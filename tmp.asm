@@ -1,4 +1,6 @@
 ; ============================================================
+;  DESCRIPTION
+; ============================================================
 ; Programa: Nr. 32
 ; Uzduoties salyga: 
     ; Parasykite programa, kuri iveda skaiciu desimtaineje 
@@ -9,34 +11,62 @@
 ; Atliko: Tomas Giedraitis
 ; ============================================================
 
-.model small     ;one code segment one data segment
+; ============================================================
+;  MACROS
+; ============================================================
+; macro: print string
+print macro string               
+    mov ah, 09h                      
+    mov dx, offset string
+    int 21h
+endm
+
+; macro: print newline
+print_nl macro
+    MOV ah, 02h
+    MOV dl, 13
+    INT 21h
+    MOV dl, 10
+    INT 21h
+endm
+
+; macro: print string with newline
+printl macro string               
+    print string
+    print_nl
+endm
+
+; ============================================================
+;  SETTINGS
+; ============================================================
+.model small     ; one code segment one data segment
 .stack 100h
 jumps
 
+; ============================================================
+;  CONSTANTS
+; ============================================================
+
+BUFSIZE	= 255
 MAX_INPUT_LEN = 11 ; 10 + eilutes pabaiga
-MAX_BASE_LEN = 3   ;  2 + eilutes pabaiga
+MAX_BASE_LEN = 4   ;  2 + eilutes pabaiga
 
-; Macro Definition for printing string
+; ============================================================
+;  DATA
+; ============================================================
 
-print macro string               
-mov ah,09h                      
-mov dx,offset string
-int 21h
-endm print                            
-     
 .data
-    newline      db 0Dh, 0Ah, '$'
-    line1        db '=============================================================================', 0Dh, 0Ah, '$'
-    line2        db '-----------------------------------------------------------------------------', 0Dh, 0Ah, '$'
+    sep1        db '=============================================================================$'
+    sep2        db '-----------------------------------------------------------------------------$'
 
-    desc         db 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema', 0Dh, 0Ah, '$'
-    prompt1_msg  db 'Iveskite simboliu eilute:', 0Dh, 0Ah, '> $'
-    prompt2_msg  db 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=36):', 0Dh, 0Ah, '> $'
-    errmsg_len   db '[ERROR] Iveskite bent viena simboli!', 0Dh, 0Ah, '$'
-    errmsg_num   db '[ERROR] Kiekvienas ivestas simbolis turi buti skaicius!', 0Dh, 0Ah, '$'
-    errmsg_min   db '[ERROR] Ivestas pagrindas mazesnis uz 1!', 0Dh, 0Ah, '$'
-    errmsg_max   db '[ERROR] Ivestas pagrindas didesnis uz 36!', 0Dh, 0Ah, '$'
-    result       db 0Dh, 0Ah, 'Rezultatas:', 0Dh, 0Ah, '$'
+    desc         db 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema$'
+    prompt1_msg  db 'Iveskite simboliu eilute:', 13, 10, '> $'
+    prompt2_msg  db 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=36):', 13, 10, '> $'
+    errmsg_len   db '[ERROR] Iveskite bent viena simboli!$'
+    errmsg_num   db '[ERROR] Kiekvienas ivestas simbolis turi buti skaicius!$'
+    errmsg_min   db '[ERROR] Ivestas pagrindas mazesnis uz 1!$'
+    errmsg_max   db '[ERROR] Ivestas pagrindas didesnis uz 36!$'
+    result       db 'Rezultatas: $'
 
     capacity_in   db MAX_INPUT_LEN
     size_in       db ?
@@ -51,42 +81,40 @@ endm print
 
     result_inverted db 16 dup ('$')
 
+; ============================================================
+;  CODE
+; ============================================================
+
 .code
 
-start:
-    ; Isvesti programos aprasa
-    MOV ah, 09h
-    MOV dx, offset line1
-    int 21h
-    jmp eof
-    print newline
+; ------------------------------------------------
+; PROCEDURES
+; ------------------------------------------------
 
+PROC print_new_line
+    MOV ah, 02h
+    MOV dl, 13
+    INT 21h
+    MOV dl, 10
+    INT 21h
+    RET
+print_new_line ENDP	
+
+; ------------------------------------------------/
+
+start:
     MOV ax, @data                   ; perkelti data i registra ax
     MOV ds, ax                      ; perkelti ax (data) i data segmenta
     MOV es, ax                      ; perkelti ax (data) i data segmenta
 
-    MOV ah, 40h
-    MOV bx, 1
-    MOV cx, 2
-    mov dx, offset newline
-    int 21h
-
-    jmp eof
-
     ; Isvesti programos aprasa
-    MOV ah, 09h
-    MOV dx, offset line1
-    int 21h
-    MOV dx, offset desc
-    int 21h
-    MOV dx, offset line1
-    int 21h
+    printl sep1
+    printl desc
+    printl sep1
     
 prompt1:
     ; Isvesti uzklausa nr.1
-    MOV ah, 09h
-    MOV dx, offset prompt1_msg
-    int 21h
+    print prompt1_msg
 
     ; skaityti eilute
     MOV dx, offset capacity_in      ; skaityti i buferio offseta 
@@ -96,11 +124,11 @@ prompt1:
     ; ivesties ilgis
     MOV cl, size_in                 ; idedam i cl kiek simboliu is viso
     cmp cl, 0                       ; ivesties ilgio validacija
+
     jne @1
     jmp err_len
-
     @1:
-
+    printl sep2
     xor ch, ch                      ; isvalome ch, nes cx (su jau esama cl reiksme) bus 
                                     ; ---naudojamas "loop" komandoje
 conv_in:
@@ -125,9 +153,7 @@ next_chr_in:
 
 prompt2:
     ; Isvesti uzklausa nr.2
-    MOV ah, 09h
-    MOV dx, offset prompt2_msg
-    int 21h
+    print prompt2_msg
 
     ; skaityti eilute
     MOV dx, offset capacity_base    ; skaityti i buferio offseta 
@@ -140,12 +166,8 @@ prompt2:
     je err_len
     cmp cl, 2                       ; ivesties ilgio validacija
     ja err_max
+    printl sep2
      
-    ; isvesti: rezultatas
-    ;MOV ah, 09h
-    ;MOV dx, offset result
-    ;int 21h
-    
     MOV si, offset data_base        ; priskirti source index'ui buferio koordinates
     xor ch, ch                      ; isvalome ch, nes cx (su jau esama cl reiksme) bus 
                                     ; ---naudojamas "loop" komandoje
@@ -170,20 +192,12 @@ next_chr_base:
 	stosb				; store value and increment pointer
 
 ; isvesti: input
-MOV ah, 09h
-MOV dx, offset result
-int 21h
-MOV ah, 09h
-MOV dx, offset op_in
-int 21h
+print result
+printl op_in
 
 ; isvesti: base
-MOV ah, 09h
-MOV dx, offset result
-int 21h
-MOV ah, 09h
-MOV dx, offset op_base
-int 21h
+print result
+printl op_base
 
 jmp eof
 
@@ -207,33 +221,21 @@ print_result:
 
 
 err_len:
-    MOV ah, 09h
-    MOV dx, offset line2
-    INT 21h
-    MOV dx, offset errmsg_len
-    INT 21h
-    MOV dx, offset line2
-    INT 21h
+    printl sep2
+    printl errmsg_len
+    printl sep2
     JMP prompt1
 
 err_num:
-    MOV ah, 09h
-    MOV dx, offset line2
-    INT 21h
-    MOV dx, offset errmsg_num
-    INT 21h
-    MOV dx, offset line2
-    INT 21h
+    printl sep2
+    printl errmsg_num
+    printl sep2
     JMP prompt1
 
 err_max:
-    MOV ah, 09h
-    MOV dx, offset line2
-    INT 21h
-    MOV dx, offset errmsg_max
-    INT 21h
-    MOV dx, offset line2
-    INT 21h
+    printl sep2
+    printl errmsg_max
+    printl sep2
     JMP prompt1
      
 eof:
