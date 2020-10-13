@@ -14,28 +14,52 @@
 ; ============================================================
 ;  MACROS
 ; ============================================================
-; macro: print string
+; print string
 print macro string               
-    mov ah, 09h                      
+    push dx
+    push ax
+    mov ah, 09                      
     mov dx, offset string
     int 21h
+    pop ax
+    pop dx
 endm
 
-; macro: print newline
+; print newline
 print_nl macro
-    MOV ah, 02h
-    MOV dl, 13
-    INT 21h
-    MOV dl, 10
-    INT 21h
+    push dx
+    push ax
+    mov ah, 02
+    mov dl, 13
+    int 21h
+    mov dl, 10
+    int 21h
+    pop ax
+    pop dx
 endm
 
-; macro: print string with newline
+; print string with newline
 printl macro string               
     print string
     print_nl
 endm
 
+; print char
+putchar macro char
+   push dx
+   push ax
+   mov dl, offset char
+   mov ah, 02
+   int 21h
+   pop ax
+   pop dx
+endm
+
+exit macro
+    MOV ax, 4c00h                   
+    INT 21h                         
+endm
+     
 ; ============================================================
 ;  SETTINGS
 ; ============================================================
@@ -199,7 +223,7 @@ printl op_in
 print result
 printl op_base
 
-jmp eof
+exit
 
 ; division
 mov di, offset result_inverted
@@ -238,8 +262,6 @@ err_max:
     printl sep2
     JMP prompt1
      
-eof:
-    MOV ax, 4c00h                   ; griztame i dos'a
-    INT 21h                         ; dos'o INTeruptas
+exit
      
 end start
