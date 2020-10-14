@@ -72,7 +72,8 @@ jumps
 ; ============================================================
 
 MAX_INPUT_LEN = 6 ; 5 + <CR>
-MAX_BASE_LEN = 3   ;  2 + <CR>
+MAX_BASE_LEN = 3  ; 2 + <CR>
+MAX_UNARY_NUM = 1000 
 
 ; ============================================================
 ;  DATA
@@ -91,19 +92,20 @@ MAX_BASE_LEN = 3   ;  2 + <CR>
     number_to_base     db MAX_BASE_LEN dup (?)
 
     base10_multiplier    dw 000Ah
+    spacing              dw 0004
 
     sep1                 db '=============================================================================$'
     sep2                 db '-----------------------------------------------------------------------------$'
     desc                 db 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema$'
-    prompt1_msg          db 'Iveskite simboliu eilute:', 13, 10, '> $'
+    prompt1_msg          db 'Iveskite skaiciu (max=65535):', 13, 10, '> $'
     prompt2_msg          db 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=62):', 13, 10, '> $'
     errmsg_no_input      db '[ERROR] Iveskite bent viena simboli!$'
-    errmsg_nan           db '[ERROR] Kiekvienas ivestas simbolis turi buti skaicius!$'
+    errmsg_nan           db '[ERROR] Kiekvienas ivestas simbolis turi buti skaitmuo!$'
     errmsg_num_max       db '[ERROR] Ivestas skaicius per didelis! (netelpa zodyje)$'
-    errmsg_base_zero     db '[ERROR] Ivestas skaicius mazesnis uz 1!$'
+    errmsg_base_zero     db '[ERROR] Ivestas pagrindas mazesnis uz 1!$'
     errmsg_base_max      db '[ERROR] Ivestas pagrindas didesnis uz 62!$'
-    result               db 'Rezultatas: $'
-
+    errmsg_unary_max     db '[ERROR] Skaicius per didelis vienetainei sistemai!$'
+    result_msg           db 'Rezultatas: $'
 
 ; ============================================================
 ;  CODE
@@ -141,18 +143,18 @@ proc store_number_in_word
         xchg ax, bx         ; store current number in bx
         lodsb               ; put current digit symbol from ds:[si] to al
         cmp al, '$'
-        je end_of_input
+       je short end_of_input
         sub al, '0'
-        jc e1_err_nan
+       jc short e1_err_nan
         cmp al, 9
-        ja e1_err_nan
+       ja short e1_err_nan
 
         xchg ax, bx         ; put current number in ax for multiplication
         mul [base10_multiplier]
         add ax, bx          ; update the current number (which is in ax for now)
-        jc e2_err_num_max
+       jc short e2_err_num_max
 
-        jmp read_chr
+       jmp short read_chr
 
     end_of_input:
         xchg ax, bx
@@ -246,6 +248,40 @@ prompt2:
     xor cx, cx
     mov ax, [op_input]
     mov bx, [op_to_base]
+
+    cmp bx, 1
+    jne short conversion
+
+unary_conversion:
+    cmp [op_input], MAX_UNARY_NUM
+    ja err_unary_max
+
+    mov cx, [op_input]
+    inc cx
+    mov ah, 2
+print_one:
+    mov dl, '1'
+    mov al, cl
+    div byte ptr spacing
+    cmp ah, 0
+    je short print_space
+    mov ah, 2
+    int 21h
+    loop print_one
+    jmp short exit_program
+print_one_no_space:
+    mov dl, '1'
+    int 21h
+    loop print_one
+    jmp short exit_program
+print_space:
+    mov ah, 2
+    mov dl, 20h
+    int 21h
+    jmp short print_one_no_space
+ 
+jmp short exit_program
+
 conversion:
 	inc	cl
 	
@@ -254,39 +290,62 @@ conversion:
 	push dx		        ; padeti skaitmeni
 	
 	cmp	ax, 0		    ; jei jau skaicius isdalintas
-    jz  converted  	; tai eiti i pabaiga
-    jmp conversion      ; kitu atveju imti kita skaitmeni
+    jz short  converted  	; tai eiti i pabaiga
+
+    xchg ax, dx
+    mov al, cl
+    div byte ptr spacing
+    cmp ah, 0
+    jne short convert
+
+    push 99
+    jmp short convert      ; kitu atveju imti kita skaitmeni
+
+convert:
+    xchg ax, dx
+    jmp short conversion
 
 converted:
-    print result
+    print result_msg
 
 print_result:
     mov	ah, 2            ; atspausdinti skaitmenis
     pop	dx
+    cmp dx, 99
+    je short process_space
+
     cmp dx, 10
-    jb process_number
+    jb short process_number
     cmp dx, 36
-    jb process_uppercase
+    jb short process_uppercase
 
     process_lowercase:
         sub dx, 35
         add	dx, 60h
-        jmp print_symbol
-
-    process_number:
-        add	dx, '0'
-        jmp print_symbol
+        jmp short short print_symbol
 
     process_uppercase:
         sub	dx, 9
         add dx, 40h
+        jmp short print_symbol
+
+    process_number:
+        add	dx, '0'
+        jmp short print_symbol
+
+    process_space:
+        mov dx, 20h
+        inc cl
+        jmp short print_symbol
 
     print_symbol:
         int	21h
+        ;loop print_result
         dec	cl
-        jnz	print_result
+        jnz print_result
 
-exit
+exit_program:
+    exit
 
 err_no_input:
     printl sep2
@@ -303,6 +362,12 @@ err_base_zero:
 err_base_max:
     printl sep2
     printl errmsg_base_max
+    printl sep2
+    jmp prompt1
+
+err_unary_max:
+    printl sep2
+    printl errmsg_unary_max
     printl sep2
     jmp prompt1
 
