@@ -71,39 +71,39 @@ jumps
 ;  CONSTANTS
 ; ============================================================
 
-BUFSIZE	= 255
-MAX_INPUT_LEN = 11 ; 10 + eilutes pabaiga
-MAX_BASE_LEN = 4   ;  2 + eilutes pabaiga
+MAX_INPUT_LEN = 6 ; 5 + <CR>
+MAX_BASE_LEN = 3   ;  2 + <CR>
 
 ; ============================================================
 ;  DATA
 ; ============================================================
 
 .data
-    sep1        db '=============================================================================$'
-    sep2        db '-----------------------------------------------------------------------------$'
+    op_input	       dw 0
+    op_to_base	       dw 0
 
-    desc         db 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema$'
-    prompt1_msg  db 'Iveskite simboliu eilute:', 13, 10, '> $'
-    prompt2_msg  db 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=36):', 13, 10, '> $'
-    errmsg_len   db '[ERROR] Iveskite bent viena simboli!$'
-    errmsg_num   db '[ERROR] Kiekvienas ivestas simbolis turi buti skaicius!$'
-    errmsg_min   db '[ERROR] Ivestas pagrindas mazesnis uz 1!$'
-    errmsg_max   db '[ERROR] Ivestas pagrindas didesnis uz 36!$'
-    result       db 'Rezultatas: $'
+    capacity_input     db MAX_INPUT_LEN
+    size_input         db ?
+    number_input       db MAX_INPUT_LEN dup (?)
 
-    capacity_in   db MAX_INPUT_LEN
-    size_in       db ?
-    data_in       db MAX_INPUT_LEN dup (?)
+    capacity_to_base   db MAX_BASE_LEN
+    size_to_base       db ?
+    number_to_base     db MAX_BASE_LEN dup (?)
 
-    capacity_base db MAX_BASE_LEN
-    size_base     db ?
-    data_base     db MAX_BASE_LEN dup (?)
+    base10_multiplier    dw 000Ah
 
-    op_in	      dw 0
-    op_base	      db 0
+    sep1                 db '=============================================================================$'
+    sep2                 db '-----------------------------------------------------------------------------$'
+    desc                 db 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema$'
+    prompt1_msg          db 'Iveskite simboliu eilute:', 13, 10, '> $'
+    prompt2_msg          db 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=62):', 13, 10, '> $'
+    errmsg_no_input      db '[ERROR] Iveskite bent viena simboli!$'
+    errmsg_nan           db '[ERROR] Kiekvienas ivestas simbolis turi buti skaicius!$'
+    errmsg_num_max       db '[ERROR] Ivestas skaicius per didelis! (netelpa zodyje)$'
+    errmsg_base_zero     db '[ERROR] Ivestas skaicius mazesnis uz 1!$'
+    errmsg_base_max      db '[ERROR] Ivestas pagrindas didesnis uz 62!$'
+    result               db 'Rezultatas: $'
 
-    result_inverted db 16 dup ('$')
 
 ; ============================================================
 ;  CODE
@@ -115,14 +115,60 @@ MAX_BASE_LEN = 4   ;  2 + eilutes pabaiga
 ; PROCEDURES
 ; ------------------------------------------------
 
-PROC print_new_line
-    MOV ah, 02h
-    MOV dl, 13
-    INT 21h
-    MOV dl, 10
-    INT 21h
-    RET
-print_new_line ENDP	
+; this proc takes a decimal number in ASCII chars 
+; and saves the numeric value in one word
+;
+; params[0]: ptr to str (source) (must have a '$' char at the end)
+; params[1]: ptr to int (destination)
+;
+; a user has to handle these error labels:
+;    err_nan
+;    err_num_max
+; including cleaning the stack after error occurs
+proc store_number_in_word
+    ; preparing the stack
+    push bp
+    mov bp, sp
+    ; reading arguments
+    mov si, [bp+6]
+    mov di, [bp+4]
+
+    ; procedure body
+    xor ax, ax  
+    xor bx, bx
+
+    read_chr:
+        xchg ax, bx         ; store current number in bx
+        lodsb               ; put current digit symbol from ds:[si] to al
+        cmp al, '$'
+        je end_of_input
+        sub al, '0'
+        jc e1_err_nan
+        cmp al, 9
+        ja e1_err_nan
+
+        xchg ax, bx         ; put current number in ax for multiplication
+        mul [base10_multiplier]
+        add ax, bx          ; update the current number (which is in ax for now)
+        jc e2_err_num_max
+
+        jmp read_chr
+
+    end_of_input:
+        xchg ax, bx
+        stosw				; saugome skaiciu zodyje adresu es:[di]
+    
+    ; clearing the stack
+        pop bp
+    ; return
+        ret 4
+
+    e1_err_nan:
+        call err_nan
+    e2_err_num_max:
+        call err_num_max
+
+store_number_in_word ENDP	
 
 ; ------------------------------------------------/
 
@@ -141,127 +187,136 @@ prompt1:
     print prompt1_msg
 
     ; skaityti eilute
-    MOV dx, offset capacity_in      ; skaityti i buferio offseta 
-    MOV ah, 0Ah                     ; eilutes skaitymo subprograma
-    INT 21h                         ; dos'o INTeruptas
+    MOV dx, offset capacity_input      ; skaityti i buferio offseta 
+    MOV ah, 0Ah                        ; eilutes skaitymo subprograma
+    INT 21h                            ; dos'o INTeruptas
+    print_nl ; cia reikia print newline, nes paskutinis char isvedime buvo
+             ; <CR>, kuris grazina BIOS kursoriu atgal i eilutes pradzia, ir kadangi 
+             ; po jo nera <LF>, kursorius nepasislenka viena eilute zemyn. Taigi sekantis
+             ; outputas uzrasys ant virsaus eilutes pradzioje, panaikindamas senaji output'a
 
     ; ivesties ilgis
-    MOV cl, size_in                 ; idedam i cl kiek simboliu is viso
-    cmp cl, 0                       ; ivesties ilgio validacija
+    xor bx, bx
+    MOV bl, size_input              ; idedam i bl kiek simboliu is viso
+    cmp bl, 0                       ; ivesties ilgio validacija
+    je err_no_input
 
-    jne @1
-    jmp err_len
-    @1:
-    printl sep2
-    xor ch, ch                      ; isvalome ch, nes cx (su jau esama cl reiksme) bus 
-                                    ; ---naudojamas "loop" komandoje
-conv_in:
-    MOV si, offset data_in          ; priskirti source index'ui buferio koordinates
-    MOV di, offset op_in            ; priskirti destination index'ui busima konversijos rezultata
-	xor	ax, ax		; accumulator
-	xor	bx, bx		; number
-next_chr_in:
-	lodsb               ; imti is ds:si stringo dali ir dedame i al 
-	sub	al, '0'			; normalize ASCII to number
-	jc	err_num
-	cmp	al, 9
-	ja	err_num
+    mov byte ptr [number_input+bx], '$' ; write '$' instead of 'CR' symbol
 
-	;lea	bx, [bx+bx*4]	; bx = bx * 5
-	;lea	bx, [ax+bx*2]	; bx = (bx * 2) + digit
-	loop next_chr_in
+    ; passing arguments to the procedure
+    mov bp, sp
+    push offset number_input
+    push offset op_input
 
-	mov ax, bx			; move number to eax
-    mov ax, 65
-	stosw				; store value and increment pointer
+    call store_number_in_word
 
 prompt2:
     ; Isvesti uzklausa nr.2
+    printl sep2
     print prompt2_msg
 
     ; skaityti eilute
-    MOV dx, offset capacity_base    ; skaityti i buferio offseta 
-    MOV ah, 0Ah                     ; eilutes skaitymo subprograma
-    INT 21h                         ; dos'o INTeruptas
+    MOV dx, offset capacity_to_base    ; skaityti i buferio offseta 
+    MOV ah, 0Ah                        ; eilutes skaitymo subprograma
+    INT 21h                            ; dos'o INTeruptas
+    print_nl
 
     ; ivesties ilgis
-    MOV cl, size_base               ; idedam i cl kiek simboliu is viso
-    cmp cl, 0                       ; ivesties ilgio validacija
-    je err_len
-    cmp cl, 2                       ; ivesties ilgio validacija
-    ja err_max
+    xor bx, bx
+    mov bl, size_to_base            ; idedam i bl kiek simboliu is viso
+    cmp bl, 0                       ; ivesties ilgio validacija
+    je err_no_input
+
     printl sep2
-     
-    MOV si, offset data_base        ; priskirti source index'ui buferio koordinates
-    xor ch, ch                      ; isvalome ch, nes cx (su jau esama cl reiksme) bus 
-                                    ; ---naudojamas "loop" komandoje
 
-conv_base:
-    MOV si, offset data_base          ; priskirti source index'ui buferio koordinates
-    MOV di, offset op_base            ; priskirti destination index'ui busima konversijos rezultata
-	xor	ax, ax		; accumulator
-	xor	bx, bx		; number
-next_chr_base:
-	lodsb               ; imti is ds:si stringo dali ir dedame i al 
-	sub	al, '0'			; normalize ASCII to number
-	jc	err_num
-	cmp	al, 9
-	jg	err_num
-	;lea	bx, [bx+bx*4]	; ebx = ebx * 5
-	;lea	bx, [ax+bx*2]	; ebx = (ebx * 2) + digit
-	loop next_chr_base
+    mov byte ptr [number_to_base+bx], '$' ; write '$' instead of 'CR' symbol
 
-	mov ax, bx			; move number to eax
-    mov ax, 8
-	stosb				; store value and increment pointer
+    ; passing arguments to the procedure
+    mov bp, sp
+    push offset number_to_base
+    push offset op_to_base
 
-; isvesti: input
-print result
-printl op_in
+    call store_number_in_word
 
-; isvesti: base
-print result
-printl op_base
+    cmp [op_to_base], 0
+    je err_base_zero
+    cmp [op_to_base], 62
+    ja err_base_max
 
-exit
+    xor cx, cx
+    mov ax, [op_input]
+    mov bx, [op_to_base]
+conversion:
+	inc	cl
+	
+	xor	dx, dx		    ; isvalyti dx, nes cia bus liekana po div
+	div	bx              ; div ax/bx, ir liekana padedama dx
+	push dx		        ; padeti skaitmeni
+	
+	cmp	ax, 0		    ; jei jau skaicius isdalintas
+    jz  converted  	; tai eiti i pabaiga
+    jmp conversion      ; kitu atveju imti kita skaitmeni
 
-; division
-mov di, offset result_inverted
-xor dx, dx
-xor cx, cx
-xor bh, bh
-MOV ax, [op_in]
-MOV bl, [op_base]
-division:
-   DIV BX
-   xchg AX, DX
-   stosb
-   xchg AX, DX
-   cmp AX, 0
-   je print_result
-   jmp division
+converted:
+    print result
 
 print_result:
+    mov	ah, 2            ; atspausdinti skaitmenis
+    pop	dx
+    cmp dx, 10
+    jb process_number
+    cmp dx, 36
+    jb process_uppercase
 
+    process_lowercase:
+        sub dx, 35
+        add	dx, 60h
+        jmp print_symbol
 
-err_len:
-    printl sep2
-    printl errmsg_len
-    printl sep2
-    JMP prompt1
+    process_number:
+        add	dx, '0'
+        jmp print_symbol
 
-err_num:
-    printl sep2
-    printl errmsg_num
-    printl sep2
-    JMP prompt1
+    process_uppercase:
+        sub	dx, 9
+        add dx, 40h
 
-err_max:
-    printl sep2
-    printl errmsg_max
-    printl sep2
-    JMP prompt1
-     
+    print_symbol:
+        int	21h
+        dec	cl
+        jnz	print_result
+
 exit
-     
+
+err_no_input:
+    printl sep2
+    printl errmsg_no_input
+    printl sep2
+    jmp prompt1
+
+err_base_zero:
+    printl sep2
+    printl errmsg_base_zero
+    printl sep2
+    jmp prompt1
+
+err_base_max:
+    printl sep2
+    printl errmsg_base_max
+    printl sep2
+    jmp prompt1
+
+; Handling labels of the procedure
+err_nan:
+    printl sep2
+    printl errmsg_nan
+    printl sep2
+    jmp prompt1
+
+err_num_max:
+    printl sep2
+    printl errmsg_num_max
+    printl sep2
+    jmp prompt1
+
 end start
