@@ -17,35 +17,72 @@
 
 ; CRLF 13, 10
 
-; print string
-m_print macro string               
+m_push_axdx macro
     push ax
     push dx
-    mov ah, 09                      
-    mov dx, offset string
-    int 21h
+endm
+
+m_pop_dxax macro
     pop dx
     pop ax
 endm
 
+; gets bit from a byte by index
+m_getbit macro  byte, index
+; Changes AX !!
+; Pirmas argumentas:  baitas (adresas/reiksme/konstanta)
+; Antras argumentas:  kelinta bita norime suzinoti (bitai skaiciuojami nuo nulinio - jauniausio)
+; Rezultas: al - nurodyto bito reiksme
+   push cx
+   mov cl, index            ; bito numeris
+   mov al, byte ptr byte     ; krauname baita
+   shr al, cl                  ; stumiame nurodyta bita i pradzia
+   and al, 01                  ; atmetame kitus bitus
+   pop cx
+endm
+
+; get string from user
+m_gets macro buffer
+   m_push_axdx
+   mov ah, 0Ah 
+   mov dx, offset buffer
+   int 21h
+   m_pop_dxax
+endm
+
+m_putdigit macro digit
+   m_push_axdx
+   mov dl, digit               
+   add dl, '0'                 
+   mov ah, 02                  
+   int 21h
+   m_pop_dxax
+endm
+
+; print string
+m_print macro string               
+    m_push_axdx
+    mov ah, 09                      
+    mov dx, offset string
+    int 21h
+    m_pop_dxax
+endm
+
 ; print newline
-m_println macro
-    push ax
-    push dx
+m_print_nl macro
+    m_push_axdx
     mov ah, 02
     mov dl, 13
     int 21h
     mov dl, 10
     int 21h
-    pop dx
-    pop ax
+    m_pop_dxax
 endm
 
 ; print string (immediate): ex. printi "hello!"
-m_printi macro string
+m_puts macro string
 local @@start, @@data
-      push ax          ;save registers
-      push dx
+      m_push_axdx
       push ds
       jmp  @@start     ; string is being stored
 @@data db string,'$'   ; in the code segment
@@ -56,31 +93,28 @@ local @@start, @@data
       lea  dx, [@@data]
       int  21h
       pop  ds          ;restore registers
-      pop  dx
-      pop ax
+      m_pop_dxax
 endm 
 
 ; print string with newline
-m_printl macro string               
+m_println macro string               
     m_print string
-    m_println
+    m_print_nl
 endm
 
 ; print immediate string with newline
-m_printil macro string               
-    m_printi string
-    m_println
+m_putsln macro string               
+    m_puts string
+    m_print_nl
 endm
 
 ; print char
-m_printch macro char
-   push ax
-   push dx
+m_putchar macro char
+   m_push_axdx
    mov dl, char
    mov ah, 02
    int 21h
-   pop dx
-   pop ax
+   m_pop_dxax
 endm
 
 m_exit0 macro
@@ -203,20 +237,20 @@ start:
     MOV es, ax                      ; perkelti ax (data) i data segmenta
 
     ; Isvesti programos aprasa
-    m_printl sep1
-    m_printil 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema'
-    m_printl sep1
+    m_println sep1
+    m_putsln 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema'
+    m_println sep1
     
 prompt1:
     ; Isvesti uzklausa nr.1
-    m_printil 'Iveskite skaiciu (max=65535):'
-    m_printi '> '
+    m_putsln 'Iveskite skaiciu (max=65535):'
+    m_puts '> '
 
     ; skaityti eilute
     MOV dx, offset capacity_input      ; skaityti i buferio offseta 
     MOV ah, 0Ah                        ; eilutes skaitymo subprograma
     INT 21h                            ; dos'o INTeruptas
-    m_println ; cia reikia print newline, nes paskutinis char isvedime buvo
+    m_print_nl ; cia reikia print newline, nes paskutinis char isvedime buvo
              ; <CR>, kuris grazina BIOS kursoriu atgal i eilutes pradzia, ir kadangi 
              ; po jo nera <LF>, kursorius nepasislenka viena eilute zemyn. Taigi sekantis
              ; outputas uzrasys ant virsaus eilutes pradzioje, panaikindamas senaji output'a
@@ -238,15 +272,15 @@ prompt1:
 
 prompt2:
     ; Isvesti uzklausa nr.2
-    m_printl sep2
-    m_printil 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=62):'
-    m_printi '> $'
+    m_println sep2
+    m_putsln 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=62):'
+    m_puts '> $'
 
     ; skaityti eilute
     MOV dx, offset capacity_to_base    ; skaityti i buferio offseta 
     MOV ah, 0Ah                        ; eilutes skaitymo subprograma
     INT 21h                            ; dos'o INTeruptas
-    m_println
+    m_print_nl
 
     ; ivesties ilgis
     xor bx, bx
@@ -254,7 +288,7 @@ prompt2:
     cmp bl, 0                       ; ivesties ilgio validacija
     je err_no_input
 
-    m_printl sep2
+    m_println sep2
 
     mov byte ptr [number_to_base+bx], '$' ; write '$' instead of 'CR' symbol
 
@@ -331,7 +365,7 @@ convert:
     jmp short conversion
 
 converted:
-    m_printi 'Rezultatas: '
+    m_puts 'Rezultatas: '
 
 print_result:
     mov	ah, 2            ; atspausdinti skaitmenis
@@ -373,40 +407,40 @@ exit_program:
     m_exit0
 
 err_no_input:
-    m_printl sep2
-    m_printil '[ERROR] Iveskite bent viena simboli!'
-    m_printl sep2
+    m_println sep2
+    m_putsln '[ERROR] Iveskite bent viena simboli!'
+    m_println sep2
     jmp prompt1
 
 err_base_zero:
-    m_printl sep2
-    m_printil '[ERROR] Ivestas pagrindas mazesnis uz 1!'
-    m_printl sep2
+    m_println sep2
+    m_putsln '[ERROR] Ivestas pagrindas mazesnis uz 1!'
+    m_println sep2
     jmp prompt1
 
 err_base_max:
-    m_printl sep2
-    m_printil '[ERROR] Ivestas pagrindas didesnis uz 62!'
-    m_printl sep2
+    m_println sep2
+    m_putsln '[ERROR] Ivestas pagrindas didesnis uz 62!'
+    m_println sep2
     jmp prompt1
 
 err_unary_max:
-    m_printl sep2
-    m_printil '[ERROR] Skaicius per didelis vienetainei sistemai!'
-    m_printl sep2
+    m_println sep2
+    m_putsln '[ERROR] Skaicius per didelis vienetainei sistemai!'
+    m_println sep2
     jmp prompt1
 
 ; Handling labels of the procedure
 err_nan:
-    m_printl sep2
-    m_printil '[ERROR] Skaicius per didelis vienetainei sistemai!'
-    m_printl sep2
+    m_println sep2
+    m_putsln '[ERROR] Skaicius per didelis vienetainei sistemai!'
+    m_println sep2
     jmp prompt1
 
 err_num_max:
-    m_printl sep2
-    m_printil '[ERROR] Ivestas skaicius per didelis! (netelpa zodyje)'
-    m_printl sep2
+    m_println sep2
+    m_putsln '[ERROR] Ivestas skaicius per didelis! (netelpa zodyje)'
+    m_println sep2
     jmp prompt1
 
 end start
