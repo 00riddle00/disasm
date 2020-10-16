@@ -14,49 +14,82 @@
 ; ============================================================
 ;  MACROS
 ; ============================================================
+
+; CRLF 13, 10
+
 ; print string
-print macro string               
-    push dx
+m_print macro string               
     push ax
+    push dx
     mov ah, 09                      
     mov dx, offset string
     int 21h
-    pop ax
     pop dx
+    pop ax
 endm
 
 ; print newline
-print_nl macro
-    push dx
+m_println macro
     push ax
+    push dx
     mov ah, 02
     mov dl, 13
     int 21h
     mov dl, 10
     int 21h
-    pop ax
     pop dx
+    pop ax
 endm
 
+; print string (immediate): ex. printi "hello!"
+m_printi macro string
+local @@start, @@data
+      push ax          ;save registers
+      push dx
+      push ds
+      jmp  @@start     ; string is being stored
+@@data db string,'$'   ; in the code segment
+@@start:               ; so, skip over it
+      mov  ax,cs
+      mov  ds,ax       ;set ds to code segment
+      mov  ah,9
+      lea  dx, [@@data]
+      int  21h
+      pop  ds          ;restore registers
+      pop  dx
+      pop ax
+endm 
+
 ; print string with newline
-printl macro string               
-    print string
-    print_nl
+m_printl macro string               
+    m_print string
+    m_println
+endm
+
+; print immediate string with newline
+m_printil macro string               
+    m_printi string
+    m_println
 endm
 
 ; print char
-putchar macro char
-   push dx
+m_printch macro char
    push ax
-   mov dl, offset char
+   push dx
+   mov dl, char
    mov ah, 02
    int 21h
-   pop ax
    pop dx
+   pop ax
 endm
 
-exit macro
+m_exit0 macro
     MOV ax, 4c00h                   
+    INT 21h                         
+endm
+
+m_exit1 macro
+    MOV ax, 4c01h                   
     INT 21h                         
 endm
      
@@ -96,16 +129,6 @@ MAX_UNARY_NUM = 1000
 
     sep1                 db '=============================================================================$'
     sep2                 db '-----------------------------------------------------------------------------$'
-    desc                 db 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema$'
-    prompt1_msg          db 'Iveskite skaiciu (max=65535):', 13, 10, '> $'
-    prompt2_msg          db 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=62):', 13, 10, '> $'
-    errmsg_no_input      db '[ERROR] Iveskite bent viena simboli!$'
-    errmsg_nan           db '[ERROR] Kiekvienas ivestas simbolis turi buti skaitmuo!$'
-    errmsg_num_max       db '[ERROR] Ivestas skaicius per didelis! (netelpa zodyje)$'
-    errmsg_base_zero     db '[ERROR] Ivestas pagrindas mazesnis uz 1!$'
-    errmsg_base_max      db '[ERROR] Ivestas pagrindas didesnis uz 62!$'
-    errmsg_unary_max     db '[ERROR] Skaicius per didelis vienetainei sistemai!$'
-    result_msg           db 'Rezultatas: $'
 
 ; ============================================================
 ;  CODE
@@ -180,19 +203,20 @@ start:
     MOV es, ax                      ; perkelti ax (data) i data segmenta
 
     ; Isvesti programos aprasa
-    printl sep1
-    printl desc
-    printl sep1
+    m_printl sep1
+    m_printil 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema'
+    m_printl sep1
     
 prompt1:
     ; Isvesti uzklausa nr.1
-    print prompt1_msg
+    m_printil 'Iveskite skaiciu (max=65535):'
+    m_printi '> '
 
     ; skaityti eilute
     MOV dx, offset capacity_input      ; skaityti i buferio offseta 
     MOV ah, 0Ah                        ; eilutes skaitymo subprograma
     INT 21h                            ; dos'o INTeruptas
-    print_nl ; cia reikia print newline, nes paskutinis char isvedime buvo
+    m_println ; cia reikia print newline, nes paskutinis char isvedime buvo
              ; <CR>, kuris grazina BIOS kursoriu atgal i eilutes pradzia, ir kadangi 
              ; po jo nera <LF>, kursorius nepasislenka viena eilute zemyn. Taigi sekantis
              ; outputas uzrasys ant virsaus eilutes pradzioje, panaikindamas senaji output'a
@@ -214,14 +238,15 @@ prompt1:
 
 prompt2:
     ; Isvesti uzklausa nr.2
-    printl sep2
-    print prompt2_msg
+    m_printl sep2
+    m_printil 'Iveskite pasirinktos skaiciavimo sistemos pagrinda (min=1, max=62):'
+    m_printi '> $'
 
     ; skaityti eilute
     MOV dx, offset capacity_to_base    ; skaityti i buferio offseta 
     MOV ah, 0Ah                        ; eilutes skaitymo subprograma
     INT 21h                            ; dos'o INTeruptas
-    print_nl
+    m_println
 
     ; ivesties ilgis
     xor bx, bx
@@ -229,7 +254,7 @@ prompt2:
     cmp bl, 0                       ; ivesties ilgio validacija
     je err_no_input
 
-    printl sep2
+    m_printl sep2
 
     mov byte ptr [number_to_base+bx], '$' ; write '$' instead of 'CR' symbol
 
@@ -268,12 +293,12 @@ print_one:
     mov ah, 2
     int 21h
     loop print_one
-    jmp short exit_program
+    jmp exit_program
 print_one_no_space:
     mov dl, '1'
     int 21h
     loop print_one
-    jmp short exit_program
+    jmp exit_program
 print_space:
     mov ah, 2
     mov dl, 20h
@@ -306,7 +331,7 @@ convert:
     jmp short conversion
 
 converted:
-    print result_msg
+    m_printi 'Rezultatas: '
 
 print_result:
     mov	ah, 2            ; atspausdinti skaitmenis
@@ -345,43 +370,43 @@ print_result:
         jnz print_result
 
 exit_program:
-    exit
+    m_exit0
 
 err_no_input:
-    printl sep2
-    printl errmsg_no_input
-    printl sep2
+    m_printl sep2
+    m_printil '[ERROR] Iveskite bent viena simboli!'
+    m_printl sep2
     jmp prompt1
 
 err_base_zero:
-    printl sep2
-    printl errmsg_base_zero
-    printl sep2
+    m_printl sep2
+    m_printil '[ERROR] Ivestas pagrindas mazesnis uz 1!'
+    m_printl sep2
     jmp prompt1
 
 err_base_max:
-    printl sep2
-    printl errmsg_base_max
-    printl sep2
+    m_printl sep2
+    m_printil '[ERROR] Ivestas pagrindas didesnis uz 62!'
+    m_printl sep2
     jmp prompt1
 
 err_unary_max:
-    printl sep2
-    printl errmsg_unary_max
-    printl sep2
+    m_printl sep2
+    m_printil '[ERROR] Skaicius per didelis vienetainei sistemai!'
+    m_printl sep2
     jmp prompt1
 
 ; Handling labels of the procedure
 err_nan:
-    printl sep2
-    printl errmsg_nan
-    printl sep2
+    m_printl sep2
+    m_printil '[ERROR] Skaicius per didelis vienetainei sistemai!'
+    m_printl sep2
     jmp prompt1
 
 err_num_max:
-    printl sep2
-    printl errmsg_num_max
-    printl sep2
+    m_printl sep2
+    m_printil '[ERROR] Ivestas skaicius per didelis! (netelpa zodyje)'
+    m_printl sep2
     jmp prompt1
 
 end start
