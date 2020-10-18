@@ -64,6 +64,8 @@ MAX_UNARY_NUM = 1000
 ; PROCEDURES
 ; ------------------------------------------------
 
+include proc_lib.asm
+
 ; this proc takes a decimal number in ASCII chars 
 ; and saves the numeric value in one word
 ;
