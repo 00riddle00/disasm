@@ -82,12 +82,12 @@ m_println macro string
     m_print_nl
 endm
 
-; print string (immediate): ex. printi "hello!"
+; print string (immediate): ex. m_puts "hello!"
 m_puts macro string
 local @@start, @@data
       m_push_axdx
       push ds
-      jmp  @@start     ; string is being stored
+      jmp short @@start     ; string is being stored
 @@data db string,'$'   ; in the code segment
 @@start:               ; so, skip over it
       mov  ax,cs
@@ -134,21 +134,21 @@ endm
 ; place the bigger of two words in ax
 get_big macro word1, word2
 ; Changes AX !!
-LOCAL @@exit
+local @@exit
     mov ax, [word1]
     cmp ax, [word2]
     jg  @@exit
     mov ax, [word2]
 @@exit:
-ENDM 
+endm 
 
 m_exit0 macro
-    MOV ax, 4c00h                   
-    INT 21h                         
+    mov ax, 4c00h                   
+    int 21h                         
 endm
 
 m_exit1 macro
-    MOV ax, 4c01h                   
-    INT 21h                         
+    mov ax, 4c01h                   
+    int 21h                         
 endm
  

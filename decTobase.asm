@@ -8,6 +8,7 @@
     ; sistema. Isspausdina pirmaji skaicių ivestoje sistemoje. 
     ; Pavyzdziui: Jei skaičiai 5 ir 2 isvesti turi 101, jei 
     ; skaiciai 20 ir 16 tai atspausdina 14.
+; 10185 -> base 22
 ; Atliko: Tomas Giedraitis
 ; ============================================================
 
@@ -30,7 +31,8 @@ jumps
 
 MAX_INPUT_LEN = 6 ; 5 + <CR>
 MAX_BASE_LEN = 3  ; 2 + <CR>
-MAX_UNARY_NUM = 1000 
+MAX_UNARY_NUM = 1000 ; limit the size of the number to be 
+                     ; converted to unary number system
 
 ; ============================================================
 ;  DATA
@@ -48,11 +50,11 @@ MAX_UNARY_NUM = 1000
     size_to_base       db ?
     number_to_base     db MAX_BASE_LEN dup (?)
 
-    base10_multiplier    dw 000Ah
-    spacing              dw 0004
+    base10_multiplier  dw 000Ah ; =10
+    spacing            dw 0004  ; separate 4 digits by space (ex. 'A010 F010')
 
-    sep1                 db '=============================================================================$'
-    sep2                 db '-----------------------------------------------------------------------------$'
+    sep1               db '=============================================================================$'
+    sep2               db '-----------------------------------------------------------------------------$'
 
 ; ============================================================
 ;  CODE
@@ -64,13 +66,12 @@ MAX_UNARY_NUM = 1000
 ; PROCEDURES
 ; ------------------------------------------------
 
-include proc_lib.asm
-
 ; this proc takes a decimal number in ASCII chars 
 ; and saves the numeric value in one word
 ;
-; params[0]: ptr to str (source) (must have a '$' char at the end)
-; params[1]: ptr to int (destination)
+; arguments need to be put in stack before call (in that order):
+;    params[0]: ptr to str (source) (must have a '$' char at the end)
+;    params[1]: ptr to int (destination)
 ;
 ; a user has to handle these error labels:
 ;    err_nan
@@ -78,8 +79,8 @@ include proc_lib.asm
 ; including cleaning the stack after error occurs
 proc store_number_in_word
     ; preparing the stack
-    push bp
-    mov bp, sp
+    push bp      ; std procedure when proc arguments are 
+    mov bp, sp   ; already put in the stack before call
     ; reading arguments
     mov si, [bp+6]
     mov di, [bp+4]
@@ -92,43 +93,42 @@ proc store_number_in_word
         xchg ax, bx         ; store current number in bx
         lodsb               ; put current digit symbol from ds:[si] to al
         cmp al, '$'
-       je short end_of_input
+        je short end_of_input
         sub al, '0'
-       jc short e1_err_nan
+        jc short e1_err_nan
         cmp al, 9
-       ja short e1_err_nan
+        ja short e1_err_nan
 
-        xchg ax, bx         ; put current number in ax for multiplication
+        xchg ax, bx              ; put current number in ax for multiplication
         mul [base10_multiplier]
-        add ax, bx          ; update the current number (which is in ax for now)
-       jc short e2_err_num_max
+        add ax, bx               ; update the current number (which is in ax for now)
+        jc short e2_err_num_max  ; overflow means the number does not fit in 2 bytes
 
-       jmp short read_chr
+        jmp short read_chr
 
     end_of_input:
-        xchg ax, bx
-        stosw				; saugome skaiciu zodyje adresu es:[di]
+        xchg ax, bx         ; put the result back in ax
+        stosw				; saugome AX'o skaiciu zodyje adresu es:[di]
     
-    ; clearing the stack
+    ; clear the stack
         pop bp
     ; return
-        ret 4
+        ret 4  ; pop function arguments (2 words)
 
     e1_err_nan:
         call err_nan
     e2_err_num_max:
         call err_num_max
-
-store_number_in_word ENDP	
+endp
 
 ; ------------------------------------------------/
 
 start:
-    MOV ax, @data                   ; perkelti data i registra ax
-    MOV ds, ax                      ; perkelti ax (data) i data segmenta
-    MOV es, ax                      ; perkelti ax (data) i data segmenta
+    mov ax, @data                   ; perkelti data i registra ax
+    mov ds, ax                      ; perkelti ax (data) i data segmenta
+    mov es, ax                      ; perkelti ax (data) i data segmenta
 
-    ; Isvesti programos aprasa
+    ; isvesti programos aprasa
     m_println sep1
     m_putsln 'Programa konvertuoja desimtaini skaiciu i jusu pasirinkta skaiciavimo sistema'
     m_println sep1
@@ -139,21 +139,22 @@ prompt1:
     m_puts '> '
 
     ; skaityti eilute
-    MOV dx, offset capacity_input      ; skaityti i buferio offseta 
-    MOV ah, 0Ah                        ; eilutes skaitymo subprograma
-    INT 21h                            ; dos'o INTeruptas
-    m_print_nl ; cia reikia print newline, nes paskutinis char isvedime buvo
-             ; <CR>, kuris grazina BIOS kursoriu atgal i eilutes pradzia, ir kadangi 
-             ; po jo nera <LF>, kursorius nepasislenka viena eilute zemyn. Taigi sekantis
-             ; outputas uzrasys ant virsaus eilutes pradzioje, panaikindamas senaji output'a
+    mov dx, offset capacity_input      ; skaityti i buferio offseta 
+    mov ah, 0Ah                        ; eilutes skaitymo subprograma
+    int 21h                            ; dos'o interuptas
+
+    m_print_nl                         ; cia reikia print newline, nes paskutinis char isvedime buvo
+                                       ; <CR>, kuris grazina BIOS kursoriu atgal i eilutes pradzia, ir kadangi 
+                                       ; po jo nera <LF>, kursorius nepasislenka viena eilute zemyn. Taigi sekantis
+                                       ; outputas uzrasys ant virsaus eilutes pradzioje, panaikindamas senaji output'a
 
     ; ivesties ilgis
     xor bx, bx
-    MOV bl, size_input              ; idedam i bl kiek simboliu is viso
+    mov bl, size_input              ; idedam i bl kiek simboliu is viso
     cmp bl, 0                       ; ivesties ilgio validacija
     je err_no_input
 
-    mov byte ptr [number_input+bx], '$' ; write '$' instead of 'CR' symbol
+    mov byte ptr [number_input+bx], '$'   ; write '$' instead of 'CR' symbol
 
     ; passing arguments to the procedure
     mov bp, sp
@@ -169,9 +170,9 @@ prompt2:
     m_puts '> $'
 
     ; skaityti eilute
-    MOV dx, offset capacity_to_base    ; skaityti i buferio offseta 
-    MOV ah, 0Ah                        ; eilutes skaitymo subprograma
-    INT 21h                            ; dos'o INTeruptas
+    mov dx, offset capacity_to_base    ; skaityti i buferio offseta 
+    mov ah, 0Ah                        ; eilutes skaitymo subprograma
+    int 21h                            ; dos'o INTeruptas
     m_print_nl
 
     ; ivesties ilgis
@@ -191,6 +192,7 @@ prompt2:
 
     call store_number_in_word
 
+    ; validate correct "to base" input
     cmp [op_to_base], 0
     je err_base_zero
     cmp [op_to_base], 62
@@ -203,25 +205,26 @@ prompt2:
     cmp bx, 1
     jne short conversion
 
+; in case base = 1
 unary_conversion:
     cmp [op_input], MAX_UNARY_NUM
     ja err_unary_max
 
-    mov cx, [op_input]
-    inc cx
+    mov cx, [op_input]  ; how many '1's to print
+    inc cx ; plus additional '1' to mark zero
     mov ah, 2
 print_one:
     mov dl, '1'
     mov al, cl
     div byte ptr spacing
-    cmp ah, 0
+    cmp ah, 0              ; check if space needs to be printed (test if mod(cx,spacing) == 0)
     je short print_space
     mov ah, 2
     int 21h
     loop print_one
     jmp exit_program
-print_one_no_space:
-    m_putchar '1'
+print_one_no_space:        ; this extra block is needed so that CX gets
+    m_putchar '1'          ; decremented if space was the previous character
     loop print_one
     jmp exit_program
 print_space:
@@ -243,14 +246,14 @@ conversion:
     xchg ax, dx
     mov al, cl
     div byte ptr spacing
-    cmp ah, 0
+    cmp ah, 0              ; check if space needs to be pushed to stack (test if mod(cx,spacing) == 0)
     jne short convert
 
-    push 99
+    push 99                ; let 99 here mean 'space'
     jmp short convert      ; kitu atveju imti kita skaitmeni
 
-convert:
-    xchg ax, dx
+convert:                   ; this extra block is used to put the remainder
+    xchg ax, dx            ; back to AX before next iteration 
     jmp short conversion
 
 converted:
@@ -259,7 +262,7 @@ converted:
 print_result:
     mov	ah, 2            ; atspausdinti skaitmenis
     pop	dx
-    cmp dx, 99
+    cmp dx, 99           ; in case of 'space'
     je short process_space
 
     cmp dx, 10
@@ -270,7 +273,7 @@ print_result:
     process_lowercase:
         sub dx, 35
         add	dx, 60h
-        jmp short short print_symbol
+        jmp short print_symbol
 
     process_uppercase:
         sub	dx, 9
@@ -288,7 +291,6 @@ print_result:
 
     print_symbol:
         int	21h
-        ;loop print_result
         dec	cl
         jnz print_result
 

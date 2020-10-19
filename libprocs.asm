@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procParseUInt16:
+proc procParseUInt16
    locals
    ; Išskiria iš buferio, kurio adresas DX'e sveiką skaičių int16 tipo
    ; Rezultatas patalpinamas AX'e. BX'e - adresas, kur buvo sustota (pvz. tarpas)  
@@ -62,8 +62,10 @@ procParseUInt16:
    pop cx
    pop dx
    ret
+procParseUInt16 endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procParseInt16:
+proc procParseInt16
    locals
    ; Išskiria iš buferio, kurio adresas DX'e sveiką skaičių int16 tipo
    ; Rezultatas patalpinamas AX'e. BX'e - adresas, kur buvo sustota (pvz. taepas)  
@@ -131,10 +133,11 @@ procParseInt16:
    pop cx
    pop dx
    ret
+procParseInt16 endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procInt16ToStr:
+proc procInt16ToStr
    locals
    ; Konvertuoja reikšmę iš AX į ASCIIZ eilutę (10-nėje sistemoje)
    ; AX - int16 (nuo -32768 iki 32767), kurį reikia konvertuoti; 
@@ -208,9 +211,10 @@ procInt16ToStr:
   pop si
   pop di
   ret
+procInt16ToStr endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procUInt16ToStr:
+proc procUInt16ToStr
     locals
    ; Konvertuoja reikšmę iš AX į ASCIIZ eilutę (10-nėje sistemoje)
    ; AX - int16 (nuo -32768 iki 32767), kurį reikia konvertuoti; 
@@ -277,9 +281,10 @@ procUInt16ToStr:
   pop si
   pop di
   ret
+procUInt16ToStr endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-procGetStr:
+proc procGetStr
     locals
    ; skaito  eilutę iš klaviatūros ir padaro ją ASCIIZ
    ; įvestis:  dx - buferio adresas; al - ilgiausios galimos sekos ilgis; 
@@ -306,10 +311,11 @@ procGetStr:
    pop cx
    pop bx
    ret
+procGetStr endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procGetInt16:
-    locals
+proc procGetInt16
+   locals
    ; skaito  sveiką skaičių  iš klaviatūros ir gražina jį AX'e (nuo -32768 iki 32767)
    jmp @@kodas
  @@buferis:
@@ -318,7 +324,7 @@ procGetInt16:
    push bx
    push cx
    push dx
-   mov dx, offset @@buferis 
+   mov dx, offset @@buferis
    mov al, 10
    call procGetStr
    call procParseInt16  
@@ -326,9 +332,9 @@ procGetInt16:
    pop cx
    pop bx
    ret
-
+procGetInt16 endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procGetUInt16:
+proc procGetUInt16
     locals
    ; skaito beženklį sveiką skaičių  iš klaviatūros ir gražina jį AX'e (nuo 0 iki 65535)
    jmp @@kodas
@@ -346,10 +352,9 @@ procGetUInt16:
    pop cx
    pop bx
    ret
-
-
+procGetUInt16 endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procPutStr:
+proc procPutStr
     locals
    ; spausdina asciiz eilutę į stdout 
    ; DX - asciiz eilutė;
@@ -371,9 +376,10 @@ procPutStr:
       pop dx
       pop bx
       ret
+procPutStr endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procPutInt16:
+proc procPutInt16
     locals
    ; spausdina int16 ant ekrano
    ; input:  ax - sveikas skaičius (nuo -32768 iki 32767)
@@ -392,9 +398,10 @@ procPutInt16:
    pop dx
    pop bx
    ret
+procPutInt16 endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procPutUInt16:
+proc procPutUInt16
     locals
    ; spausdina int16 ant ekrano
    ; input:  ax - beženklis sveikas skaičius (nuo 0 iki 65535)
@@ -413,10 +420,10 @@ procPutUInt16:
    pop dx
    pop bx
    ret
-
+procPutUInt16 endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procNewLine:
+proc procNewLine
     locals
    ; prints \n 
    jmp @@begin
@@ -432,9 +439,10 @@ procNewLine:
    pop ax
    pop dx
    ret 
+procNewLine endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procPutHexWord:
+proc procPutHexWord
     locals
 ; Spausdina 16-tainį žodį, kuris paduodamas AX'e
 ;
@@ -480,9 +488,10 @@ procPutHexWord:
    pop ax
    pop dx
    ret 
+procPutHexWord endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procPutHexByte:
+proc procPutHexByte
     locals
 ; Spausdina 16-tainį baitą, kuris paduodamas AL'e
 ;
@@ -528,15 +537,14 @@ procPutHexByte:
    pop ax
    pop dx
    ret 
-
+procPutHexByte endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;   Paprasta grafika
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-procSetGraphicsMode:
+proc procSetGraphicsMode
     locals
 ; Nustato grafinį režimą, 320x200x256
    push ax 
@@ -545,8 +553,9 @@ procSetGraphicsMode:
    int 10h
    pop ax
    ret
+procSetGraphicsMode endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procSetTextMode:
+proc procSetTextMode
     locals
 ; Nustato tekstinį režimą, 80x25
    push ax 
@@ -555,8 +564,9 @@ procSetTextMode:
    int 10h
    pop ax
    ret
+procSetTextMode endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-procPutPixel:
+proc procPutPixel
     locals
 ;  deda nurodytos spalvos pikselį nurodytoje vietoje
 ;  cl - color
@@ -582,6 +592,39 @@ procPutPixel:
    pop cx
    pop ax
    ret
+procPutPixel endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; misc
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+procPrintByteBin proc near
+       ; Procedura spausdina baito (AL) dvejetaini koda
+       ; Jokiu registru "negadina"
+       ; Saugome naudojamus registrus steke
+	   push        dx
+       push        ax
+       push        cx
+       push        bx 
+	   ; CX - bus ciklas pagal visus 8 baito bitus
+       mov         cx, 0008
+       mov dh,     al                                   ; issaugome al
+       mov bl,     10000000b                            ; bl - kauke (filtras) reikalingam bitui atrinkti
 
-
+       @@ciklas_pagal_cx_nuo_8:
+       mov dl,     dh
+       and dl,     bl                                   ; registre dl dabar liko vienas dominantis mus reiksmingas bitas 
+       dec cl                                           ; paruosiame cl kitai operacijai
+       shr dl,     cl                                   ; musu dominantis registro dl  bitas tapo jauniaisias
+       shr bl,     1                                    ; pakeiciame bl, kad kita karta jis atrinktu kita bita is dl
+       inc cl                                           ; atstatome cl  
+       add dl,     '0'                                  ; dabar dl bus arba '0' arba '1' - nulio ir vieneto ascii kodai 
+       mov ah,     02                                   ; naudosime antra funkcija - simbolio spausdinimas ant ekrano
+       int 21h                                          ; DOS funkcija 
+       loop  @@ciklas_pagal_cx_nuo_8                    ; kartojame kol CX>0
+       
+	   ; Atstatome registrus:
+       pop bx
+       pop cx
+       pop ax
+       pop dx                
+       ret
+procPrintByteBin endp
