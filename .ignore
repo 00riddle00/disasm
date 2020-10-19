@@ -1,4 +1,11 @@
-*.OBJ
-*.EXE
+/log/
+/tmp/
 *.COM
+*.EXE
+*.MAP
+*.OBJ
 *.TD
+*.bak
+*.log
+*.old
+*.tags*
