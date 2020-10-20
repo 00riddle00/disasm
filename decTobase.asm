@@ -29,10 +29,10 @@ jumps
 ;  CONSTANTS
 ; ============================================================
 
-MAX_INPUT_LEN = 6 ; 5 + <CR>
-MAX_BASE_LEN = 3  ; 2 + <CR>
-MAX_UNARY_NUM = 1000 ; limit the size of the number to be 
-                     ; converted to unary number system
+MAX_INPUT_LEN = 6     ; 5 + <CR>
+MAX_BASE_LEN = 3      ; 2 + <CR>
+MAX_UNARY_NUM = 1000  ; limit the size of the number to be 
+                      ; converted to unary number system
 
 ; ============================================================
 ;  DATA
@@ -50,8 +50,8 @@ MAX_UNARY_NUM = 1000 ; limit the size of the number to be
     size_to_base       db ?
     number_to_base     db MAX_BASE_LEN dup (?)
 
-    base10_multiplier  dw 000Ah ; =10
-    spacing            dw 0004  ; separate 4 digits by space (ex. 'A010 F010')
+    base10_multiplier  dw 000Ah  ; =10
+    spacing            dw 0004   ; separate 4 digits by space (ex. 'A010 F010')
 
     sep1               db '=============================================================================$'
     sep2               db '-----------------------------------------------------------------------------$'
@@ -70,17 +70,17 @@ MAX_UNARY_NUM = 1000 ; limit the size of the number to be
 ; and saves the numeric value in one word
 ;
 ; arguments need to be put in stack before call (in that order):
-;    params[0]: ptr to str (source) (must have a '$' char at the end)
-;    params[1]: ptr to int (destination)
+;     params[0]: ptr to str (source) (must have a '$' char at the end)
+;     params[1]: ptr to int (destination)
 ;
 ; a user has to handle these error labels:
-;    err_nan
-;    err_num_max
+;     err_nan
+;     err_num_max
 ; including cleaning the stack after error occurs
 proc store_number_in_word
     ; preparing the stack
-    push bp      ; std procedure when proc arguments are 
-    mov bp, sp   ; already put in the stack before call
+    push bp                      ; std procedure when proc arguments are 
+    mov bp, sp                   ; already put in the stack before call
     ; reading arguments
     mov si, [bp+6]
     mov di, [bp+4]
@@ -107,13 +107,13 @@ proc store_number_in_word
         jmp short read_chr
 
     end_of_input:
-        xchg ax, bx         ; put the result back in ax
-        stosw               ; saugome AX'o skaiciu zodyje adresu es:[di]
+        xchg ax, bx              ; put the result back in ax
+        stosw                    ; saugome AX'o skaiciu zodyje adresu es:[di]
     
     ; clear the stack
         pop bp
     ; return
-        ret 4  ; pop function arguments (2 words)
+        ret 4                    ; pop function arguments (2 words)
 
     e1_err_nan:
         call err_nan
@@ -124,9 +124,9 @@ endp
 ; ------------------------------------------------/
 
 start:
-    mov ax, @data                   ; perkelti data i registra ax
-    mov ds, ax                      ; perkelti ax (data) i data segmenta
-    mov es, ax                      ; perkelti ax (data) i data segmenta
+    mov ax, @data                  ; perkelti data i registra ax
+    mov ds, ax                     ; perkelti ax (data) i data segmenta
+    mov es, ax                     ; perkelti ax (data) i data segmenta
 
     ; isvesti programos aprasa
     m_println sep1
@@ -139,22 +139,23 @@ prompt1:
     m_puts '> '
 
     ; skaityti eilute
-    mov dx, offset capacity_input      ; skaityti i buferio offseta 
-    mov ah, 0Ah                        ; eilutes skaitymo subprograma
-    int 21h                            ; dos'o interuptas
+    mov dx, offset capacity_input  ; skaityti i buferio offseta 
+    mov ah, 0Ah                    ; eilutes skaitymo subprograma
+    int 21h                        ; dos'o interuptas
 
-    m_print_nl                         ; cia reikia print newline, nes paskutinis char isvedime buvo
-                                       ; <CR>, kuris grazina BIOS kursoriu atgal i eilutes pradzia, ir kadangi 
-                                       ; po jo nera <LF>, kursorius nepasislenka viena eilute zemyn. Taigi sekantis
-                                       ; outputas uzrasys ant virsaus eilutes pradzioje, panaikindamas senaji output'a
+    m_print_nl                     ; cia reikia print newline, nes paskutinis char isvedime buvo
+                                   ; <CR>, kuris grazina BIOS kursoriu atgal i eilutes pradzia, ir kadangi 
+                                   ; po jo nera <LF>, kursorius nepasislenka viena eilute zemyn. Taigi sekantis
+                                   ; outputas uzrasys ant virsaus eilutes pradzioje, panaikindamas senaji output'a
 
     ; ivesties ilgis
     xor bx, bx
-    mov bl, size_input              ; idedam i bl kiek simboliu is viso
-    cmp bl, 0                       ; ivesties ilgio validacija
+    mov bl, size_input             ; idedam i bl kiek simboliu is viso
+    cmp bl, 0                      ; ivesties ilgio validacija
     je err_no_input
 
-    mov byte ptr [number_input+bx], '$'   ; write '$' instead of 'CR' symbol
+    ; write '$' instead of 'CR' symbol
+    mov byte ptr [number_input+bx], '$'
 
     ; passing arguments to the procedure
     mov bp, sp
@@ -170,20 +171,21 @@ prompt2:
     m_puts '> $'
 
     ; skaityti eilute
-    mov dx, offset capacity_to_base    ; skaityti i buferio offseta 
-    mov ah, 0Ah                        ; eilutes skaitymo subprograma
-    int 21h                            ; dos'o INTeruptas
+    mov dx, offset capacity_to_base  ; skaityti i buferio offseta 
+    mov ah, 0Ah                      ; eilutes skaitymo subprograma
+    int 21h                          ; dos'o INTeruptas
     m_print_nl
 
     ; ivesties ilgis
     xor bx, bx
-    mov bl, size_to_base            ; idedam i bl kiek simboliu is viso
-    cmp bl, 0                       ; ivesties ilgio validacija
+    mov bl, size_to_base             ; idedam i bl kiek simboliu is viso
+    cmp bl, 0                        ; ivesties ilgio validacija
     je err_no_input
 
     m_println sep2
 
-    mov byte ptr [number_to_base+bx], '$' ; write '$' instead of 'CR' symbol
+    ; write '$' instead of 'CR' symbol
+    mov byte ptr [number_to_base+bx], '$'  
 
     ; passing arguments to the procedure
     mov bp, sp
@@ -210,21 +212,21 @@ unary_conversion:
     cmp [op_input], MAX_UNARY_NUM
     ja err_unary_max
 
-    mov cx, [op_input]  ; how many '1's to print
-    inc cx ; plus additional '1' to mark zero
+    mov cx, [op_input]           ; how many '1's to print
+    inc cx                       ; plus additional '1' to mark zero
     mov ah, 2
 print_one:
     mov dl, '1'
     mov al, cl
     div byte ptr spacing
-    cmp ah, 0              ; check if space needs to be printed (test if mod(cx,spacing) == 0)
+    cmp ah, 0                    ; check if space needs to be printed (test if mod(cx,spacing) == 0)
     je short print_space
     mov ah, 2
     int 21h
     loop print_one
     jmp exit_program
-print_one_no_space:        ; this extra block is needed so that CX gets
-    m_putchar '1'          ; decremented if space was the previous character
+print_one_no_space:              ; this extra block is needed so that CX gets
+    m_putchar '1'                ; decremented if space was the previous character
     loop print_one
     jmp exit_program
 print_space:
@@ -236,33 +238,33 @@ jmp short exit_program
 conversion:
     inc cl
     
-    xor dx, dx          ; isvalyti dx, nes cia bus liekana po div
-    div bx              ; div ax/bx, ir liekana padedama dx
-    push dx             ; padeti skaitmeni
+    xor dx, dx                   ; isvalyti dx, nes cia bus liekana po div
+    div bx                       ; div ax/bx, ir liekana padedama dx
+    push dx                      ; padeti skaitmeni
     
-    cmp ax, 0           ; jei jau skaicius isdalintas
-    jz short  converted     ; tai eiti i pabaiga
+    cmp ax, 0                    ; jei jau skaicius isdalintas
+    jz short  converted          ; tai eiti i pabaiga
 
     xchg ax, dx
     mov al, cl
     div byte ptr spacing
-    cmp ah, 0              ; check if space needs to be pushed to stack (test if mod(cx,spacing) == 0)
+    cmp ah, 0                    ; check if space needs to be pushed to stack (test if mod(cx,spacing) == 0)
     jne short convert
 
-    push 99                ; let 99 here mean 'space'
-    jmp short convert      ; kitu atveju imti kita skaitmeni
+    push 99                      ; let 99 here mean 'space'
+    jmp short convert            ; kitu atveju imti kita skaitmeni
 
-convert:                   ; this extra block is used to put the remainder
-    xchg ax, dx            ; back to AX before next iteration 
+convert:                         ; this extra block is used to put the remainder
+    xchg ax, dx                  ; back to AX before next iteration 
     jmp short conversion
 
 converted:
     m_puts 'Rezultatas: '
 
 print_result:
-    mov ah, 2            ; atspausdinti skaitmenis
+    mov ah, 2                    ; atspausdinti skaitmenis
     pop dx
-    cmp dx, 99           ; in case of 'space'
+    cmp dx, 99                   ; in case of 'space'
     je short process_space
 
     cmp dx, 10
