@@ -39,8 +39,8 @@ MAX_UNARY_NUM = 1000 ; limit the size of the number to be
 ; ============================================================
 
 .data
-    op_input	       dw 0
-    op_to_base	       dw 0
+    op_input           dw 0
+    op_to_base         dw 0
 
     capacity_input     db MAX_INPUT_LEN
     size_input         db ?
@@ -90,8 +90,8 @@ proc store_number_in_word
     xor bx, bx
 
     read_chr:
-        xchg ax, bx         ; store current number in bx
-        lodsb               ; put current digit symbol from ds:[si] to al
+        xchg ax, bx              ; store current number in bx
+        lodsb                    ; put current digit symbol from ds:[si] to al
         cmp al, '$'
         je short end_of_input
         sub al, '0'
@@ -108,7 +108,7 @@ proc store_number_in_word
 
     end_of_input:
         xchg ax, bx         ; put the result back in ax
-        stosw				; saugome AX'o skaiciu zodyje adresu es:[di]
+        stosw               ; saugome AX'o skaiciu zodyje adresu es:[di]
     
     ; clear the stack
         pop bp
@@ -234,14 +234,14 @@ print_space:
 jmp short exit_program
 
 conversion:
-	inc	cl
-	
-	xor	dx, dx		    ; isvalyti dx, nes cia bus liekana po div
-	div	bx              ; div ax/bx, ir liekana padedama dx
-	push dx		        ; padeti skaitmeni
-	
-	cmp	ax, 0		    ; jei jau skaicius isdalintas
-    jz short  converted  	; tai eiti i pabaiga
+    inc cl
+    
+    xor dx, dx          ; isvalyti dx, nes cia bus liekana po div
+    div bx              ; div ax/bx, ir liekana padedama dx
+    push dx             ; padeti skaitmeni
+    
+    cmp ax, 0           ; jei jau skaicius isdalintas
+    jz short  converted     ; tai eiti i pabaiga
 
     xchg ax, dx
     mov al, cl
@@ -260,8 +260,8 @@ converted:
     m_puts 'Rezultatas: '
 
 print_result:
-    mov	ah, 2            ; atspausdinti skaitmenis
-    pop	dx
+    mov ah, 2            ; atspausdinti skaitmenis
+    pop dx
     cmp dx, 99           ; in case of 'space'
     je short process_space
 
@@ -272,16 +272,16 @@ print_result:
 
     process_lowercase:
         sub dx, 35
-        add	dx, 60h
+        add dx, 60h
         jmp short print_symbol
 
     process_uppercase:
-        sub	dx, 9
+        sub dx, 9
         add dx, 40h
         jmp short print_symbol
 
     process_number:
-        add	dx, '0'
+        add dx, '0'
         jmp short print_symbol
 
     process_space:
@@ -290,8 +290,8 @@ print_result:
         jmp short print_symbol
 
     print_symbol:
-        int	21h
-        dec	cl
+        int 21h
+        dec cl
         jnz print_result
 
 exit_program:
