@@ -8,30 +8,16 @@ C_BUFFSIZE = 255
 ; =================================
 
 ; ---------------------
-;  stack
-; ---------------------
-
-m_push_axdx macro
-    push ax
-    push dx
-endm
-
-m_pop_dxax macro
-    pop dx
-    pop ax
-endm
-
-; ---------------------
 ;  user input
 ; ---------------------
 
 ; get string from user
 m_gets macro buffer
-   m_push_axdx
+   push ax dx
    mov ah, 0Ah 
    mov dx, offset buffer
    int 21h
-   m_pop_dxax
+   pop dx ax
 endm
 
 ; ---------------------
@@ -58,22 +44,22 @@ endm
 
 ; print string
 m_print macro string               
-    m_push_axdx
+    push ax dx
     mov ah, 09                      
     mov dx, offset string
     int 21h
-    m_pop_dxax
+    pop dx ax
 endm
 
 ; print newline
 m_print_nl macro
-    m_push_axdx
+    push ax dx
     mov ah, 02
     mov dl, 13
     int 21h
     mov dl, 10
     int 21h
-    m_pop_dxax
+    pop dx ax
 endm
 
 ; print string with newline
@@ -85,7 +71,7 @@ endm
 ; print string (immediate): ex. m_puts "hello!"
 m_puts macro string
 local @@start, @@data
-      m_push_axdx
+      push ax dx
       push ds
       jmp short @@start     ; string is being stored
 @@data db string,'$'   ; in the code segment
@@ -96,7 +82,7 @@ local @@start, @@data
       lea  dx, [@@data]
       int  21h
       pop  ds          ;restore registers
-      m_pop_dxax
+      pop dx ax
 endm 
 
 ; print immediate string with newline
@@ -107,20 +93,20 @@ endm
 
 ; print char
 m_putchar macro char
-   m_push_axdx
+   push ax dx
    mov dl, char
    mov ah, 02
    int 21h
-   m_pop_dxax
+   pop dx ax
 endm
 
 m_putdigit macro digit
-   m_push_axdx
+   push ax dx
    mov dl, digit               
    add dl, '0'                 
    mov ah, 02                  
    int 21h
-   m_pop_dxax
+   pop dx ax
 endm
 
 m_putspace macro
