@@ -212,6 +212,7 @@ unary_conversion:
     cmp [op_input], MAX_UNARY_NUM
     ja err_unary_max
 
+    m_puts 'Rezultatas: '
     mov cx, [op_input]           ; how many '1's to print
     inc cx                       ; plus additional '1' to mark zero
     mov ah, 2
@@ -243,7 +244,7 @@ conversion:
     push dx                      ; padeti skaitmeni
     
     cmp ax, 0                    ; jei jau skaicius isdalintas
-    jz short  converted          ; tai eiti i pabaiga
+    jz short converted           ; tai eiti i pabaiga
 
     xchg ax, dx
     mov al, cl
