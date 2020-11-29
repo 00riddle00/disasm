@@ -85,6 +85,33 @@ proc store_number_in_word
     mov si, [bp+6]
     mov di, [bp+4]
 
+    ; stack before "push bp"
+    ;                 ________________
+    ;           bp -> |______________|
+    ;                 |_number_input_|
+    ;                 |___op_input___|
+    ;           sp -> |__return_addr_|
+    ;                 |______________|
+    ;                 |              |
+    ;
+    ; stack after "push bp"
+    ;                 ________________
+    ; bp -> old bp -> |______________|
+    ;                 |_number_input_|
+    ;                 |___op_input___|
+    ;                 |__return_addr_|
+    ;           sp -> |___old_bp_____|
+    ;                 |              |
+    ;
+    ; stack after "mov bp, sp"
+    ;
+    ;       old bp -> |______________|
+    ;                 |_number_input_| <- bp + 6
+    ;                 |___op_input___| <- bp + 4
+    ;                 |__return_addr_|
+    ;     bp -> sp -> |___old_bp_____|
+    ;                 |              |
+
     ; procedure body
     xor ax, ax  
     xor bx, bx
@@ -110,10 +137,21 @@ proc store_number_in_word
         xchg ax, bx              ; put the result back in ax
         stosw                    ; saugome AX'o skaiciu zodyje adresu es:[di]
     
-    ; clear the stack
+        ; clear the stack
         pop bp
-    ; return
-        ret 4                    ; pop function arguments (2 words)
+
+        ; stack after "pop bp"
+        ;                 ________________
+        ; bp -> old bp -> |______________|
+        ;                 |_number_input_| 
+        ;                 |___op_input___| 
+        ;           sp -> |__return_addr_|
+        ;                 |              |
+
+        ; return
+        ret 4                    ; pop return address (set IP to it) and 
+                                 ; pop both function arguments (2 words = 4 bytes) as well
+                                 ; (Fortran/Pascal style calling convention)
 
     e1_err_nan:
         call err_nan
@@ -158,11 +196,38 @@ prompt1:
     mov byte ptr [number_input+bx], '$'
 
     ; passing arguments to the procedure
+    ; first argument is passed first to the stack 
+    ; (Fortran/Pascal style calling convention)
     mov bp, sp
     push offset number_input
     push offset op_input
 
-    call store_number_in_word
+    ; stack after "mov bp, sp"
+    ;             ________________
+    ; bp -> sp -> |______________|
+    ;             |              |
+    ;
+    ; stack after arguments are pushed
+    ;             ________________
+    ;       bp -> |______________|
+    ;             |_number_input_|
+    ;       sp -> |___op_input___|
+    ;             |______________|
+    ;             |______________|
+    ;             |              |
+
+    call store_number_in_word       ; the called function will pop the arguments
+                                    ; passed to it on return. 
+                                    ; (Fortran/Pascal style calling convention)
+                                    ; Otherwise, the calling procedure should
+                                    ;
+                                    ; increase stack pointer neccesary number of
+                                    ; bytes after a call (C style calling convention)
+     
+    ; stack after the procedure has returned
+    ;             ________________
+    ; bp -> sp -> |______________|
+    ;             |              |
 
 prompt2:
     ; Isvesti uzklausa nr.2
