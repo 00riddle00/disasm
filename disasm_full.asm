@@ -80,7 +80,9 @@ start:
 
     ; isvesti programos aprasa
     m_println sep1
-    m_putsln 'DISASM'
+    m_puts   '                                   '
+    m_puts   'DISASM'
+    m_putsln '                                   '
     m_println sep1
 
     xor ax, ax
@@ -90,25 +92,28 @@ _xxx:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 0FFh
-    je exit_program
+    je short exit_program
 
     cmp al, 3
     je _3xx
-    ja undefined
+    ja short undefined
 
     cmp al, 1
-    jb _0xx
+    jb short _0xx
     je _1xx
     jmp _2xx
 
     inc si
-    jmp _xxx
+    jmp short _xxx
 ; -----------------------------------------------------------/
 
 undefined:
     m_putsln 'UNDEFINED'
     inc si
-    jmp _xxx
+    jmp short _xxx
+
+exit_program:
+    m_exit0
 
 ; ============================================================
 ;  _0XX
@@ -119,22 +124,22 @@ _0xx:
 
     cmp al, 7
     je _07x
-    ja undefined
+    ja short undefined
 
     cmp al, 3
-    jb  __0_012_x
+    jb short  __0_012_x
     je  _03x
     jmp __0_456_x
 
     __0_012_x:
         cmp al, 1
-        jb  _00x
+        jb short  _00x
         je  _01x
         jmp _02x
 
     __0_456_x:
         cmp al, 5
-        jb  _04x
+        jb _04x
         je  _05x
         jmp _06x
 
@@ -150,19 +155,19 @@ _00x:
     ja undefined
 
     cmp al, 3
-    jb  __00_012
+    jb short  __00_012
     je  _003
     jmp __00_456
 
     __00_012:
         cmp al, 1
-        jb  _000
+        jb short  _000
         je  _001
         jmp _002
 
     __00_456:
         cmp al, 5
-        jb  _004
+        jb _004
         je  _005
         jmp _006
 
@@ -226,19 +231,19 @@ _01x:
     ja undefined
 
     cmp al, 3
-    jb  __01_012
+    jb short  __01_012
     je  _013
     jmp __01_456
 
     __01_012:
         cmp al, 1
-        jb  _010
+        jb short  _010
         je  _011
         jmp _012
 
     __01_456:
         cmp al, 5
-        jb  _014
+        jb _014
         je  _015
         jmp _016
 
@@ -302,19 +307,19 @@ _02x:
     ja undefined
 
     cmp al, 3
-    jb  __02_012
+    jb short  __02_012
     je  _023
     jmp __02_456
 
     __02_012:
         cmp al, 1
-        jb  _020
+        jb short  _020
         je  _021
         jmp _022
 
     __02_456:
         cmp al, 5
-        jb  _024
+        jb _024
         je  _025
         jmp _026
 
@@ -379,19 +384,19 @@ _03x:
     ja undefined
 
     cmp al, 3
-    jb  __03_012
+    jb short  __03_012
     je  _033
     jmp __03_456
 
     __03_012:
         cmp al, 1
-        jb  _030
+        jb short  _030
         je  _031
         jmp _032
 
     __03_456:
         cmp al, 5
-        jb  _034
+        jb _034
         je  _035
         jmp _036
 
@@ -455,19 +460,19 @@ _04x:
     ja undefined
 
     cmp al, 3
-    jb  __04_012
+    jb short  __04_012
     je  _043
     jmp __04_456
 
     __04_012:
         cmp al, 1
-        jb  _040
+        jb short  _040
         je  _041
         jmp _042
 
     __04_456:
         cmp al, 5
-        jb  _044
+        jb _044
         je  _045
         jmp _046
 
@@ -531,19 +536,19 @@ _05x:
     ja undefined
 
     cmp al, 3
-    jb  __05_012
+    jb short  __05_012
     je  _053
     jmp __05_456
 
     __05_012:
         cmp al, 1
-        jb  _050
+        jb short  _050
         je  _051
         jmp _052
 
     __05_456:
         cmp al, 5
-        jb  _054
+        jb _054
         je  _055
         jmp _056
 
@@ -608,19 +613,19 @@ _06x:
     ja undefined
 
     cmp al, 3
-    jb  __06_012
+    jb short  __06_012
     je  _063
     jmp __06_456
 
     __06_012:
         cmp al, 1
-        jb  _060
+        jb short  _060
         je  _061
         jmp _062
 
     __06_456:
         cmp al, 5
-        jb  _064
+        jb _064
         je  _065
         jmp _066
 
@@ -684,19 +689,19 @@ _07x:
     ja undefined
 
     cmp al, 3
-    jb  __07_012
+    jb short  __07_012
     je  _073
     jmp __07_456
 
     __07_012:
         cmp al, 1
-        jb  _070
+        jb short  _070
         je  _071
         jmp _072
 
     __07_456:
         cmp al, 5
-        jb  _074
+        jb _074
         je  _075
         jmp _076
 
@@ -761,19 +766,19 @@ _1xx:
     ja undefined
 
     cmp al, 3
-    jb  __1_112_x
+    jb short  __1_112_x
     je  _13x
     jmp __1_456_x
 
     __1_112_x:
         cmp al, 1
-        jb  _10x
+        jb short  _10x
         je  _11x
         jmp _12x
 
     __1_456_x:
         cmp al, 5
-        jb  _14x
+        jb _14x
         je  _15x
         jmp _16x
 
@@ -789,19 +794,19 @@ _10x:
     ja undefined
 
     cmp al, 3
-    jb  __10_112
+    jb short  __10_112
     je  _103
     jmp __10_456
 
     __10_112:
         cmp al, 1
-        jb  _100
+        jb short  _100
         je  _101
         jmp _102
 
     __10_456:
         cmp al, 5
-        jb  _104
+        jb _104
         je  _105
         jmp _106
 
@@ -865,19 +870,19 @@ _11x:
     ja undefined
 
     cmp al, 3
-    jb  __11_112
+    jb short  __11_112
     je  _113
     jmp __11_456
 
     __11_112:
         cmp al, 1
-        jb  _110
+        jb short  _110
         je  _111
         jmp _112
 
     __11_456:
         cmp al, 5
-        jb  _114
+        jb _114
         je  _115
         jmp _116
 
@@ -941,19 +946,19 @@ _12x:
     ja undefined
 
     cmp al, 3
-    jb  __12_112
+    jb short  __12_112
     je  _123
     jmp __12_456
 
     __12_112:
         cmp al, 1
-        jb  _120
+        jb short  _120
         je  _121
         jmp _122
 
     __12_456:
         cmp al, 5
-        jb  _124
+        jb _124
         je  _125
         jmp _126
 
@@ -1018,19 +1023,19 @@ _13x:
     ja undefined
 
     cmp al, 3
-    jb  __13_112
+    jb short  __13_112
     je  _133
     jmp __13_456
 
     __13_112:
         cmp al, 1
-        jb  _130
+        jb short  _130
         je  _131
         jmp _132
 
     __13_456:
         cmp al, 5
-        jb  _134
+        jb _134
         je  _135
         jmp _136
 
@@ -1094,19 +1099,19 @@ _14x:
     ja undefined
 
     cmp al, 3
-    jb  __14_112
+    jb short  __14_112
     je  _143
     jmp __14_456
 
     __14_112:
         cmp al, 1
-        jb  _140
+        jb short  _140
         je  _141
         jmp _142
 
     __14_456:
         cmp al, 5
-        jb  _144
+        jb _144
         je  _145
         jmp _146
 
@@ -1170,19 +1175,19 @@ _15x:
     ja undefined
 
     cmp al, 3
-    jb  __15_112
+    jb short  __15_112
     je  _153
     jmp __15_456
 
     __15_112:
         cmp al, 1
-        jb  _150
+        jb short  _150
         je  _151
         jmp _152
 
     __15_456:
         cmp al, 5
-        jb  _154
+        jb _154
         je  _155
         jmp _156
 
@@ -1247,19 +1252,19 @@ _16x:
     ja undefined
 
     cmp al, 3
-    jb  __16_112
+    jb short  __16_112
     je  _163
     jmp __16_456
 
     __16_112:
         cmp al, 1
-        jb  _160
+        jb short  _160
         je  _161
         jmp _162
 
     __16_456:
         cmp al, 5
-        jb  _164
+        jb _164
         je  _165
         jmp _166
 
@@ -1323,19 +1328,19 @@ _17x:
     ja undefined
 
     cmp al, 3
-    jb  __17_112
+    jb short  __17_112
     je  _173
     jmp __17_456
 
     __17_112:
         cmp al, 1
-        jb  _170
+        jb short  _170
         je  _171
         jmp _172
 
     __17_456:
         cmp al, 5
-        jb  _174
+        jb _174
         je  _175
         jmp _176
 
@@ -1399,19 +1404,19 @@ _2xx:
     ja undefined
 
     cmp al, 3
-    jb  __2_012_x
+    jb short  __2_012_x
     je  _23x
     jmp __2_456_x
 
     __2_012_x:
         cmp al, 1
-        jb  _20x
+        jb short  _20x
         je  _21x
         jmp _22x
 
     __2_456_x:
         cmp al, 5
-        jb  _24x
+        jb _24x
         je  _25x
         jmp _26x_mov_reg_imm_byte
 
@@ -1427,19 +1432,19 @@ _20x:
     ja undefined
 
     cmp al, 3
-    jb  __20_012
+    jb short  __20_012
     je  _203
     jmp __20_456
 
     __20_012:
         cmp al, 1
-        jb  _200
+        jb short  _200
         je  _201
         jmp _202
 
     __20_456:
         cmp al, 5
-        jb  _204
+        jb _204
         je  _205
         jmp _206
 
@@ -1504,19 +1509,19 @@ _21x:
     ja undefined
 
     cmp al, 3
-    jb  __21_012
+    jb short  __21_012
     je  _213
     jmp __21_456
 
     __21_012:
         cmp al, 1
-        jb  _210
+        jb short  _210
         je  _211
         jmp _212
 
     __21_456:
         cmp al, 5
-        jb  _214
+        jb _214
         je  _215
         jmp _216
 
@@ -1580,19 +1585,19 @@ _22x:
     ja undefined
 
     cmp al, 3
-    jb  __22_012
+    jb short  __22_012
     je  _223
     jmp __22_456
 
     __22_012:
         cmp al, 1
-        jb  _220
+        jb short  _220
         je  _221
         jmp _222
 
     __22_456:
         cmp al, 5
-        jb  _224
+        jb _224
         je  _225
         jmp _226
 
@@ -1656,19 +1661,19 @@ _23x:
     ja undefined
 
     cmp al, 3
-    jb  __23_012
+    jb short  __23_012
     je  _233
     jmp __23_456
 
     __23_012:
         cmp al, 1
-        jb  _230
+        jb short  _230
         je  _231
         jmp _232
 
     __23_456:
         cmp al, 5
-        jb  _234
+        jb _234
         je  _235
         jmp _236
 
@@ -1733,19 +1738,19 @@ _24x:
     ja undefined
 
     cmp al, 3
-    jb  __24_012
+    jb short  __24_012
     je  _243
     jmp __24_456
 
     __24_012:
         cmp al, 1
-        jb  _240
+        jb short  _240
         je  _241
         jmp _242
 
     __24_456:
         cmp al, 5
-        jb  _244
+        jb _244
         je  _245
         jmp _246
 
@@ -1810,19 +1815,19 @@ _25x:
     ja undefined
 
     cmp al, 3
-    jb  __25_012
+    jb short  __25_012
     je  _253
     jmp __25_456
 
     __25_012:
         cmp al, 1
-        jb  _250
+        jb short  _250
         je  _251
         jmp _252
 
     __25_456:
         cmp al, 5
-        jb  _254
+        jb _254
         je  _255
         jmp _256
 
@@ -2013,19 +2018,19 @@ _3xx:
     ja undefined
 
     cmp al, 3
-    jb  __3_312_x
+    jb short  __3_312_x
     je  _33x
     jmp __3_456_x
 
     __3_312_x:
         cmp al, 1
-        jb  _30x
+        jb short  _30x
         je  _31x
         jmp _32x
 
     __3_456_x:
         cmp al, 5
-        jb  _34x
+        jb _34x
         je  _35x
         jmp _36x
 
@@ -2041,19 +2046,19 @@ _30x:
     ja undefined
 
     cmp al, 3
-    jb  __30_312
+    jb short  __30_312
     je  _303
     jmp __30_456
 
     __30_312:
         cmp al, 1
-        jb  _300
+        jb short  _300
         je  _301
         jmp _302
 
     __30_456:
         cmp al, 5
-        jb  _304
+        jb _304
         je  _305
         jmp _306
 
@@ -2117,19 +2122,19 @@ _31x:
     ja undefined
 
     cmp al, 3
-    jb  __31_312
+    jb short  __31_312
     je  _313
     jmp __31_456
 
     __31_312:
         cmp al, 1
-        jb  _310
+        jb short  _310
         je  _311
         jmp _312
 
     __31_456:
         cmp al, 5
-        jb  _314
+        jb _314
         je  _315
         jmp _316
 
@@ -2193,19 +2198,19 @@ _32x:
     ja undefined
 
     cmp al, 3
-    jb  __32_312
+    jb short  __32_312
     je  _323
     jmp __32_456
 
     __32_312:
         cmp al, 1
-        jb  _320
+        jb short  _320
         je  _321
         jmp _322
 
     __32_456:
         cmp al, 5
-        jb  _324
+        jb _324
         je  _325
         jmp _326
 
@@ -2270,19 +2275,19 @@ _33x:
     ja undefined
 
     cmp al, 3
-    jb  __33_312
+    jb short  __33_312
     je  _333
     jmp __33_456
 
     __33_312:
         cmp al, 1
-        jb  _330
+        jb short  _330
         je  _331
         jmp _332
 
     __33_456:
         cmp al, 5
-        jb  _334
+        jb _334
         je  _335
         jmp _336
 
@@ -2346,19 +2351,19 @@ _34x:
     ja undefined
 
     cmp al, 3
-    jb  __34_312
+    jb short  __34_312
     je  _343
     jmp __34_456
 
     __34_312:
         cmp al, 1
-        jb  _340
+        jb short  _340
         je  _341
         jmp _342
 
     __34_456:
         cmp al, 5
-        jb  _344
+        jb _344
         je  _345
         jmp _346
 
@@ -2422,19 +2427,19 @@ _35x:
     ja undefined
 
     cmp al, 3
-    jb  __35_312
+    jb short  __35_312
     je  _353
     jmp __35_456
 
     __35_312:
         cmp al, 1
-        jb  _350
+        jb short  _350
         je  _351
         jmp _352
 
     __35_456:
         cmp al, 5
-        jb  _354
+        jb _354
         je  _355
         jmp _356
 
@@ -2499,19 +2504,19 @@ _36x:
     ja undefined
 
     cmp al, 3
-    jb  __36_312
+    jb short  __36_312
     je  _363
     jmp __36_456
 
     __36_312:
         cmp al, 1
-        jb  _360
+        jb short  _360
         je  _361
         jmp _362
 
     __36_456:
         cmp al, 5
-        jb  _364
+        jb _364
         je  _365
         jmp _366
 
@@ -2575,19 +2580,19 @@ _37x:
     ja undefined
 
     cmp al, 3
-    jb  __37_312
+    jb short  __37_312
     je  _373
     jmp __37_456
 
     __37_312:
         cmp al, 1
-        jb  _370
+        jb short  _370
         je  _371
         jmp _372
 
     __37_456:
         cmp al, 5
-        jb  _374
+        jb _374
         je  _375
         jmp _376
 
@@ -2639,9 +2644,6 @@ _377:
     inc si
     jmp _xxx
 ; -----------------------------------------------------------/
-
-exit_program:
-    m_exit0
 
 end start
 
