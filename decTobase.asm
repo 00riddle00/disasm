@@ -164,7 +164,7 @@ endp
 start:
     mov ax, @data                  ; perkelti data i registra ax
     mov ds, ax                     ; perkelti ax (data) i data segmenta
-    mov es, ax                     ; perkelti ax (data) i data segmenta
+    mov es, ax                     ; perkelti ax (data) i extended segmenta
 
     ; isvesti programos aprasa
     m_println sep1

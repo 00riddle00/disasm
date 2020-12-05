@@ -38,22 +38,20 @@ jumps
 ;  CONSTANTS
 ; ============================================================
 
-
 ; ============================================================
 ;  DATA
 ; ============================================================
 
 .data
-    data_oct        db 2, 6, 4, 0, 1, 1, 0FFh, 0FFh
-    ;data_oct       db 264o, 011o, 272o, 336o, 001o, 315o, 041o 
-    ;data_hex       db 0B4h, 009h, 0BAh, 0DEh,  01h, 0CDh,  21h
+    ;data_octal        db 2, 6, 4, 0, 1, 1, 0FFh ; B409
+    data_octal        db 2, 7, 2, 3, 3, 6, 0, 0, 1, 0FFh ; BADE01
 
     ; Rb = Byte-sized register
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DL', 'BH'
     ; Rw = Word-sized register
-    Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI', '$'
+    Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
 
-    sep1               db '=============================================================================$'
+    sep1 db '=============================================================================$'
 
 ; ============================================================
 ;  CODE
@@ -64,7 +62,6 @@ jumps
 ; ------------------------------------------------
 ; PROCEDURES
 ; ------------------------------------------------
-
 
 ; ------------------------------------------------/
 
@@ -82,7 +79,7 @@ start:
     xor si, si
 ; ------------------------------------------------/
 _xxx:
-    mov al, byte ptr [data_oct+si]
+    mov al, byte ptr [data_octal+si]
 
     cmp al, 0FFh
     je exit_program
@@ -117,7 +114,7 @@ _1xx:
 
 _2xx:
     inc si
-    mov al, byte ptr [data_oct+si]
+    mov al, byte ptr [data_octal+si]
 
     cmp al, 7
     je _27x_mov_reg_imm_word
@@ -164,7 +161,7 @@ _22x:
 
 _23x:
     inc si
-    mov al, byte ptr [data_oct+si]
+    mov al, byte ptr [data_octal+si]
 
     cmp al, 4
     jb __23_0123
@@ -199,7 +196,7 @@ _25x:
 _26x_mov_reg_imm_byte:
 
     inc si
-    mov al, byte ptr [data_oct+si]
+    mov al, byte ptr [data_octal+si]
 
     cmp al, 7
     ja undefined
@@ -207,9 +204,11 @@ _26x_mov_reg_imm_byte:
     m_puts 'MOV '
 
     mov bl, al
-    shl bl, 1; times 2
+    shl bl, 1; times 2. bl = 8
 
+    ; --------- print register name -------------
     mov dl, byte ptr [Rb+bx+1]
+    ;mov dl, byte ptr [Rb+9]
     mov ah, 02h
     int 21h
 
@@ -217,62 +216,132 @@ _26x_mov_reg_imm_byte:
     ;mov dl, byte ptr [Rb+8]
     mov ah, 02h
     int 21h
+    ; -------------------------------------------/
 
     m_puts ', '
 
+    ; --------- print next byte -----------------
     inc si
-    mov al, byte ptr [data_oct+si]
-
-    inc si
-    mov al, byte ptr [data_oct+si]
-
-    inc si
-    mov al, byte ptr [data_oct+si]
-
-    m_putsln '09h'
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
 
     inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
 
+    inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_putsln '  <-- _26x_mov_reg_imm_byte'
+
+    inc si
     jmp _xxx
 
 _27x_mov_reg_imm_word:
-    m_putsln '27x_mov_reg_imm_word'
-    jmp exit_program
+    inc si
+    mov al, byte ptr [data_octal+si]
+
+    cmp al, 7
+    ja undefined
+
+    m_puts 'MOV '
+
+    mov bl, al
+    shl bl, 1; times 2. bl = 4
+
+    ; --------- print register name -------------
+    mov dl, byte ptr [Rw+bx+1]
+    ;mov dl, byte ptr [Rw+9]
+    mov ah, 02h
+    int 21h
+
+    mov dl, byte ptr [Rw+bx]
+    ;mov dl, byte ptr [Rw+8]
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_puts ', '
+
+    ; --------- print next word -----------------
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_putsln '  <-- _27x_mov_reg_imm_word'
+
+    inc si
+    jmp _xxx
+
 ; ------------------------------------------------/
 _230:
     m_putsln '230'
     jmp exit_program
 
-
 _231:
     m_putsln '231'
     jmp exit_program
-
 
 _232:
     m_putsln '232'
     jmp exit_program
 
-
 _233:
     m_putsln '233'
     jmp exit_program
-
 
 _234:
     m_putsln '234'
     jmp exit_program
 
-
 _235:
     m_putsln '235'
     jmp exit_program
 
-
 _236:
     m_putsln '236'
     jmp exit_program
-
 
 _237:
     m_putsln '237'
