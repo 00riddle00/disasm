@@ -63,6 +63,7 @@ jumps
                db 2, 5, 1,  0, 0, 1,  3, 3, 6  ; 0XXX: ??       | TEST AX, 336001
                db 0, 4, 7                      ; 0XXX: ??       | DAA
                db 0, 7, 7                      ; 0XXX: ??       | AAS
+               db 1, 0, 2                      ; 0XXX: ??       | INC DX
                db 0FFh
 
     ; Byte-sized register
@@ -737,7 +738,7 @@ _1xx:
 
     __1_012_x:
         cmp al, 1
-        jb short _10x
+        jb short _10x_inc_reg_word
         je _11x
         jmp _12x
 
@@ -746,14 +747,38 @@ _1xx:
         je _16x
         jmp undefined_2nd_octal ; _14x, _15x
 
-; ------------------------------------------------------------
+; ************************************************************
 ;  _10X
-; ------------------------------------------------------------
-_10x:
+; ************************************************************
+
+_10x_inc_reg_word:
     ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
+    cmp al, 7
+    ja undefined
+
+    m_puts 'INC '
+
+    mov bl, al
+    shl bl, 1 ; times 2
+
+    ; --------- print word register name ---------
+    mov dl, byte ptr [Rw+bx+1]
+    mov ah, 02h
+    int 21h
+
+    mov dl, byte ptr [Rw+bx]
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_putsln '  <-- _10x_inc_reg_word'
+
+    jmp _xxx
+
+_10x:
     cmp al, 7
     je _107
     ja undefined
@@ -1575,7 +1600,7 @@ _25x:
 _250_test_acc_imm_byte:
     m_puts 'TEST '
 
-    ; ---------- print accumulator name ----------
+    ; ------- print byte accumulator name --------
     mov dl, byte ptr [Rb+1]
     mov ah, 02h
     int 21h
@@ -1615,7 +1640,7 @@ _250_test_acc_imm_byte:
 _251_test_acc_imm_word:
     m_puts 'TEST '
 
-    ; ---------- print accumulator name ----------
+    ; ------- print word accumulator name --------
     mov dl, byte ptr [Rw+1]
     mov ah, 02h
     int 21h
@@ -1715,7 +1740,7 @@ _26x_mov_reg_imm_byte:
     mov bl, al
     shl bl, 1 ; times 2
 
-    ; --------- print register name -------------
+    ; ------- print byte register name ----------
     mov dl, byte ptr [Rb+bx+1]
     mov ah, 02h
     int 21h
@@ -1767,14 +1792,12 @@ _27x_mov_reg_imm_word:
     mov bl, al
     shl bl, 1; times 2. bl = 4
 
-    ; --------- print register name -------------
+    ; --------- print word register name ---------
     mov dl, byte ptr [Rw+bx+1]
-    ;mov dl, byte ptr [Rw+9]
     mov ah, 02h
     int 21h
 
     mov dl, byte ptr [Rw+bx]
-    ;mov dl, byte ptr [Rw+8]
     mov ah, 02h
     int 21h
     ; -------------------------------------------/
