@@ -43,16 +43,10 @@ jumps
 ; ============================================================
 
 .data
-    data_octal        db 2, 1, 2,   0, 1, 6,   1, 4, 4,   0, 0, 1,  0FFh ; B409
-    ;data_octal        db 2, 6, 4, 0, 1, 1, 0FFh ; B409
-    ;data_octal        db 2, 7, 2, 3, 3, 6, 0, 0, 1, 0FFh ; BADE01
-
-    ;data_octal         db 2, 6, 4, 0, 1, 1
-                       ;db 2, 7, 2, 3, 3, 6, 0, 0, 1
-                       ;db 2, 3, 5
-                       ;db 0, 1, 7
-                       ;db 9
-                       ;db 0, 3, 3, 0FFh;
+    data_octal         db 2, 6, 4,  0, 1, 1                      ; B409
+                       db 2, 7, 2,  3, 3, 6,  0, 0, 1            ; BADE01
+                       db 0, 2, 5,  0, 1, 6,  0, 6, 7,  9, 1, 2, 
+                       db 0, 1, 6,  1, 4, 4,  3, 2, 6,  0FFh
 
     ; Rb = Byte-sized register
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DL', 'BH'
@@ -91,6 +85,7 @@ start:
     mov si, 0FFFFh
 
 _xxx:
+    ; get 1st octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -128,58 +123,89 @@ exit_program:
 ; ============================================================
 ;  _0XX
 ; ============================================================
+
 _0xx:
+    ; get 2nd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
+    ; get 3rd octal digit
+    inc si ; SI now also points to 3rd octal
+    mov bl, byte ptr [data_octal+si]
+
     cmp al, 7
-    je _07x
-    ja short undefined_2nd_octal
+    ja undefined ; undefined_2nd_octal is not used here, since 
+                 ; SI already points to the last octal digit
 
-    cmp al, 3
-    jb short __0_012_x
-    je  _03x
-    jmp short __0_456_x
+    ; --------- check the 3rd octal digit -------------
 
-    __0_012_x:
+    ; check if it's a (POP seg)/(adjust) operation
+    cmp bl, 7
+    je short __0x7
+    ja undefined
+
+    ; check if it's a (PUSH seg)/(seg change prefix) operation
+    cmp bl, 6
+    je short __0x6
+
+    ; --------- check the 2nd octal digit -------------
+    cmp al, 4
+    jb short __0_0123_x
+    je _04x
+    jmp short __0_567_x
+    
+    __0_0123_x:
+        cmp al, 2
+        jb short __0_01_x
+        je _02x
+        jmp _03x
+
+    __0_567_x:
+        cmp al, 6
+        jb _05x
+        je _06x
+        jmp _07x
+
+    __0_01_x:
         cmp al, 1
         jb short _00x
-        je  _01x
-        jmp _02x
+        jmp _01x
 
-    __0_456_x:
-        cmp al, 5
-        jb _04x
-        je  _05x
-        jmp _06x
+    ; if it's a (PUSH seg)/(seg change prefix) operation
+    __0x6:
+        cmp al, 4
+        jb _0x6_push_seg
+        jmp _0x6_seg_change_prefix
+
+    ; if it's a (POP seg)/(adjust) operation
+    __0x7:
+        cmp al, 4
+        jb _0x7_pop_seg
+        jmp _0x7_add_sub_adjust
 
 ; ------------------------------------------------------------
 ;  _00X
 ; ------------------------------------------------------------
 _00x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _007
-    ja undefined
+    ; 3rd octal digit is already in BL, and it 
+    ; cannot be 6 or 7 (since it was checked before)
+    mov al, bl
 
     cmp al, 3
     jb short __00_012
-    je  _003
-    jmp short __00_456
+    je _003
+    jmp short __00_45
 
     __00_012:
         cmp al, 1
         jb short _000
-        je  _001
+        je _001
         jmp _002
 
-    __00_456:
+    __00_45:
         cmp al, 5
-        jb _004
-        je  _005
-        jmp _006
+        je _005
+        jmp _004
 
 ; ############################################################
 _000:
@@ -211,43 +237,28 @@ _005:
     m_putsln '005'
     jmp _xxx
 
-; ############################################################
-_006:
-    m_putsln '006'
-    jmp _xxx
-
-; ############################################################
-_007:
-    m_putsln '007'
-    jmp _xxx
-
 ; ------------------------------------------------------------
 ;  _01X
 ; ------------------------------------------------------------
 _01x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _017
-    ja undefined
+    ; 3rd octal digit is already in BL
+    mov al, bl
 
     cmp al, 3
     jb short __01_012
-    je  _013
-    jmp short __01_456
+    je _013
+    jmp short __01_45
 
     __01_012:
         cmp al, 1
         jb short _010
-        je  _011
+        je _011
         jmp _012
 
-    __01_456:
+    __01_45:
         cmp al, 5
-        jb _014
-        je  _015
-        jmp _016
+        je _015
+        jmp _014
 
 ; ############################################################
 _010:
@@ -279,43 +290,28 @@ _015:
     m_putsln '015'
     jmp _xxx
 
-; ############################################################
-_016:
-    m_putsln '016'
-    jmp _xxx
-
-; ############################################################
-_017:
-    m_putsln '017'
-    jmp _xxx
-
 ; ------------------------------------------------------------
 ;  _02X
 ; ------------------------------------------------------------
 _02x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _027
-    ja undefined
+    ; 3rd octal digit is already in BL
+    mov al, bl
 
     cmp al, 3
     jb short __02_012
-    je  _023
-    jmp short __02_456
+    je _023
+    jmp short __02_45
 
     __02_012:
         cmp al, 1
         jb short _020
-        je  _021
+        je _021
         jmp _022
 
-    __02_456:
+    __02_45:
         cmp al, 5
-        jb _024
-        je  _025
-        jmp _026
+        je _025
+        jmp _024
 
 ; ############################################################
 _020:
@@ -347,44 +343,28 @@ _025:
     m_putsln '025'
     jmp _xxx
 
-; ############################################################
-_026:
-    m_putsln '026'
-    jmp _xxx
-
-; ############################################################
-_027:
-    m_putsln '027'
-    jmp _xxx
-
 ; ------------------------------------------------------------
 ;  _03X
 ; ------------------------------------------------------------
-
 _03x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _037
-    ja undefined
+    ; 3rd octal digit is already in BL
+    mov al, bl
 
     cmp al, 3
     jb short __03_012
-    je  _033
-    jmp short __03_456
+    je _033
+    jmp short __03_45
 
     __03_012:
         cmp al, 1
         jb short _030
-        je  _031
+        je _031
         jmp _032
 
-    __03_456:
+    __03_45:
         cmp al, 5
-        jb _034
-        je  _035
-        jmp _036
+        je _035
+        jmp _034
 
 ; ############################################################
 _030:
@@ -416,43 +396,28 @@ _035:
     m_putsln '035'
     jmp _xxx
 
-; ############################################################
-_036:
-    m_putsln '036'
-    jmp _xxx
-
-; ############################################################
-_037:
-    m_putsln '037'
-    jmp _xxx
-
 ; ------------------------------------------------------------
 ;  _04X
 ; ------------------------------------------------------------
 _04x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _047
-    ja undefined
+    ; 3rd octal digit is already in BL
+    mov al, bl
 
     cmp al, 3
     jb short __04_012
-    je  _043
-    jmp short __04_456
+    je _043
+    jmp short __04_45
 
     __04_012:
         cmp al, 1
         jb short _040
-        je  _041
+        je _041
         jmp _042
 
-    __04_456:
+    __04_45:
         cmp al, 5
-        jb _044
-        je  _045
-        jmp _046
+        je _045
+        jmp _044
 
 ; ############################################################
 _040:
@@ -484,43 +449,28 @@ _045:
     m_putsln '045'
     jmp _xxx
 
-; ############################################################
-_046:
-    m_putsln '046'
-    jmp _xxx
-
-; ############################################################
-_047:
-    m_putsln '047'
-    jmp _xxx
-
 ; ------------------------------------------------------------
 ;  _05X
 ; ------------------------------------------------------------
 _05x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _057
-    ja undefined
+    ; 3rd octal digit is already in BL
+    mov al, bl
 
     cmp al, 3
     jb short __05_012
-    je  _053
-    jmp short __05_456
+    je _053
+    jmp short __05_45
 
     __05_012:
         cmp al, 1
         jb short _050
-        je  _051
+        je _051
         jmp _052
 
-    __05_456:
+    __05_45:
         cmp al, 5
-        jb _054
-        je  _055
-        jmp _056
+        je _055
+        jmp _054
 
 ; ############################################################
 _050:
@@ -552,44 +502,28 @@ _055:
     m_putsln '055'
     jmp _xxx
 
-; ############################################################
-_056:
-    m_putsln '056'
-    jmp _xxx
-
-; ############################################################
-_057:
-    m_putsln '057'
-    jmp _xxx
-
 ; ------------------------------------------------------------
 ;  _06X
 ; ------------------------------------------------------------
-
 _06x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _067
-    ja undefined
+    ; 3rd octal digit is already in BL
+    mov al, bl
 
     cmp al, 3
     jb short __06_012
-    je  _063
-    jmp short __06_456
+    je _063
+    jmp short __06_45
 
     __06_012:
         cmp al, 1
         jb short _060
-        je  _061
+        je _061
         jmp _062
 
-    __06_456:
+    __06_45:
         cmp al, 5
-        jb _064
-        je  _065
-        jmp _066
+        je _065
+        jmp _064
 
 ; ############################################################
 _060:
@@ -621,43 +555,28 @@ _065:
     m_putsln '065'
     jmp _xxx
 
-; ############################################################
-_066:
-    m_putsln '066'
-    jmp _xxx
-
-; ############################################################
-_067:
-    m_putsln '067'
-    jmp _xxx
-
 ; ------------------------------------------------------------
 ;  _07X
 ; ------------------------------------------------------------
 _07x:
-    inc si
-    mov al, byte ptr [data_octal+si]
-
-    cmp al, 7
-    je _077
-    ja undefined
+    ; 3rd octal digit is already in BL
+    mov al, bl
 
     cmp al, 3
     jb short __07_012
-    je  _073
-    jmp short __07_456
+    je _073
+    jmp short __07_45
 
     __07_012:
         cmp al, 1
         jb short _070
-        je  _071
+        je _071
         jmp _072
 
-    __07_456:
+    __07_45:
         cmp al, 5
-        jb _074
-        je  _075
-        jmp _076
+        je _075
+        jmp _074
 
 ; ############################################################
 _070:
@@ -689,14 +608,28 @@ _075:
     m_putsln '075'
     jmp _xxx
 
-; ############################################################
-_076:
-    m_putsln '076'
+; ************************************************************
+;  _0X6
+; ************************************************************
+
+_0x6_push_seg:
+    m_putsln '0x6_push_seg'
     jmp _xxx
 
-; ############################################################
-_077:
-    m_putsln '077'
+_0x6_seg_change_prefix:
+    m_putsln '0x6_seg_change_prefix'
+    jmp _xxx
+
+; ************************************************************
+;  _0X7
+; ************************************************************
+
+_0x7_pop_seg:
+    m_putsln '0x7__pop_seg'
+    jmp _xxx
+
+_0x7_add_sub_adjust:
+    m_putsln '0x7_add_sub_adjust'
     jmp _xxx
 
 ; ============================================================
@@ -704,6 +637,7 @@ _077:
 ; ============================================================
 
 _1xx:
+    ; get 2nd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -713,13 +647,13 @@ _1xx:
 
     cmp al, 3
     jb short __1_012_x
-    je  _13x
+    je _13x
     jmp short __1_456_x
 
     __1_012_x:
         cmp al, 1
         jb short _10x
-        je  _11x
+        je _11x
         jmp _12x
 
     __1_456_x:
@@ -731,6 +665,7 @@ _1xx:
 ;  _10X
 ; ------------------------------------------------------------
 _10x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -740,19 +675,19 @@ _10x:
 
     cmp al, 3
     jb short __10_012
-    je  _103
+    je _103
     jmp short __10_456
 
     __10_012:
         cmp al, 1
         jb short _100
-        je  _101
+        je _101
         jmp _102
 
     __10_456:
         cmp al, 5
         jb _104
-        je  _105
+        je _105
         jmp _106
 
 ; ############################################################
@@ -799,6 +734,7 @@ _107:
 ;  _11X
 ; ------------------------------------------------------------
 _11x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -808,19 +744,19 @@ _11x:
 
     cmp al, 3
     jb short __11_012
-    je  _113
+    je _113
     jmp short __11_456
 
     __11_012:
         cmp al, 1
         jb short _110
-        je  _111
+        je _111
         jmp _112
 
     __11_456:
         cmp al, 5
         jb _114
-        je  _115
+        je _115
         jmp _116
 
 ; ############################################################
@@ -867,6 +803,7 @@ _117:
 ;  _12X
 ; ------------------------------------------------------------
 _12x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -876,19 +813,19 @@ _12x:
 
     cmp al, 3
     jb short __12_012
-    je  _123
+    je _123
     jmp short __12_456
 
     __12_012:
         cmp al, 1
         jb short _120
-        je  _121
+        je _121
         jmp _122
 
     __12_456:
         cmp al, 5
         jb _124
-        je  _125
+        je _125
         jmp _126
 
 ; ############################################################
@@ -936,6 +873,7 @@ _127:
 ; ------------------------------------------------------------
 
 _13x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -945,19 +883,19 @@ _13x:
 
     cmp al, 3
     jb short __13_012
-    je  _133
+    je _133
     jmp short __13_456
 
     __13_012:
         cmp al, 1
         jb short _130
-        je  _131
+        je _131
         jmp _132
 
     __13_456:
         cmp al, 5
         jb _134
-        je  _135
+        je _135
         jmp _136
 
 ; ############################################################
@@ -1005,6 +943,7 @@ _137:
 ; ------------------------------------------------------------
 
 _16x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1014,19 +953,19 @@ _16x:
 
     cmp al, 3
     jb short __16_012
-    je  _163
+    je _163
     jmp short __16_456
 
     __16_012:
         cmp al, 1
         jb short _160
-        je  _161
+        je _161
         jmp _162
 
     __16_456:
         cmp al, 5
         jb _164
-        je  _165
+        je _165
         jmp _166
 
 ; ############################################################
@@ -1073,6 +1012,7 @@ _167:
 ;  _17X
 ; ------------------------------------------------------------
 _17x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1082,19 +1022,19 @@ _17x:
 
     cmp al, 3
     jb short __17_012
-    je  _173
+    je _173
     jmp short __17_456
 
     __17_012:
         cmp al, 1
         jb short _170
-        je  _171
+        je _171
         jmp _172
 
     __17_456:
         cmp al, 5
         jb _174
-        je  _175
+        je _175
         jmp _176
 
 ; ############################################################
@@ -1141,6 +1081,7 @@ _177:
 ;  _2XX
 ; ============================================================
 _2xx:
+    ; get 2nd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1150,19 +1091,19 @@ _2xx:
 
     cmp al, 3
     jb short __2_012_x
-    je  _23x
+    je _23x
     jmp short __2_456_x
 
     __2_012_x:
         cmp al, 1
         jb short _20x
-        je  _21x
+        je _21x
         jmp _22x
 
     __2_456_x:
         cmp al, 5
         jb _24x
-        je  _25x
+        je _25x
         jmp _26x_mov_reg_imm_byte
 
 ; ------------------------------------------------------------
@@ -1178,19 +1119,19 @@ _20x:
 
     cmp al, 3
     jb short __20_012
-    je  _203
+    je _203
     jmp short __20_456
 
     __20_012:
         cmp al, 1
         jb short _200
-        je  _201
+        je _201
         jmp _202
 
     __20_456:
         cmp al, 5
         jb _204
-        je  _205
+        je _205
         jmp _206
 
 ; ############################################################
@@ -1238,6 +1179,7 @@ _207:
 ; ------------------------------------------------------------
 
 _21x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1247,19 +1189,19 @@ _21x:
 
     cmp al, 3
     jb short __21_012
-    je  _213
+    je _213
     jmp short __21_456
 
     __21_012:
         cmp al, 1
         jb short _210
-        je  _211
+        je _211
         jmp _212
 
     __21_456:
         cmp al, 5
         jb _214
-        je  _215
+        je _215
         jmp _216
 
 ; ############################################################
@@ -1306,6 +1248,7 @@ _217:
 ;  _22X
 ; ------------------------------------------------------------
 _22x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1315,19 +1258,19 @@ _22x:
 
     cmp al, 3
     jb short __22_012
-    je  _223
+    je _223
     jmp short __22_456
 
     __22_012:
         cmp al, 1
         jb short _220
-        je  _221
+        je _221
         jmp _222
 
     __22_456:
         cmp al, 5
         jb _224
-        je  _225
+        je _225
         jmp _226
 
 ; ############################################################
@@ -1374,6 +1317,7 @@ _227:
 ;  _23X
 ; ------------------------------------------------------------
 _23x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1383,19 +1327,19 @@ _23x:
 
     cmp al, 3
     jb short __23_012
-    je  _233
+    je _233
     jmp short __23_456
 
     __23_012:
         cmp al, 1
         jb short _230
-        je  _231
+        je _231
         jmp _232
 
     __23_456:
         cmp al, 5
         jb _234
-        je  _235
+        je _235
         jmp _236
 
 ; ############################################################
@@ -1443,6 +1387,7 @@ _237:
 ; ------------------------------------------------------------
 
 _24x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1452,19 +1397,19 @@ _24x:
 
     cmp al, 3
     jb short __24_012
-    je  _243
+    je _243
     jmp short __24_456
 
     __24_012:
         cmp al, 1
         jb short _240
-        je  _241
+        je _241
         jmp _242
 
     __24_456:
         cmp al, 5
         jb _244
-        je  _245
+        je _245
         jmp _246
 
 ; ############################################################
@@ -1512,6 +1457,7 @@ _247:
 ; ------------------------------------------------------------
 
 _25x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1521,19 +1467,19 @@ _25x:
 
     cmp al, 3
     jb short __25_012
-    je  _253
+    je _253
     jmp short __25_456
 
     __25_012:
         cmp al, 1
         jb short _250
-        je  _251
+        je _251
         jmp _252
 
     __25_456:
         cmp al, 5
         jb _254
-        je  _255
+        je _255
         jmp _256
 
 ; ############################################################
@@ -1580,6 +1526,7 @@ _257:
 ;  _26X
 ; ************************************************************
 _26x_mov_reg_imm_byte:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1633,6 +1580,7 @@ _26x_mov_reg_imm_byte:
 ;  _27X
 ; ############################################################
 _27x_mov_reg_imm_word:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1705,6 +1653,7 @@ _27x_mov_reg_imm_word:
 ; ============================================================
 
 _3xx:
+    ; get 2nd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1714,25 +1663,26 @@ _3xx:
 
     cmp al, 3
     jb short __3_012_x
-    je  _33x
+    je _33x
     jmp short __3_456_x
 
     __3_012_x:
         cmp al, 1
         jb short _30x
-        je  _31x
+        je _31x
         jmp _32x
 
     __3_456_x:
         cmp al, 5
         jb _34x
-        je  _35x
+        je _35x
         jmp _36x
 
 ; ------------------------------------------------------------
 ;  _30X
 ; ------------------------------------------------------------
 _30x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1742,7 +1692,7 @@ _30x:
 
     cmp al, 3
     jb short __30_012
-    je  _303
+    je _303
     jmp short __30_456
 
     __30_012:
@@ -1753,7 +1703,7 @@ _30x:
     __30_456:
         cmp al, 5
         jb _304
-        je  _305
+        je _305
         jmp _306
 
 ; ############################################################
@@ -1790,6 +1740,7 @@ _307:
 ;  _31X
 ; ------------------------------------------------------------
 _31x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1799,7 +1750,7 @@ _31x:
 
     cmp al, 3
     jb short __31_012
-    je  _313
+    je _313
     jmp short __31_456
 
     __31_012:
@@ -1810,7 +1761,7 @@ _31x:
     __31_456:
         cmp al, 5
         jb _314
-        je  _315
+        je _315
         jmp _316
 
 ; ############################################################
@@ -1847,6 +1798,7 @@ _317:
 ;  _32X
 ; ------------------------------------------------------------
 _32x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1856,19 +1808,19 @@ _32x:
 
     cmp al, 3
     jb short __32_012
-    je  _323
+    je _323
     jmp short __32_456
 
     __32_012:
         cmp al, 1
         jb short _320
-        je  _321
+        je _321
         jmp _322
 
     __32_456:
         cmp al, 5
         jb _324
-        je  _325
+        je _325
         jmp undefined ; _326
 
 ; ############################################################
@@ -1911,6 +1863,7 @@ _327:
 ; ------------------------------------------------------------
 
 _33x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1920,19 +1873,19 @@ _33x:
 
     cmp al, 3
     jb short __33_012
-    je  _333
+    je _333
     jmp short __33_456
 
     __33_012:
         cmp al, 1
         jb short _330
-        je  _331
+        je _331
         jmp _332
 
     __33_456:
         cmp al, 5
         jb _334
-        je  _335
+        je _335
         jmp _336
 
 ; ############################################################
@@ -1979,6 +1932,7 @@ _337:
 ;  _34X
 ; ------------------------------------------------------------
 _34x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -1988,19 +1942,19 @@ _34x:
 
     cmp al, 3
     jb short __34_012
-    je  _343
+    je _343
     jmp short __34_456
 
     __34_012:
         cmp al, 1
         jb short _340
-        je  _341
+        je _341
         jmp _342
 
     __34_456:
         cmp al, 5
         jb _344
-        je  _345
+        je _345
         jmp _346
 
 ; ############################################################
@@ -2047,6 +2001,7 @@ _347:
 ;  _35X
 ; ------------------------------------------------------------
 _35x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -2056,19 +2011,19 @@ _35x:
 
     cmp al, 3
     jb short __35_012
-    je  _353
+    je _353
     jmp short __35_456
 
     __35_012:
         cmp al, 1
         jb short _350
-        je  _351
+        je _351
         jmp _352
 
     __35_456:
         cmp al, 5
         jb _354
-        je  _355
+        je _355
         jmp _356
 
 ; ############################################################
@@ -2116,6 +2071,7 @@ _357:
 ; ------------------------------------------------------------
 
 _36x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -2125,7 +2081,7 @@ _36x:
 
     cmp al, 3
     jb short __36_012
-    je  _363
+    je _363
     jmp short __36_456
 
     __36_012:
@@ -2137,7 +2093,7 @@ _36x:
     __36_456:
         cmp al, 5
         jb _364
-        je  _365
+        je _365
         jmp _366
 
 ; ############################################################
@@ -2184,6 +2140,7 @@ _367:
 ;  _37X
 ; ------------------------------------------------------------
 _37x:
+    ; get 3rd octal digit
     inc si
     mov al, byte ptr [data_octal+si]
 
@@ -2193,19 +2150,19 @@ _37x:
 
     cmp al, 3
     jb short __37_012
-    je  _373
+    je _373
     jmp short __37_456
 
     __37_012:
         cmp al, 1
         jb short _370
-        je  _371
+        je _371
         jmp _372
 
     __37_456:
         cmp al, 5
         jb _374
-        je  _375
+        je _375
         jmp _376
 
 ; ############################################################
@@ -2250,4 +2207,3 @@ _377:
 ; -----------------------------------------------------------/
 
 end start
-
