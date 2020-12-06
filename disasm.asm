@@ -47,18 +47,20 @@ jumps
                db 0, 1, 1                      ; 0101: 09       | 011
                db 0, 3, 6                      ; 0102: 1E       | PUSH DS
                db 0, 0, 7                      ; 0XXX: ??       | POP ES
+               db 1, 4, 4                      ; 0XXX: 64       | UNDEFINED
                db 2, 6, 4,  0, 1, 1            ; 0XXX: B4 09    | MOV AH, 011
                db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0XXX: BA DE 01 | MOV DX, 001336
                db 0, 2, 7                      ; 0XXX: ??       | POP SS 
                db 0, 2, 5                      ; 0XXX: 15       | 025
                db 0, 6, 7                      ; 0XXX: 37       | 0x7_add_sub_adjust
-               db 1, 4, 4                      ; 0XXX: 64       | UNDEFINED
                db 3, 2, 6                      ; 0XXX: D6       | UNDEFINED
                db 2, 4, 4                      ; 0XXX: ??       | MOVSB
                db 2, 4, 7                      ; 0XXX: ??       | CMPSW
                db 2, 5, 2                      ; 0XXX: ??       | STOSB
                db 2, 5, 5                      ; 0XXX: ??       | LODSW
                db 2, 5, 7                      ; 0XXX: ??       | SCASW
+               db 2, 5, 0,  0, 4, 9            ; 0XXX: ??       | TEST AL, 049
+               db 2, 5, 1,  0, 0, 1,  3, 3, 6  ; 0XXX: ??       | TEST AX, 336001
                db 0FFh
 
     ; Byte-sized register
@@ -1548,12 +1550,100 @@ _25x:
 
 ; ############################################################
 _250_test_acc_imm_byte:
-    m_putsln '_250_test_acc_imm_byte'
+    m_puts 'TEST '
+
+    ; ---------- print accumulator name ----------
+    mov dl, byte ptr [Rb+1]
+    mov ah, 02h
+    int 21h
+
+    mov dl, byte ptr [Rb]
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_puts ', '
+
+    ; --------- print next byte -----------------
+    inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_putsln '  <-- _250_test_acc_imm_byte'
+
     jmp _xxx
 
 ; ############################################################
 _251_test_acc_imm_word:
-    m_putsln '_251_test_acc_imm_word'
+    m_puts 'TEST '
+
+    ; ---------- print accumulator name ----------
+    mov dl, byte ptr [Rw+1]
+    mov ah, 02h
+    int 21h
+
+    mov dl, byte ptr [Rw]
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_puts ', '
+
+    ; --------- print next word -----------------
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_putsln '  <-- _251_test_acc_imm_word'
+
     jmp _xxx
 
 ; ############################################################
