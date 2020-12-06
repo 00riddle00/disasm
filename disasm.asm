@@ -47,12 +47,14 @@ jumps
                db 0, 1, 1                      ; 0101: 09       | 011
                db 0, 3, 6                      ; 0102: 1E       | PUSH DS
                db 8, 4, 4                      ; 0XXX: ??       | UNDEFINED
+               db 0, 0, 7                      ; 0XXX: ??       | POP ES
                db 2, 6, 4,  0, 1, 1            ; 0XXX: B4 09    | MOV AH, 011
                db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0XXX: BA DE 01 | MOV DX, 001336
+               db 0, 2, 7                      ; 0XXX: ??       | POP SS 
                db 0, 2, 5                      ; 0XXX: 15       | 025
                db 0, 6, 7                      ; 0XXX: 37       | 0x7_add_sub_adjust
                db 1, 4, 4                      ; 0XXX: 64       | UNDEFINED
-               db 3, 2, 6                      ; 0136: D6       | UNDEFINED
+               db 3, 2, 6                      ; 0XXX: D6       | UNDEFINED
                db 0FFh
 
     ; Rb = Byte-sized register
@@ -625,7 +627,7 @@ _075:
 
 _0x6_push_seg:
     ; 2nd octal digit is already in AL
-    ; AL is one of {0,1,2,3}
+    ; it is one of {0,1,2,3}
 
     m_puts 'PUSH '
 
@@ -659,7 +661,27 @@ _0x6_seg_change_prefix:
 ; ************************************************************
 
 _0x7_pop_seg:
-    m_putsln '0x7__pop_seg'
+    ; 2nd octal digit is already in AL
+    ; it is one of {0,1,2,3}
+
+    m_puts 'POP '
+
+    mov bl, al 
+    shl bl, 1 ; times 2
+
+    ; ------- print segment register name --------
+    mov dl, byte ptr [SR+bx+1]
+    mov ah, 02h
+    int 21h
+
+    mov dl, byte ptr [SR+bx]
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_puts '  <-- _0x7_pop_seg'
+    m_print_nl
+
     jmp _xxx
 
 _0x7_add_sub_adjust:
