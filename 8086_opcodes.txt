@@ -133,7 +133,7 @@
 1001 1000                                     | CBW
 1001 1001                                     | CWD
 
-1001 1010 ajb avb srjb srvb                   | CALL žymė (išorinis tiesioginis)
+1001 1010 ajb avb srjb srvb                   | CALL žymė (išorinis tiesioginis) (far, absolute, address in operand)
 
 1001 1011                                     | WAIT
 
@@ -206,10 +206,10 @@
 1110 010w portas                              | IN portas  (fiksuotas portas) (IN akumuliatorius <- portas)
 1110 011w portas                              | OUT portas (fiksuotas portas) (OUT akumuliatorius -> portas)
 -------------------------------------o350--------------------------------------------------------------------
-1110 1000 ajb avb                             | CALL žymė (vidinis tiesioginis)
-1110 1001 pjb pvb                             | JMP žymė (vidinis tiesioginis)
-1110 1010 ajb avb srjb srvb                   | JMP žymė (išorinis tiesioginis)
-1110 1011 poslinkis                           | JMP žymė (vidinis artimas)
+1110 1000 ajb avb                             | CALL žymė (vidinis tiesioginis) (near, relative, displacement relative to next instruction)
+1110 1001 pjb pvb                             | JMP žymė (vidinis tiesioginis) (near, relative, displament relative to next instruction)
+1110 1010 ajb avb srjb srvb                   | JMP žymė (išorinis tiesioginis) (far, absolute, address in operand)
+1110 1011 poslinkis                           | JMP žymė (vidinis artimas) (short, relative, displacement relative to next instruction)
 
 1110 110w                                     | IN  (kintamas portas) (IN akumuliatorius <- portas dx)
 1110 111w                                     | OUT (kintamas portas) (OUT akumuliatorius -> portas dx)
@@ -238,9 +238,9 @@
 
 1111 111w mod 000 r/m [poslinkis]             | INC registras/atmintis
 1111 111w mod 001 r/m [poslinkis]             | DEC registras/atmintis
-1111 1111 mod 010 r/m [poslinkis]             | CALL adresas (vidinis netiesioginis)
-1111 1111 mod 011 r/m [poslinkis]             | CALL adresas (išorinis netiesioginis)
-1111 1111 mod 100 r/m [poslinkis]             | JMP adresas (vidinis netiesioginis)
-1111 1111 mod 101 r/m [poslinkis]             | JMP adresas (išorinis netiesioginis)
+1111 1111 mod 010 r/m [poslinkis]             | CALL adresas (vidinis netiesioginis) (near, absolute indirect, address in r/m) 
+1111 1111 mod 011 r/m [poslinkis]             | CALL adresas (išorinis netiesioginis) (far, absolute indirect, address in mem)
+1111 1111 mod 100 r/m [poslinkis]             | JMP adresas (vidinis netiesioginis) (near, absolute indirect, address in r/m)
+1111 1111 mod 101 r/m [poslinkis]             | JMP adresas (išorinis netiesioginis) (far, absolute indirect, address in mem)
 1111 1111 mod 110 r/m [poslinkis]             | PUSH registras/atmintis
 -------------------------------------------------------------------------------------------------------------
