@@ -101,6 +101,8 @@ jumps
                db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
                db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
                db 3, 0, 3                      ; 0???: ??      | RET
+               db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
+               db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
                db 0FFh
 
     ; Byte-sized register
@@ -312,50 +314,53 @@ _00x:
     ; cannot be 6 or 7 (since it was checked before)
     mov al, bl
 
-    cmp al, 3
-    jb short __00_012
-    je _003
-    jmp short __00_45
+    cmp al, 4
+    jb short __00_0123
+    je _004_add_acc_imm_byte
+    jmp _005_add_acc_imm_word
 
-    __00_012:
+    __00_0123:
+        cmp al, 2
+        jb short __00_01
+        je _002_add_reg_rm_byte
+        jmp _003_add_reg_rm_word
+
+    __00_01:
         cmp al, 1
-        jb short _000
-        je _001
-        jmp _002
-
-    __00_45:
-        cmp al, 5
-        je _005
-        jmp _004
+        je _001_add_rm_reg_word
 
 ; ------------------------------------------------------------
-_000:
-    m_putsln '000'
+_000_add_rm_reg_byte:
+    m_putsln '_000_add_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_001:
-    m_putsln '001'
+_001_add_rm_reg_word:
+    m_putsln '_001_add_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_002:
-    m_putsln '002'
+_002_add_reg_rm_byte:
+    m_putsln '_002_add_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_003:
-    m_putsln '003'
+_003_add_reg_rm_word:
+    m_putsln '_003_add_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_004:
-    m_putsln '004'
+; ************************************************************
+_004_add_acc_imm_byte:
+    m_puts 'ADD AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_005:
-    m_putsln '005'
+; ************************************************************
+_005_add_acc_imm_word:
+    m_puts 'ADD AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------

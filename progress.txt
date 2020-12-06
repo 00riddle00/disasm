@@ -4,7 +4,7 @@
 ============================================================================================================
 -------------------------------- o000-o005 -----------------------------------------------------------------
 0000 00dw mod reg r/m [poslinkis]             | ADD registras += registras/atmintis
-0000 010w bojb [bovb]                         | ADD akumuliatorius += betarpiškas operandas
+++++ ++++ ++++ +++++]                         | +++ ++++++++++++++ ++ +++++++++++ +++++++++
 -------------------------------- o010-o015 -----------------------------------------------------------------
 0000 10dw mod reg r/m [poslinkis]             | OR registras V registras/atmintis
 0000 110w bojb [bovb]                         | OR akumuliatorius V betarpiškas operandas
