@@ -31,6 +31,25 @@
 
 include macros.asm
 
+; print register name
+; registers can be byte, word, and segment registers
+; ::param:: reg_group - address where reg names are
+; Also, BX must contain the offset from reg_group where
+; the required register is.
+m_print_reg macro reg_group
+   push ax bx dx
+   add bx, offset reg_group
+   mov dl, byte ptr [bx+1]
+
+   mov ah, 02h
+   int 21h
+
+   mov dl, byte ptr [bx]
+   int 21h
+
+   pop dx bx ax
+endm
+
 ; ============================================================
 ;  SETTINGS
 ; ============================================================
@@ -657,19 +676,9 @@ _0x6_push_seg:
 
     mov bl, al 
     shl bl, 1 ; times 2
-
-    ; ------- print segment register name --------
-    mov dl, byte ptr [SR+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [SR+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    m_print_reg SR
 
     m_print_nl
-
     jmp _xxx
 
 _0x6_seg_change_prefix:
@@ -690,19 +699,9 @@ _0x7_pop_seg:
 
     mov bl, al 
     shl bl, 1 ; times 2
-
-    ; ------- print segment register name --------
-    mov dl, byte ptr [SR+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [SR+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    m_print_reg SR
 
     m_print_nl
-
     jmp _xxx
 
 ; ************************************************************
@@ -768,19 +767,9 @@ _10x_inc_reg_word:
 
     mov bl, al
     shl bl, 1 ; times 2
-
-    ; --------- print word register name ---------
-    mov dl, byte ptr [Rw+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rw+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    m_print_reg Rw
 
     m_print_nl
-
     jmp _xxx
 
 ; ************************************************************
@@ -798,19 +787,9 @@ _11_dec_reg_word:
 
     mov bl, al
     shl bl, 1; times 2. bl = 4
-
-    ; --------- print word register name ---------
-    mov dl, byte ptr [Rw+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rw+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    m_print_reg Rw
 
     m_print_nl
-
     jmp _xxx
 
 ; ************************************************************
@@ -828,21 +807,9 @@ _12_push_reg_word:
 
     mov bl, al
     shl bl, 1; times 2. bl = 4
-
-    ; --------- print word register name ---------
-    mov dl, byte ptr [Rw+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rw+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    m_print_reg Rw
 
     m_print_nl
-
-    jmp _xxx
-
     jmp _xxx
 
 ; ************************************************************
@@ -860,19 +827,9 @@ _13_pop_reg_word:
 
     mov bl, al
     shl bl, 1; times 2. bl = 4
-
-    ; --------- print word register name ---------
-    mov dl, byte ptr [Rw+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rw+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    m_print_reg Rw
 
     m_print_nl
-
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -1197,16 +1154,7 @@ _22x_xchg_reg_ax:
 
     mov bl, al
     shl bl, 1; times 2. bl = 4
-
-    ; --------- print word register name ---------
-    mov dl, byte ptr [Rw+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rw+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    m_print_reg Rw
 
     m_putsln ', AX'
     jmp _xxx
@@ -1388,19 +1336,7 @@ _25x:
 
 ; ************************************************************
 _250_test_acc_imm_byte:
-    m_puts 'TEST '
-
-    ; ------- print byte accumulator name --------
-    mov dl, byte ptr [Rb+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rb]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
-
-    m_puts ', '
+    m_puts 'TEST AL, '
 
     ; --------- print next byte -----------------
     inc si
@@ -1423,24 +1359,11 @@ _250_test_acc_imm_byte:
     ; -------------------------------------------/
 
     m_print_nl
-
     jmp _xxx
 
 ; ************************************************************
 _251_test_acc_imm_word:
-    m_puts 'TEST '
-
-    ; ------- print word accumulator name --------
-    mov dl, byte ptr [Rw+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rw]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
-
-    m_puts ', '
+    m_puts 'TEST AX, '
 
     ; --------- print next word -----------------
     inc si
@@ -1481,7 +1404,6 @@ _251_test_acc_imm_word:
     ; -------------------------------------------/
 
     m_print_nl
-
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -1529,17 +1451,7 @@ _26x_mov_reg_imm_byte:
 
     mov bl, al
     shl bl, 1 ; times 2
-
-    ; ------- print byte register name ----------
-    mov dl, byte ptr [Rb+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rb+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
-
+    m_print_reg Rb
     m_puts ', '
 
     ; --------- print next byte -----------------
@@ -1563,7 +1475,6 @@ _26x_mov_reg_imm_byte:
     ; -------------------------------------------/
 
     m_print_nl
-
     jmp _xxx
 
 ; ************************************************************
@@ -1581,17 +1492,7 @@ _27x_mov_reg_imm_word:
 
     mov bl, al
     shl bl, 1; times 2. bl = 4
-
-    ; --------- print word register name ---------
-    mov dl, byte ptr [Rw+bx+1]
-    mov ah, 02h
-    int 21h
-
-    mov dl, byte ptr [Rw+bx]
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
-
+    m_print_reg Rw
     m_puts ', '
 
     ; --------- print next word -----------------
@@ -1633,7 +1534,6 @@ _27x_mov_reg_imm_word:
     ; -------------------------------------------/
 
     m_print_nl
-
     jmp _xxx
 
 ; ============================================================
