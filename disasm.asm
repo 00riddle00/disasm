@@ -61,6 +61,8 @@ jumps
                db 2, 5, 7                      ; 0XXX: ??       | SCASW
                db 2, 5, 0,  0, 4, 9            ; 0XXX: ??       | TEST AL, 049
                db 2, 5, 1,  0, 0, 1,  3, 3, 6  ; 0XXX: ??       | TEST AX, 336001
+               db 0, 4, 7                      ; 0XXX: ??       | DAA
+               db 0, 7, 7                      ; 0XXX: ??       | AAS
                db 0FFh
 
     ; Byte-sized register
@@ -200,7 +202,12 @@ _0xx:
     __0x7:
         cmp al, 4
         jb _0x7_pop_seg
-        jmp _0x7_add_sub_adjust
+        je _047_add_sub_adjust
+        
+        cmp al, 6
+        jb _057_add_sub_adjust
+        jb _067_add_sub_adjust
+        jmp _077_add_sub_adjust
 
 ; ------------------------------------------------------------
 ;  _00X
@@ -690,8 +697,24 @@ _0x7_pop_seg:
 
     jmp _xxx
 
-_0x7_add_sub_adjust:
-    m_putsln '0x7_add_sub_adjust'
+; ************************************************************
+_047_add_sub_adjust:
+    m_putsln 'DAA'
+    jmp _xxx
+
+; ************************************************************
+_057_add_sub_adjust:
+    m_putsln 'DAS'
+    jmp _xxx
+
+; ************************************************************
+_067_add_sub_adjust:
+    m_putsln 'AAA'
+    jmp _xxx
+
+; ************************************************************
+_077_add_sub_adjust:
+    m_putsln 'AAS'
     jmp _xxx
 
 ; ============================================================
