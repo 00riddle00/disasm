@@ -68,22 +68,22 @@ jumps
 
    data_octal  db 2, 6, 4,  0, 1, 1            ; 0100: B409    | MOV AH, 011
                db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0102: BADE01  | MOV DX, 001336
-               ;db 3, 1, 5,  0, 4, 1            ; 0105: CD21    | INT 21
-               ;db 1, 4, 5                      ; 01F9: 65      | UNDEFINED
+               db 3, 1, 5,  0, 4, 1            ; 0105: CD21    | INT 21
+               db 1, 4, 5                      ; 01F9: 65      | UNDEFINED
                ;db 0, 1, 6                      ; 01FA: 0E      | PUSH CS
                ;db 0, 1, 1                      ; 0???: 09      | 011
                ;db 0, 3, 6                      ; 0???: 1E      | PUSH DS
                ;db 0, 0, 7                      ; 0???: 07      | POP ES
                ;db 0, 2, 7                      ; 0???: 17      | POP SS 
                ;db 0, 2, 5                      ; 0???: 15      | 025
-               db 3, 2, 6                      ; 0???: D6      | UNDEFINED
-               db 2, 4, 4                      ; 0???: ??      | MOVSB
-               db 2, 4, 7                      ; 0???: ??      | CMPSW
-               db 2, 5, 2                      ; 0???: ??      | STOSB
-               db 2, 5, 5                      ; 0???: ??      | LODSW
-               db 2, 5, 7                      ; 0???: ??      | SCASW
-               db 2, 5, 0,  0, 4, 9            ; 0???: ????    | TEST AL, 049
-               db 2, 5, 1,  0, 0, 1,  3, 3, 6  ; 0???: ??????  | TEST AX, 336001
+               ;db 3, 2, 6                      ; 0???: D6      | UNDEFINED
+               ;db 2, 4, 4                      ; 0???: ??      | MOVSB
+               ;db 2, 4, 7                      ; 0???: ??      | CMPSW
+               ;db 2, 5, 2                      ; 0???: ??      | STOSB
+               ;db 2, 5, 5                      ; 0???: ??      | LODSW
+               ;db 2, 5, 7                      ; 0???: ??      | SCASW
+               ;db 2, 5, 0,  1, 1, 1            ; 0???: ????    | TEST AL, 043
+               ;db 2, 5, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??????  | TEST AX, 336001
                db 0, 4, 7                      ; 0???: ??      | DAA
                db 0, 7, 7                      ; 0???: ??      | AAS
                db 1, 0, 6                      ; 0???: ??      | INC SI
@@ -95,6 +95,10 @@ jumps
                db 2, 3, 0                      ; 0???: ??      | CBW
                db 2, 3, 3                      ; 0???: ??      | WAIT
                db 2, 3, 7                      ; 0???: ??      | LAHF
+               db 2, 4, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AL, [222111]
+               db 2, 4, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AX, [222111]
+               db 2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AL
+               db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
                db 0FFh
 
     ; Byte-sized register
@@ -1262,7 +1266,7 @@ _231_cwd:
     m_putsln 'CWD'
     jmp _xxx
 
-; ************************************************************
+; ------------------------------------------------------------
 _232_call_far_absolute:
     m_putsln '_232_call_far_absolute'
     jmp _xxx
@@ -1325,22 +1329,30 @@ _24x:
 
 ; ************************************************************
 _240_mov_acc_mem_byte:
-    m_putsln '_240_mov_acc_mem_byte'
+    m_puts 'MOV AL, ['
+    call p_print_next_word
+    m_putsln ']'
     jmp _xxx
 
 ; ************************************************************
 _241_mov_acc_mem_word:
-    m_putsln '_241_mov_acc_mem_word'
+    m_puts 'MOV AX, ['
+    call p_print_next_word
+    m_putsln ']'
     jmp _xxx
 
 ; ************************************************************
 _242_mov_mem_acc_byte:
-    m_putsln '_242_mov_mem_acc_byte'
+    m_puts 'MOV ['
+    call p_print_next_word
+    m_putsln '], AL'
     jmp _xxx
 
 ; ************************************************************
 _243_mov_mem_acc_word:
-    m_putsln '_243_mov_mem_acc_word'
+    m_puts 'MOV ['
+    call p_print_next_word
+    m_putsln '], AX'
     jmp _xxx
 
 ; ************************************************************
