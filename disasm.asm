@@ -40,13 +40,10 @@ m_print_reg macro reg_group
    push ax bx dx
    add bx, offset reg_group
    mov dl, byte ptr [bx+1]
-
    mov ah, 02h
    int 21h
-
    mov dl, byte ptr [bx]
    int 21h
-
    pop dx bx ax
 endm
 
@@ -117,7 +114,66 @@ jumps
 ; ------------------------------------------------------------
 ; PROCEDURES
 ; ------------------------------------------------------------
-; ...
+
+; increases SI by 3
+proc p_print_next_byte
+    push ax dx
+    inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si]
+    add dl, 30h
+    int 21h
+    pop dx ax
+    ret
+endp
+
+; increases SI by 6
+proc p_print_next_word
+    push ax dx
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    mov ah, 02h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si+3]
+    add dl, 30h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    int 21h
+
+    inc si
+    mov dl, byte ptr [data_octal+si-3]
+    add dl, 30h
+    int 21h
+
+    pop dx ax
+    ret
+endp
 ; -----------------------------------------------------------/
 
 start:
@@ -1337,26 +1393,7 @@ _25x:
 ; ************************************************************
 _250_test_acc_imm_byte:
     m_puts 'TEST AL, '
-
-    ; --------- print next byte -----------------
-    inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    call p_print_next_byte
 
     m_print_nl
     jmp _xxx
@@ -1364,44 +1401,7 @@ _250_test_acc_imm_byte:
 ; ************************************************************
 _251_test_acc_imm_word:
     m_puts 'TEST AX, '
-
-    ; --------- print next word -----------------
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    call p_print_next_word
 
     m_print_nl
     jmp _xxx
@@ -1453,26 +1453,7 @@ _26x_mov_reg_imm_byte:
     shl bl, 1 ; times 2
     m_print_reg Rb
     m_puts ', '
-
-    ; --------- print next byte -----------------
-    inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    call p_print_next_byte
 
     m_print_nl
     jmp _xxx
@@ -1494,44 +1475,7 @@ _27x_mov_reg_imm_word:
     shl bl, 1; times 2. bl = 4
     m_print_reg Rw
     m_puts ', '
-
-    ; --------- print next word -----------------
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
-    ; -------------------------------------------/
+    call p_print_next_word
 
     m_print_nl
     jmp _xxx
