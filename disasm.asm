@@ -9,9 +9,9 @@
     ; (.asm pavidalu). 
 
     ; output failas po programos ivykdymo atrodo taip:
-        ; 0100:	B409		mov	ah, 09
-        ; 0102:	BADE01		mov	dx, 01DE
-        ; 0105:	CD21		int	21
+        ; 0100: B409        mov ah, 09
+        ; 0102: BADE01      mov dx, 01DE
+        ; 0105: CD21        int 21
         ; 01F9:   65        NEATPAZINTA
         ; ...
     ; t.y. vienoje eiluteje turi buti komandos Hex adresas, 
@@ -43,15 +43,26 @@ jumps
 ; ============================================================
 
 .data
-    data_octal         db 2, 6, 4,  0, 1, 1                      ; B409
-                       db 2, 7, 2,  3, 3, 6,  0, 0, 1            ; BADE01
-                       db 0, 2, 5,  0, 1, 6,  0, 6, 7,  9, 1, 2, 
-                       db 0, 1, 6,  1, 4, 4,  3, 2, 6,  0FFh
+    data_octal db 0, 1, 6                      ; 0100: 0E       | PUSH CS
+               db 0, 1, 1                      ; 0101: 09       | 011
+               db 0, 3, 6                      ; 0102: 1E       | PUSH DS
+               db 8, 4, 4                      ; 0XXX: ??       | UNDEFINED
+               db 2, 6, 4,  0, 1, 1            ; 0XXX: B4 09    | MOV AH, 011
+               db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0XXX: BA DE 01 | MOV DX, 001336
+               db 0, 2, 5                      ; 0XXX: 15       | 025
+               db 0, 6, 7                      ; 0XXX: 37       | 0x7_add_sub_adjust
+               db 1, 4, 4                      ; 0XXX: 64       | UNDEFINED
+               db 3, 2, 6                      ; 0136: D6       | UNDEFINED
+               db 0FFh
 
     ; Rb = Byte-sized register
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DL', 'BH'
+
     ; Rw = Word-sized register
     Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
+
+    ; SR = Segment register:
+    SR dw 'ES', 'CS', 'SS', 'DS'  
 
     sep1 db '=============================================================================$'
 
@@ -613,10 +624,33 @@ _075:
 ; ************************************************************
 
 _0x6_push_seg:
-    m_putsln '0x6_push_seg'
+    ; 2nd octal digit is already in AL
+    ; AL is one of {0,1,2,3}
+
+    m_puts 'PUSH '
+
+    mov bl, al 
+    shl bl, 1 ; times 2
+
+    ; ------- print segment register name --------
+    mov dl, byte ptr [SR+bx+1]
+    mov ah, 02h
+    int 21h
+
+    mov dl, byte ptr [SR+bx]
+    mov ah, 02h
+    int 21h
+    ; -------------------------------------------/
+
+    m_puts '  <-- _0x6_push_seg'
+    m_print_nl
+
     jmp _xxx
 
 _0x6_seg_change_prefix:
+    ; 2nd octal digit is already in AL
+    ; AL is one of {4,5,6,7}
+
     m_putsln '0x6_seg_change_prefix'
     jmp _xxx
 
@@ -1536,16 +1570,14 @@ _26x_mov_reg_imm_byte:
     m_puts 'MOV '
 
     mov bl, al
-    shl bl, 1; times 2. bl = 8
+    shl bl, 1 ; times 2
 
     ; --------- print register name -------------
     mov dl, byte ptr [Rb+bx+1]
-    ;mov dl, byte ptr [Rb+9]
     mov ah, 02h
     int 21h
 
     mov dl, byte ptr [Rb+bx]
-    ;mov dl, byte ptr [Rb+8]
     mov ah, 02h
     int 21h
     ; -------------------------------------------/
