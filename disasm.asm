@@ -99,6 +99,8 @@ jumps
                db 2, 4, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AX, [222111]
                db 2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AL
                db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
+               db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
+               db 3, 0, 3                      ; 0???: ??      | RET
                db 0FFh
 
     ; Byte-sized register
@@ -1534,53 +1536,52 @@ _30x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _307
     ja undefined
 
-    cmp al, 3
-    jb short __30_012
-    je _303
-    jmp short __30_456
+    cmp al, 4
+    jb short __30_23
+    je _304_les_reg_mem
 
-    __30_012:
-        cmp al, 2
-        je _302
-        jmp undefined ; _300, _301
+    cmp al, 6
+    jb _305_lds_reg_mem
+    je _306_mov_rm_imm_byte
+    jmp _307_mov_rm_imm_word
 
-    __30_456:
-        cmp al, 5
-        jb _304
-        je _305
-        jmp _306
+    __30_23:
+        cmp al, 3
+        jb short _302_ret_imm
+        jmp _303_ret
 
 ; ------------------------------------------------------------
-_302:
-    m_putsln '302'
+_302_ret_imm:
+    m_puts 'RET '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
-_303:
-    m_putsln '303'
+_303_ret:
+    m_putsln 'RET'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_304:
-    m_putsln '304'
+_304_les_reg_mem:
+    m_putsln '304_les_reg_mem'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_305:
-    m_putsln '305'
+_305_lds_reg_mem:
+    m_putsln '_305_lds_reg_mem'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_306:
-    m_putsln '306'
+_306_mov_rm_imm_byte:
+    m_putsln '_306_mov_rm_imm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_307:
-    m_putsln '307'
+_307_mov_rm_imm_word:
+    m_putsln '_307_mov_rm_imm_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
