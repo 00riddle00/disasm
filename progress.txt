@@ -113,8 +113,8 @@
 1010 000w ajb avb                             | MOV akumuliatorius <- atmintis
 1010 001w ajb avb                             | MOV atmintis <- akumuliatorius
 
-1010 010w                                     | MOVSB; MOVSW
-1010 011w                                     | CMPSB; CMPSW
+++++ ++++                                     | ++++++ +++++
+++++ ++++                                     | ++++++ +++++
 -------------------------------------o250--------------------------------------------------------------------
 1010 100w bojb [bovb]                         | TEST akumuliatorius ? betarpiškas operandas
 

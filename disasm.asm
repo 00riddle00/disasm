@@ -46,7 +46,6 @@ jumps
     data_octal db 0, 1, 6                      ; 0100: 0E       | PUSH CS
                db 0, 1, 1                      ; 0101: 09       | 011
                db 0, 3, 6                      ; 0102: 1E       | PUSH DS
-               db 8, 4, 4                      ; 0XXX: ??       | UNDEFINED
                db 0, 0, 7                      ; 0XXX: ??       | POP ES
                db 2, 6, 4,  0, 1, 1            ; 0XXX: B4 09    | MOV AH, 011
                db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0XXX: BA DE 01 | MOV DX, 001336
@@ -55,15 +54,17 @@ jumps
                db 0, 6, 7                      ; 0XXX: 37       | 0x7_add_sub_adjust
                db 1, 4, 4                      ; 0XXX: 64       | UNDEFINED
                db 3, 2, 6                      ; 0XXX: D6       | UNDEFINED
+               db 2, 4, 4                      ; 0XXX: ??       | MOVSB
+               db 2, 4, 7                      ; 0XXX: ??       | CMPSW
                db 0FFh
 
-    ; Rb = Byte-sized register
+    ; Byte-sized register
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DL', 'BH'
 
-    ; Rw = Word-sized register
+    ; Word-sized register
     Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
 
-    ; SR = Segment register:
+    ; Segment register:
     SR dw 'ES', 'CS', 'SS', 'DS'  
 
     sep1 db '=============================================================================$'
@@ -1448,64 +1449,66 @@ _24x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _247
     ja undefined
 
-    cmp al, 3
-    jb short __24_012
-    je _243
-    jmp short __24_456
+    cmp al, 4
+    jb short __24_0123
+    je _244_movsb
 
-    __24_012:
+    cmp al, 6
+    jb _245_movsw
+    je _246_cmpsb
+    jmp _247_cmpsw
+
+    __24_0123:
+        cmp al, 2
+        jb short __24_01
+        je _242_mov_mem_acc
+        jmp _243_mov_mem_acc
+
+    __24_01:
         cmp al, 1
-        jb short _240
-        je _241
-        jmp _242
-
-    __24_456:
-        cmp al, 5
-        jb _244
-        je _245
-        jmp _246
+        jb _240_mov_acc_mem
+        jmp _241_mov_acc_mem
 
 ; ############################################################
-_240:
-    m_putsln '240'
+_244_movsb:
+    m_putsln 'MOVSB'
     jmp _xxx
 
 ; ############################################################
-_241:
-    m_putsln '241'
+_245_movsw:
+    m_putsln 'MOVSW'
     jmp _xxx
 
 ; ############################################################
-_242:
-    m_putsln '242'
+_246_cmpsb:
+    m_putsln 'CMPSB'
     jmp _xxx
 
 ; ############################################################
-_243:
-    m_putsln '243'
+_247_cmpsw:
+    m_putsln 'CMPSW'
     jmp _xxx
 
 ; ############################################################
-_244:
-    m_putsln '244'
+_240_mov_acc_mem:
+    m_putsln '_240_mov_acc_mem'
     jmp _xxx
 
 ; ############################################################
-_245:
-    m_putsln '245'
+_241_mov_acc_mem:
+    m_putsln '_241_mov_acc_mem'
     jmp _xxx
 
 ; ############################################################
-_246:
-    m_putsln '246'
+_242_mov_mem_acc:
+    m_putsln '_242_mov_mem_acc'
     jmp _xxx
 
 ; ############################################################
-_247:
-    m_putsln '247'
+_243_mov_mem_acc:
+    m_putsln '_243_mov_mem_acc'
     jmp _xxx
 
 ; ------------------------------------------------------------
