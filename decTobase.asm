@@ -1,15 +1,23 @@
 ; ============================================================
 ;  DESCRIPTION
 ; ============================================================
-; Programa: Nr. 32
-; Uzduoties salyga: 
-    ; Parasykite programa, kuri iveda skaiciu desimtaineje 
-    ; sistemoje. Tuomet ivedamas skaicius, kuris simbolizuoja 
-    ; sistema. Isspausdina pirmaji skaicių ivestoje sistemoje. 
-    ; Pavyzdziui: Jei skaičiai 5 ir 2 isvesti turi 101, jei 
-    ; skaiciai 20 ir 16 tai atspausdina 14.
-; 10185 -> base 22
-; Atliko: Tomas Giedraitis
+; Subject: Computer Architecture
+; LAB-1 
+; Vilnius University, MIF
+; Author: Tomas Giedraitis
+;
+; Assignment:
+;    A program which lets the user input a decimal number
+;    as well as the number system to be converted in, and 
+;    outputs the converted number.
+;
+;    ex. If the number is 5 and the number system is 2
+;    (binary), it should output 101.
+;    If the number is 10185 and the system is 22, it 
+;    should output LOL.
+;
+; TODO: rewrite comments and text outputted by program in 
+;       English
 ; ============================================================
 
 ; ============================================================

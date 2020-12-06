@@ -1,24 +1,28 @@
 ; ============================================================
 ;  DESCRIPTION
 ; ============================================================
-; Programa: Disasembleris
+; Subject: Computer Architecture
+; LAB-2 and LAB-3: x8086 Disassembler
+; Vilnius University, MIF
+; Author: Tomas Giedraitis
 ;
-; Uzduoties salyga: 
-    ; Programa, kuri priima 'input' faila (.com arba .exe 
-    ; pavidalu) ir disasembliuoja i nurodyta 'output' faila
-    ; (.asm pavidalu). 
-
-    ; output failas po programos ivykdymo atrodo taip:
-        ; 0100: B409        mov ah, 09
-        ; 0102: BADE01      mov dx, 01DE
-        ; 0105: CD21        int 21
-        ; 01F9:   65        NEATPAZINTA
-        ; ...
-    ; t.y. vienoje eiluteje turi buti komandos Hex adresas, 
-    ; komandos Hex dump'as ir atpazinta komanda (arba 
-    ; NEATPAZINTA, jei tokios komandos nera).
+; Assignment: 
+;    A program which takes 'input' file (.com or .exe) 
+;    and disassembles it, writing to the 'output' file (.asm)
 ;
-; Atliko: Tomas Giedraitis
+;    output file after the program's execution should look
+;    like this:
+;         ...
+;         0100: B409    | MOV AH, 09
+;         0102: BADE01  | MOV DX, 01DE
+;         0105: CD21    | INT 21
+;         01F9: 65      | UNDEFINED
+;         ...
+;         ...
+;    i.e. on every line there should be Hex address of the 
+;    command, it's bytes written in Hex and then the
+;    recognized command (undefined, if no such command exists)
+;
 ; ============================================================
 
 ; ============================================================
@@ -37,33 +41,36 @@ jumps
 ; ============================================================
 ;  CONSTANTS
 ; ============================================================
+; ...
+; -----------------------------------------------------------/
 
 ; ============================================================
 ;  DATA
 ; ============================================================
 
 .data
-    data_octal db 0, 1, 6                      ; 0100: 0E       | PUSH CS
-               db 0, 1, 1                      ; 0101: 09       | 011
-               db 0, 3, 6                      ; 0102: 1E       | PUSH DS
-               db 0, 0, 7                      ; 0XXX: ??       | POP ES
-               db 1, 4, 4                      ; 0XXX: 64       | UNDEFINED
-               db 2, 6, 4,  0, 1, 1            ; 0XXX: B4 09    | MOV AH, 011
-               db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0XXX: BA DE 01 | MOV DX, 001336
-               db 0, 2, 7                      ; 0XXX: ??       | POP SS 
-               db 0, 2, 5                      ; 0XXX: 15       | 025
-               db 0, 6, 7                      ; 0XXX: 37       | 0x7_add_sub_adjust
-               db 3, 2, 6                      ; 0XXX: D6       | UNDEFINED
-               db 2, 4, 4                      ; 0XXX: ??       | MOVSB
-               db 2, 4, 7                      ; 0XXX: ??       | CMPSW
-               db 2, 5, 2                      ; 0XXX: ??       | STOSB
-               db 2, 5, 5                      ; 0XXX: ??       | LODSW
-               db 2, 5, 7                      ; 0XXX: ??       | SCASW
-               db 2, 5, 0,  0, 4, 9            ; 0XXX: ??       | TEST AL, 049
-               db 2, 5, 1,  0, 0, 1,  3, 3, 6  ; 0XXX: ??       | TEST AX, 336001
-               db 0, 4, 7                      ; 0XXX: ??       | DAA
-               db 0, 7, 7                      ; 0XXX: ??       | AAS
-               db 1, 0, 2                      ; 0XXX: ??       | INC DX
+
+   data_octal  db 2, 6, 4,  0, 1, 1            ; 0100: B409    | MOV AH, 011
+               db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0102: BADE01  | MOV DX, 001336
+              ;db 3, 1, 5,  0, 4, 1            ; 0105: CD21    | INT 21
+               db 1, 4, 5                      ; 01F9: 65      | UNDEFINED
+               db 0, 1, 6                      ; 01FA: 0E      | PUSH CS
+               db 0, 1, 1                      ; 0???: 09      | 011
+               db 0, 3, 6                      ; 0???: 1E      | PUSH DS
+               db 0, 0, 7                      ; 0???: 07      | POP ES
+               db 0, 2, 7                      ; 0???: 17      | POP SS 
+               db 0, 2, 5                      ; 0???: 15      | 025
+               db 3, 2, 6                      ; 0???: D6      | UNDEFINED
+               db 2, 4, 4                      ; 0???: ??      | MOVSB
+               db 2, 4, 7                      ; 0???: ??      | CMPSW
+               db 2, 5, 2                      ; 0???: ??      | STOSB
+               db 2, 5, 5                      ; 0???: ??      | LODSW
+               db 2, 5, 7                      ; 0???: ??      | SCASW
+               db 2, 5, 0,  0, 4, 9            ; 0???: ????    | TEST AL, 049
+               db 2, 5, 1,  0, 0, 1,  3, 3, 6  ; 0???: ??????  | TEST AX, 336001
+               db 0, 4, 7                      ; 0???: ??      | DAA
+               db 0, 7, 7                      ; 0???: ??      | AAS
+               db 1, 0, 2                      ; 0???: ??      | INC DX
                db 0FFh
 
     ; Byte-sized register
@@ -145,7 +152,6 @@ exit_program:
 ; ============================================================
 ;  _0XX
 ; ============================================================
-
 _0xx:
     ; get 2nd octal digit
     inc si
@@ -638,7 +644,6 @@ _075:
 ; ************************************************************
 ;  _0X6
 ; ************************************************************
-
 _0x6_push_seg:
     ; 2nd octal digit is already in AL
     ; it is one of {0,1,2,3}
@@ -658,7 +663,6 @@ _0x6_push_seg:
     int 21h
     ; -------------------------------------------/
 
-    m_puts '  <-- _0x6_push_seg'
     m_print_nl
 
     jmp _xxx
@@ -673,7 +677,6 @@ _0x6_seg_change_prefix:
 ; ************************************************************
 ;  _0X7
 ; ************************************************************
-
 _0x7_pop_seg:
     ; 2nd octal digit is already in AL
     ; it is one of {0,1,2,3}
@@ -693,7 +696,6 @@ _0x7_pop_seg:
     int 21h
     ; -------------------------------------------/
 
-    m_puts '  <-- _0x7_pop_seg'
     m_print_nl
 
     jmp _xxx
@@ -721,7 +723,6 @@ _077_add_sub_adjust:
 ; ============================================================
 ;  _1XX
 ; ============================================================
-
 _1xx:
     ; get 2nd octal digit
     inc si
@@ -750,7 +751,6 @@ _1xx:
 ; ************************************************************
 ;  _10X
 ; ************************************************************
-
 _10x_inc_reg_word:
     ; get 3rd octal digit
     inc si
@@ -774,7 +774,7 @@ _10x_inc_reg_word:
     int 21h
     ; -------------------------------------------/
 
-    m_putsln '  <-- _10x_inc_reg_word'
+    m_print_nl
 
     jmp _xxx
 
@@ -981,7 +981,6 @@ _127:
 ; ------------------------------------------------------------
 ;  _13X
 ; ------------------------------------------------------------
-
 _13x:
     ; get 3rd octal digit
     inc si
@@ -1051,7 +1050,6 @@ _137:
 ; ------------------------------------------------------------
 ;  _16X
 ; ------------------------------------------------------------
-
 _16x:
     ; get 3rd octal digit
     inc si
@@ -1287,7 +1285,6 @@ _207:
 ; ------------------------------------------------------------
 ;  _21X
 ; ------------------------------------------------------------
-
 _21x:
     ; get 3rd octal digit
     inc si
@@ -1495,7 +1492,6 @@ _237:
 ; ------------------------------------------------------------
 ;  _24X
 ; ------------------------------------------------------------
-
 _24x:
     ; get 3rd octal digit
     inc si
@@ -1567,7 +1563,6 @@ _243_mov_mem_acc_word:
 ; ------------------------------------------------------------
 ;  _25X
 ; ------------------------------------------------------------
-
 _25x:
     ; get 3rd octal digit
     inc si
@@ -1632,7 +1627,7 @@ _250_test_acc_imm_byte:
     int 21h
     ; -------------------------------------------/
 
-    m_putsln '  <-- _250_test_acc_imm_byte'
+    m_print_nl
 
     jmp _xxx
 
@@ -1690,7 +1685,7 @@ _251_test_acc_imm_word:
     int 21h
     ; -------------------------------------------/
 
-    m_putsln '  <-- _251_test_acc_imm_word'
+    m_print_nl
 
     jmp _xxx
 
@@ -1772,7 +1767,7 @@ _26x_mov_reg_imm_byte:
     int 21h
     ; -------------------------------------------/
 
-    m_putsln '  <-- _26x_mov_reg_imm_byte'
+    m_print_nl
 
     jmp _xxx
 
@@ -1842,14 +1837,13 @@ _27x_mov_reg_imm_word:
     int 21h
     ; -------------------------------------------/
 
-    m_putsln '  <-- _27x_mov_reg_imm_word'
+    m_print_nl
 
     jmp _xxx
 
 ; ============================================================
 ;  _3XX
 ; ============================================================
-
 _3xx:
     ; get 2nd octal digit
     inc si
@@ -2059,7 +2053,6 @@ _327:
 ; ------------------------------------------------------------
 ;  _33X
 ; ------------------------------------------------------------
-
 _33x:
     ; get 3rd octal digit
     inc si
@@ -2267,7 +2260,6 @@ _357:
 ; ------------------------------------------------------------
 ;  _36X
 ; ------------------------------------------------------------
-
 _36x:
     ; get 3rd octal digit
     inc si
