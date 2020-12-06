@@ -103,6 +103,14 @@ jumps
                db 3, 0, 3                      ; 0???: ??      | RET
                db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
                db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
+               db 0, 1, 4,  1, 1, 1            ; 0???: ??      | OR AL, 111
+               db 0, 1, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR AX, 222111
+               db 0, 2, 4,  1, 1, 1            ; 0???: ??      | ADC AL, 111
+               db 0, 2, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADC AX, 222111
+               db 0, 5, 4,  1, 1, 1            ; 0???: ??      | SUB AL, 111
+               db 0, 5, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB AX, 222111
+               db 0, 7, 4,  1, 1, 1            ; 0???: ??      | XOR AL, 111
+               db 0, 7, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, 222111
                db 0FFh
 
     ; Byte-sized register
@@ -370,50 +378,53 @@ _01x:
     ; 3rd octal digit is already in BL
     mov al, bl
 
-    cmp al, 3
-    jb short __01_012
-    je _013
-    jmp short __01_45
+    cmp al, 4
+    jb short __01_0123
+    je _014_or_acc_imm_byte
+    jmp _015_or_acc_imm_word
 
-    __01_012:
+    __01_0123:
+        cmp al, 2
+        jb short __01_01
+        je _012_or_reg_rm_byte
+        jmp _013_or_reg_rm_word
+
+    __01_01:
         cmp al, 1
-        jb short _010
-        je _011
-        jmp _012
-
-    __01_45:
-        cmp al, 5
-        je _015
-        jmp _014
+        je _011_or_rm_reg_word
 
 ; ------------------------------------------------------------
-_010:
-    m_putsln '010'
+_010_or_rm_reg_byte:
+    m_putsln '_010_or_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_011:
-    m_putsln '011'
+_011_or_rm_reg_word:
+    m_putsln '_011_or_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_012:
-    m_putsln '012'
+_012_or_reg_rm_byte:
+    m_putsln '_012_or_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_013:
-    m_putsln '013'
+_013_or_reg_rm_word:
+    m_putsln '_013_or_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_014:
-    m_putsln '014'
+; ************************************************************
+_014_or_acc_imm_byte:
+    m_puts 'OR AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_015:
-    m_putsln '015'
+; ************************************************************
+_015_or_acc_imm_word:
+    m_puts 'OR AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -423,50 +434,53 @@ _02x:
     ; 3rd octal digit is already in BL
     mov al, bl
 
-    cmp al, 3
-    jb short __02_012
-    je _023
-    jmp short __02_45
+    cmp al, 4
+    jb short __02_0123
+    je _024_adc_acc_imm_byte
+    jmp _025_adc_acc_imm_word
 
-    __02_012:
+    __02_0123:
+        cmp al, 2
+        jb short __02_01
+        je _022_adc_reg_rm_byte
+        jmp _023_adc_reg_rm_word
+
+    __02_01:
         cmp al, 1
-        jb short _020
-        je _021
-        jmp _022
-
-    __02_45:
-        cmp al, 5
-        je _025
-        jmp _024
+        je _021_adc_rm_reg_word
 
 ; ------------------------------------------------------------
-_020:
-    m_putsln '020'
+_020_adc_rm_reg_byte:
+    m_putsln '_020_adc_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_021:
-    m_putsln '021'
+_021_adc_rm_reg_word:
+    m_putsln '_021_adc_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_022:
-    m_putsln '022'
+_022_adc_reg_rm_byte:
+    m_putsln '_022_adc_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_023:
-    m_putsln '023'
+_023_adc_reg_rm_word:
+    m_putsln '_023_adc_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_024:
-    m_putsln '024'
+; ************************************************************
+_024_adc_acc_imm_byte:
+    m_puts 'ADC AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_025:
-    m_putsln '025'
+; ************************************************************
+_025_adc_acc_imm_word:
+    m_puts 'ADC AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -476,50 +490,53 @@ _03x:
     ; 3rd octal digit is already in BL
     mov al, bl
 
-    cmp al, 3
-    jb short __03_012
-    je _033
-    jmp short __03_45
+    cmp al, 4
+    jb short __03_0123
+    je _034_sbb_acc_imm_byte
+    jmp _035_sbb_acc_imm_word
 
-    __03_012:
+    __03_0123:
+        cmp al, 2
+        jb short __03_01
+        je _032_sbb_reg_rm_byte
+        jmp _033_sbb_reg_rm_word
+
+    __03_01:
         cmp al, 1
-        jb short _030
-        je _031
-        jmp _032
-
-    __03_45:
-        cmp al, 5
-        je _035
-        jmp _034
+        je _031_sbb_rm_reg_word
 
 ; ------------------------------------------------------------
-_030:
-    m_putsln '030'
+_030_sbb_rm_reg_byte:
+    m_putsln '_030_sbb_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_031:
-    m_putsln '031'
+_031_sbb_rm_reg_word:
+    m_putsln '_031_sbb_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_032:
-    m_putsln '032'
+_032_sbb_reg_rm_byte:
+    m_putsln '_032_sbb_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_033:
-    m_putsln '033'
+_033_sbb_reg_rm_word:
+    m_putsln '_033_sbb_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_034:
-    m_putsln '034'
+; ************************************************************
+_034_sbb_acc_imm_byte:
+    m_puts 'SBB AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_035:
-    m_putsln '035'
+; ************************************************************
+_035_sbb_acc_imm_word:
+    m_puts 'SBB AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -529,50 +546,53 @@ _04x:
     ; 3rd octal digit is already in BL
     mov al, bl
 
-    cmp al, 3
-    jb short __04_012
-    je _043
-    jmp short __04_45
+    cmp al, 4
+    jb short __04_0123
+    je _044_and_acc_imm_byte
+    jmp _045_and_acc_imm_word
 
-    __04_012:
+    __04_0123:
+        cmp al, 2
+        jb short __04_01
+        je _042_and_reg_rm_byte
+        jmp _043_and_reg_rm_word
+
+    __04_01:
         cmp al, 1
-        jb short _040
-        je _041
-        jmp _042
-
-    __04_45:
-        cmp al, 5
-        je _045
-        jmp _044
+        je _041_and_rm_reg_word
 
 ; ------------------------------------------------------------
-_040:
-    m_putsln '040'
+_040_and_rm_reg_byte:
+    m_putsln '_040_and_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_041:
-    m_putsln '041'
+_041_and_rm_reg_word:
+    m_putsln '_041_and_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_042:
-    m_putsln '042'
+_042_and_reg_rm_byte:
+    m_putsln '_042_and_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_043:
-    m_putsln '043'
+_043_and_reg_rm_word:
+    m_putsln '_043_and_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_044:
-    m_putsln '044'
+; ************************************************************
+_044_and_acc_imm_byte:
+    m_puts 'AND AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_045:
-    m_putsln '045'
+; ************************************************************
+_045_and_acc_imm_word:
+    m_puts 'AND AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -582,50 +602,53 @@ _05x:
     ; 3rd octal digit is already in BL
     mov al, bl
 
-    cmp al, 3
-    jb short __05_012
-    je _053
-    jmp short __05_45
+    cmp al, 4
+    jb short __05_0123
+    je _054_sub_acc_imm_byte
+    jmp _055_sub_acc_imm_word
 
-    __05_012:
+    __05_0123:
+        cmp al, 2
+        jb short __05_01
+        je _052_sub_reg_rm_byte
+        jmp _053_sub_reg_rm_word
+
+    __05_01:
         cmp al, 1
-        jb short _050
-        je _051
-        jmp _052
-
-    __05_45:
-        cmp al, 5
-        je _055
-        jmp _054
+        je _051_sub_rm_reg_word
 
 ; ------------------------------------------------------------
-_050:
-    m_putsln '050'
+_050_sub_rm_reg_byte:
+    m_putsln '_050_sub_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_051:
-    m_putsln '051'
+_051_sub_rm_reg_word:
+    m_putsln '_051_sub_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_052:
-    m_putsln '052'
+_052_sub_reg_rm_byte:
+    m_putsln '_052_sub_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_053:
-    m_putsln '053'
+_053_sub_reg_rm_word:
+    m_putsln '_053_sub_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_054:
-    m_putsln '054'
+; ************************************************************
+_054_sub_acc_imm_byte:
+    m_puts 'SUB AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_055:
-    m_putsln '055'
+; ************************************************************
+_055_sub_acc_imm_word:
+    m_puts 'SUB AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -635,50 +658,53 @@ _06x:
     ; 3rd octal digit is already in BL
     mov al, bl
 
-    cmp al, 3
-    jb short __06_012
-    je _063
-    jmp short __06_45
+    cmp al, 4
+    jb short __06_0123
+    je _064_xor_acc_imm_byte
+    jmp _065_xor_acc_imm_word
 
-    __06_012:
+    __06_0123:
+        cmp al, 2
+        jb short __06_01
+        je _062_xor_reg_rm_byte
+        jmp _063_xor_reg_rm_word
+
+    __06_01:
         cmp al, 1
-        jb short _060
-        je _061
-        jmp _062
-
-    __06_45:
-        cmp al, 5
-        je _065
-        jmp _064
+        je _061_xor_rm_reg_word
 
 ; ------------------------------------------------------------
-_060:
-    m_putsln '060'
+_060_xor_rm_reg_byte:
+    m_putsln '_060_xor_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_061:
-    m_putsln '061'
+_061_xor_rm_reg_word:
+    m_putsln '_061_xor_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_062:
-    m_putsln '062'
+_062_xor_reg_rm_byte:
+    m_putsln '_062_xor_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_063:
-    m_putsln '063'
+_063_xor_reg_rm_word:
+    m_putsln '_063_xor_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_064:
-    m_putsln '064'
+; ************************************************************
+_064_xor_acc_imm_byte:
+    m_puts 'XOR AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_065:
-    m_putsln '065'
+; ************************************************************
+_065_xor_acc_imm_word:
+    m_puts 'XOR AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -688,50 +714,53 @@ _07x:
     ; 3rd octal digit is already in BL
     mov al, bl
 
-    cmp al, 3
-    jb short __07_012
-    je _073
-    jmp short __07_45
+    cmp al, 4
+    jb short __07_0123
+    je _074_cmp_acc_imm_byte
+    jmp _075_cmp_acc_imm_word
 
-    __07_012:
+    __07_0123:
+        cmp al, 2
+        jb short __07_01
+        je _072_cmp_reg_rm_byte
+        jmp _073_cmp_reg_rm_word
+
+    __07_01:
         cmp al, 1
-        jb short _070
-        je _071
-        jmp _072
-
-    __07_45:
-        cmp al, 5
-        je _075
-        jmp _074
+        je _071_cmp_rm_reg_word
 
 ; ------------------------------------------------------------
-_070:
-    m_putsln '070'
+_070_cmp_rm_reg_byte:
+    m_putsln '_070_cmp_rm_reg_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_071:
-    m_putsln '071'
+_071_cmp_rm_reg_word:
+    m_putsln '_071_cmp_rm_reg_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_072:
-    m_putsln '072'
+_072_cmp_reg_rm_byte:
+    m_putsln '_072_cmp_reg_rm_byte'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_073:
-    m_putsln '073'
+_073_cmp_reg_rm_word:
+    m_putsln '_073_cmp_reg_rm_word'
     jmp _xxx
 
-; ------------------------------------------------------------
-_074:
-    m_putsln '074'
+; ************************************************************
+_074_cmp_acc_imm_byte:
+    m_puts 'CMP AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
-; ------------------------------------------------------------
-_075:
-    m_putsln '075'
+; ************************************************************
+_075_cmp_acc_imm_word:
+    m_puts 'CMP AX, '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ************************************************************
