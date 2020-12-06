@@ -56,6 +56,9 @@ jumps
                db 3, 2, 6                      ; 0XXX: D6       | UNDEFINED
                db 2, 4, 4                      ; 0XXX: ??       | MOVSB
                db 2, 4, 7                      ; 0XXX: ??       | CMPSW
+               db 2, 5, 2                      ; 0XXX: ??       | STOSB
+               db 2, 5, 5                      ; 0XXX: ??       | LODSW
+               db 2, 5, 7                      ; 0XXX: ??       | SCASW
                db 0FFh
 
     ; Byte-sized register
@@ -67,7 +70,7 @@ jumps
     ; Segment register:
     SR dw 'ES', 'CS', 'SS', 'DS'  
 
-    sep1 db '=============================================================================$'
+    sep db '=============================================================================$'
 
 ; ============================================================
 ;  CODE
@@ -87,11 +90,11 @@ start:
     mov es, ax                     ; perkelti ax (data) i data segmenta
 
     ; isvesti programos aprasa
-    m_println sep1
+    m_println sep
     m_puts   '                                   '
     m_puts   'DISASM'
     m_putsln '                                   '
-    m_println sep1
+    m_println sep
 
     xor ax, ax
     xor si, si
@@ -1463,13 +1466,13 @@ _24x:
     __24_0123:
         cmp al, 2
         jb short __24_01
-        je _242_mov_mem_acc
-        jmp _243_mov_mem_acc
+        je _242_mov_mem_acc_byte
+        jmp _243_mov_mem_acc_word
 
     __24_01:
         cmp al, 1
-        jb _240_mov_acc_mem
-        jmp _241_mov_acc_mem
+        jb _240_mov_acc_mem_byte
+        jmp _241_mov_acc_mem_word
 
 ; ############################################################
 _244_movsb:
@@ -1492,23 +1495,23 @@ _247_cmpsw:
     jmp _xxx
 
 ; ############################################################
-_240_mov_acc_mem:
-    m_putsln '_240_mov_acc_mem'
+_240_mov_acc_mem_byte:
+    m_putsln '_240_mov_acc_mem_byte'
     jmp _xxx
 
 ; ############################################################
-_241_mov_acc_mem:
-    m_putsln '_241_mov_acc_mem'
+_241_mov_acc_mem_word:
+    m_putsln '_241_mov_acc_mem_word'
     jmp _xxx
 
 ; ############################################################
-_242_mov_mem_acc:
-    m_putsln '_242_mov_mem_acc'
+_242_mov_mem_acc_byte:
+    m_putsln '_242_mov_mem_acc_byte'
     jmp _xxx
 
 ; ############################################################
-_243_mov_mem_acc:
-    m_putsln '_243_mov_mem_acc'
+_243_mov_mem_acc_word:
+    m_putsln '_243_mov_mem_acc_word'
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -1521,64 +1524,66 @@ _25x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _257
     ja undefined
 
-    cmp al, 3
-    jb short __25_012
-    je _253
-    jmp short __25_456
+    cmp al, 4
+    jb short __25_0123
+    je _254_lodsb
 
-    __25_012:
+    cmp al, 6
+    jb _255_lodsw
+    je _256_scasb
+    jmp _257_scasw
+
+    __25_0123:
+        cmp al, 2
+        jb short __25_01
+        je _252_stosb
+        jmp _253_stosw
+
+    __25_01:
         cmp al, 1
-        jb short _250
-        je _251
-        jmp _252
-
-    __25_456:
-        cmp al, 5
-        jb _254
-        je _255
-        jmp _256
+        jb _250_test_acc_imm_byte
+        jmp _251_test_acc_imm_word
 
 ; ############################################################
-_250:
-    m_putsln '250'
+_250_test_acc_imm_byte:
+    m_putsln '_250_test_acc_imm_byte'
     jmp _xxx
 
 ; ############################################################
-_251:
-    m_putsln '251'
+_251_test_acc_imm_word:
+    m_putsln '_251_test_acc_imm_word'
     jmp _xxx
 
 ; ############################################################
-_252:
-    m_putsln '252'
+_252_stosb:
+    m_putsln 'STOSB'
     jmp _xxx
 
 ; ############################################################
-_253:
-    m_putsln '253'
+_253_stosw:
+    m_putsln 'STOSW'
     jmp _xxx
 
 ; ############################################################
-_254:
-    m_putsln '254'
+_254_lodsb:
+    m_putsln 'LODSB'
     jmp _xxx
 
 ; ############################################################
-_255:
-    m_putsln '255'
+_255_lodsw:
+    m_putsln 'LODSW'
     jmp _xxx
 
 ; ############################################################
-_256:
-    m_putsln '256'
+_256_scasb:
+    m_putsln 'SCASB'
     jmp _xxx
 
 ; ############################################################
-_257:
-    m_putsln '257'
+_257_scasw:
+    m_putsln 'SCASW'
     jmp _xxx
 
 ; ************************************************************
