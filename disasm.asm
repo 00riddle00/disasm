@@ -68,7 +68,7 @@ jumps
 
    data_octal  db 2, 6, 4,  0, 1, 1            ; 0100: B409    | MOV AH, 011
                db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0102: BADE01  | MOV DX, 001336
-               db 3, 1, 5,  0, 4, 1            ; 0105: CD21    | INT 21
+               db 3, 1, 5,  0, 4, 1            ; 0105: CD21    | INT 041
                db 1, 4, 5                      ; 01F9: 65      | UNDEFINED
                ;db 0, 1, 6                      ; 01FA: 0E      | PUSH CS
                ;db 0, 1, 1                      ; 0???: 09      | 011
@@ -111,6 +111,10 @@ jumps
                db 0, 5, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB AX, 222111
                db 0, 7, 4,  1, 1, 1            ; 0???: ??      | XOR AL, 111
                db 0, 7, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, 222111
+               db 3, 1, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RETF 222111
+               db 3, 1, 3                      ; 0???: ??      | RETF
+               db 3, 1, 5,  0, 4, 1            ; 0???: ??      | INT 041
+               db 3, 1, 6                      ; 0???: ??      | INTO
                db 0FFh
 
     ; Byte-sized register
@@ -1627,53 +1631,54 @@ _31x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _317
     ja undefined
 
-    cmp al, 3
-    jb short __31_012
-    je _313
-    jmp short __31_456
+    cmp al, 5
+    jb short __31_234
+    je _315_int_number
 
-    __31_012:
-        cmp al, 2
-        je _312
-        jmp undefined ; _310, _311
+    cmp al, 6
+    je _316_into
+    jmp _317_iret
 
-    __31_456:
-        cmp al, 5
-        jb _314
-        je _315
-        jmp _316
+    __31_234:
+        cmp al, 3
+        jb _312_retf_imm
+        je _313_retf
+        jmp _314_int3
 
 ; ------------------------------------------------------------
-_312:
-    m_putsln '312'
+_312_retf_imm:
+    m_puts 'RETF '
+    call p_print_next_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
-_313:
-    m_putsln '313'
+_313_retf:
+    m_putsln 'RETF'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_314:
-    m_putsln '314'
+_314_int3:
+    m_putsln 'INT 3'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_315:
-    m_putsln '315'
+_315_int_number:
+    m_puts 'INT '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
-_316:
-    m_putsln '316'
+_316_into:
+    m_putsln 'INTO'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_317:
-    m_putsln '317'
+_317_iret:
+    m_putsln 'IRET'
     jmp _xxx
 
 ; ------------------------------------------------------------
