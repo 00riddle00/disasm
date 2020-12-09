@@ -84,22 +84,22 @@ jumps
                ;db 2, 5, 7                      ; 0???: ??      | SCASW
                ;db 2, 5, 0,  1, 1, 1            ; 0???: ????    | TEST AL, 043
                ;db 2, 5, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??????  | TEST AX, 336001
-               db 0, 4, 7                      ; 0???: ??      | DAA
-               db 0, 7, 7                      ; 0???: ??      | AAS
-               db 1, 0, 6                      ; 0???: ??      | INC SI
-               db 1, 1, 3                      ; 0???: ??      | DEC BX
-               db 1, 2, 0                      ; 0???: ??      | PUSH AX
-               db 1, 3, 1                      ; 0???: ??      | POP CX
-               db 2, 2, 0                      ; 0???: ??      | NOP
-               db 2, 2, 5                      ; 0???: ??      | XCHG BP, AX
-               db 2, 3, 0                      ; 0???: ??      | CBW
-               db 2, 3, 3                      ; 0???: ??      | WAIT
-               db 2, 3, 7                      ; 0???: ??      | LAHF
-               db 2, 4, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AL, [222111]
-               db 2, 4, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AX, [222111]
-               db 2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AL
-               db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
-               db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
+               ;db 0, 4, 7                      ; 0???: ??      | DAA
+               ;db 0, 7, 7                      ; 0???: ??      | AAS
+               ;db 1, 0, 6                      ; 0???: ??      | INC SI
+               ;db 1, 1, 3                      ; 0???: ??      | DEC BX
+               ;db 1, 2, 0                      ; 0???: ??      | PUSH AX
+               ;db 1, 3, 1                      ; 0???: ??      | POP CX
+               ;db 2, 2, 0                      ; 0???: ??      | NOP
+               ;db 2, 2, 5                      ; 0???: ??      | XCHG BP, AX
+               ;db 2, 3, 0                      ; 0???: ??      | CBW
+               ;db 2, 3, 3                      ; 0???: ??      | WAIT
+               ;db 2, 3, 7                      ; 0???: ??      | LAHF
+               ;db 2, 4, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AL, [222111]
+               ;db 2, 4, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AX, [222111]
+               ;db 2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AL
+               ;db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
+               ;db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
                db 3, 0, 3                      ; 0???: ??      | RET
                db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
                db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
@@ -118,6 +118,10 @@ jumps
                db 3, 2, 4,  0, 1, 2            ; 0???: ??      | AAM
                db 3, 2, 4                      ; 0???: ??      | UNDEFINED
                db 3, 2, 7                      ; 0???: ??      | XLAT
+               db 3, 4, 4,  1, 1, 1            ; 0???: ??      | IN AL, 111
+               db 3, 4, 7,  0, 0, 1            ; 0???: ??      | OUT 001, AX
+               db 3, 5, 5                      ; 0???: ??      | IN AX, DX
+               db 3, 5, 6                      ; 0???: ??      | OUT DX, AL
                db 0FFh
 
     ; Byte-sized register
@@ -1291,7 +1295,7 @@ _23x:
     __23_0123:
         cmp al, 2
         jb short __23_01
-        je _232_call_far_absolute
+        je _232_call_label_far_absolute
         jmp _233_wait
 
     __23_01:
@@ -1310,8 +1314,8 @@ _231_cwd:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_232_call_far_absolute:
-    m_putsln '_232_call_far_absolute'
+_232_call_label_far_absolute:
+    m_putsln '_232_call_label_far_absolute'
     jmp _xxx
 
 ; ************************************************************
@@ -1729,12 +1733,12 @@ _32x:
         jmp _325_aad
 
 
-; ------------------------------------------------------------
+; ************************************************************
 _324_aam:
     m_putsln 'AAM'
     jmp _xxx
 
-; ------------------------------------------------------------
+; ************************************************************
 _325_aad:
     m_putsln 'AAD'
     jmp _xxx
@@ -1822,64 +1826,74 @@ _34x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _347
     ja undefined
 
-    cmp al, 3
-    jb short __34_012
-    je _343
-    jmp short __34_456
+    cmp al, 4
+    jb short __34_0123
+    je _344_in_acc_port_direct_byte
 
-    __34_012:
+    cmp al, 6
+    jb _345_in_acc_port_direct_word
+    je _346_out_acc_port_direct_byte
+    jmp _347_out_acc_port_direct_word
+
+    __34_0123:
+        cmp al, 2
+        jb short __34_01
+        je _342_loop_label
+        jmp _343_jcxz_label
+
+    __34_01:
         cmp al, 1
-        jb short _340
-        je _341
-        jmp _342
-
-    __34_456:
-        cmp al, 5
-        jb _344
-        je _345
-        jmp _346
+        jb short _340_loopne_label
+        jmp _341_loope_label
 
 ; ------------------------------------------------------------
-_340:
-    m_putsln '340'
+_340_loopne_label:
+    m_putsln '_340_loopne_label'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_341:
-    m_putsln '341'
+_341_loope_label:
+    m_putsln '_341_loope_label'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_342:
-    m_putsln '342'
+_342_loop_label:
+    m_putsln '_342_loop_label'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_343:
-    m_putsln '343'
+_343_jcxz_label:
+    m_putsln '343_343_jcxz_label'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_344:
-    m_putsln '344'
+_344_in_acc_port_direct_byte:
+    m_puts 'IN AL, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
-_345:
-    m_putsln '345'
+_345_in_acc_port_direct_word:
+    m_puts 'IN AX, '
+    call p_print_next_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
-_346:
-    m_putsln '346'
+_346_out_acc_port_direct_byte:
+    m_puts 'OUT ' 
+    call p_print_next_byte
+    m_putsln ', AL'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_347:
-    m_putsln '347'
+_347_out_acc_port_direct_word:
+    m_puts 'OUT ' 
+    call p_print_next_byte
+    m_putsln ', AX'
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -1891,64 +1905,66 @@ _35x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _357
     ja undefined
 
-    cmp al, 3
-    jb short __35_012
-    je _353
-    jmp short __35_456
+    cmp al, 4
+    jb short __35_0123
+    je _354_in_acc_port_indirect_byte
 
-    __35_012:
+    cmp al, 6
+    jb _355_in_acc_port_indirect_word
+    je _356_out_acc_port_indirect_byte
+    jmp _357_out_acc_port_indirect_word
+
+    __35_0123:
+        cmp al, 2
+        jb short __35_01
+        je _352_jmp_label_far_absolute
+        jmp _353_jmp_label_short_relative
+
+    __35_01:
         cmp al, 1
-        jb short _350
-        je _351
-        jmp _352
-
-    __35_456:
-        cmp al, 5
-        jb _354
-        je _355
-        jmp _356
+        jb short _350_call_label_near_relative
+        jmp _351_jmp_label_near_relative
 
 ; ------------------------------------------------------------
-_350:
-    m_putsln '350'
+_350_call_label_near_relative:
+    m_putsln '_350_call_label_near_relative'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_351:
-    m_putsln '351'
+_351_jmp_label_near_relative:
+    m_putsln '_351_jmp_label_near_relative'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_352:
-    m_putsln '352'
+_352_jmp_label_far_absolute:
+    m_putsln '_352_jmp_label_far_absolute'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_353:
-    m_putsln '353'
+_353_jmp_label_short_relative:
+    m_putsln '_353_jmp_label_short_relative'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_354:
-    m_putsln '354'
+_354_in_acc_port_indirect_byte:
+    m_putsln 'IN AL, DX'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_355:
-    m_putsln '355'
+_355_in_acc_port_indirect_word:
+    m_putsln 'IN AX, DX'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_356:
-    m_putsln '356'
+_356_out_acc_port_indirect_byte:
+    m_putsln 'OUT DX, AL'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_357:
-    m_putsln '357'
+_357_out_acc_port_indirect_word:
+    m_putsln 'OUT DX, AX'
     jmp _xxx
 
 ; ------------------------------------------------------------
