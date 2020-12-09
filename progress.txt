@@ -191,12 +191,12 @@
 1111 011w mod 110 r/m [poslinkis]             | DIV registras/atmintis
 1111 011w mod 111 r/m [poslinkis]             | IDIV registras/atmintis
 -------------------------------------o370--------------------------------------------------------------------
-1111 1000                                     | CLC
-1111 1001                                     | STC
-1111 1010                                     | CLI
-1111 1011                                     | STI
-1111 1100                                     | CLD
-1111 1101                                     | STD
+++++ ++++                                     | +++
+++++ ++++                                     | +++
+++++ ++++                                     | +++
+++++ ++++                                     | +++
+++++ ++++                                     | +++
+++++ ++++                                     | +++
 
 1111 111w mod 000 r/m [poslinkis]             | INC registras/atmintis
 1111 111w mod 001 r/m [poslinkis]             | DEC registras/atmintis
