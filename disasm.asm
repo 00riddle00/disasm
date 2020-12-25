@@ -50,7 +50,7 @@ endm
 ; ============================================================
 ;  SETTINGS
 ; ============================================================
-.model small     ; one code segment one data segment
+.model small     ; one code segment, one data segment
 .stack 100h
 jumps
 
@@ -236,11 +236,11 @@ endp
 ; -----------------------------------------------------------/
 
 start:
-    mov ax, @data                  ; perkelti data i registra ax
-    mov ds, ax                     ; perkelti ax (data) i data segmenta
-    mov es, ax                     ; perkelti ax (data) i data segmenta
+    mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
+    mov ds, ax                     ; move AX (@data) to DS (data segment)
+    mov es, ax                     ; move AX (@data) to ES (extended data segment)
 
-    ; isvesti programos aprasa
+    ; print program description
     m_println sep
     m_puts   '                                   '
     m_puts   'DISASM'
