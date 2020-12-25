@@ -66,84 +66,103 @@ jumps
 
 .data
 
-   data_octal  db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
-               db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
-               db 0, 0, 7                      ; 0???: ??      | POP ES
-               db 0, 1, 1                      ; 0???: ??      | _011_or_rm_reg_word
-               db 0, 1, 4,  1, 1, 1            ; 0???: ??      | OR AL, 111
-               db 0, 1, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR AX, 222111
-               db 0, 1, 6                      ; 0???: ??      | PUSH CS
-               db 0, 2, 4,  1, 1, 1            ; 0???: ??      | ADC AL, 111
-               db 0, 2, 5                      ; 0???: ??      | 025 !! (ADC AX, 111025)
-               db 0, 2, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADC AX, 222111 !! (XCHG DX, AX)
-               db 0, 2, 7                      ; 0???: ??      | POP SS 
-               db 0, 3, 6                      ; 0???: ??      | PUSH DS
-               db 0, 4, 7                      ; 0???: ??      | DAA
-               db 0, 5, 4,  1, 1, 1            ; 0???: ??      | SUB AL, 111
-               db 0, 5, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB AX, 222111
-               db 0, 7, 4,  1, 1, 1            ; 0???: ??      | XOR AL, 111 !! (CMP AL, 111)
-               db 0, 7, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, 222111 !! (CMP AX, 222111)
-               db 0, 7, 7                      ; 0???: ??      | AAS
+    ; Byte-sized registers
+    Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
 
-               db 1, 0, 6                      ; 0???: ??      | INC SI
-               db 1, 1, 3                      ; 0???: ??      | DEC BX
-               db 1, 2, 0                      ; 0???: ??      | PUSH AX
-               db 1, 3, 1                      ; 0???: ??      | POP CX
-               db 1, 4, 5                      ; 0???: ??      | UNDEFINED
-
-               db 2, 2, 0                      ; 0???: ??      | NOP
-               db 2, 2, 5                      ; 0???: ??      | XCHG BP, AX
-               db 2, 3, 0                      ; 0???: ??      | CBW
-               db 2, 3, 3                      ; 0???: ??      | WAIT
-               db 2, 3, 7                      ; 0???: ??      | LAHF
-               db 2, 4, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AL, [222111]
-               db 2, 4, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AX, [222111]
-               db 2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AL
-               db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
-               db 2, 4, 4                      ; 0???: ??      | MOVSB
-               db 2, 4, 7                      ; 0???: ??      | CMPSW
-               db 2, 5, 0,  1, 1, 1            ; 0???: ????    | TEST AL, 043 ?? (TEST AL, 111)
-               db 2, 5, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??????  | TEST AX, 336001 ?? (TEST AX, 222111)
-               db 2, 5, 2                      ; 0???: ??      | STOSB
-               db 2, 5, 5                      ; 0???: ??      | LODSW
-               db 2, 5, 7                      ; 0???: ??      | SCASW
-               db 2, 6, 4,  0, 1, 1            ; 0???: ????    | MOV AH, 011
-               db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0???: ??????  | MOV DX, 001336
-               
-               db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
-               db 3, 0, 3                      ; 0???: ??      | RET
-               db 3, 1, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RETF 222111
-               db 3, 1, 3                      ; 0???: ??      | RETF
-               db 3, 1, 5,  0, 4, 1            ; 0???: ??      | INT 041
-               db 3, 1, 6                      ; 0???: ??      | INTO
-               db 3, 2, 4                      ; 0???: ??      | UNDEFINED
-               db 3, 2, 4,  0, 1, 2            ; 0???: ??      | AAM
-               db 3, 2, 6                      ; 0???: ??      | UNDEFINED
-               db 3, 2, 7                      ; 0???: ??      | XLAT
-               db 3, 4, 4,  1, 1, 1            ; 0???: ??      | IN AL, 111
-               db 3, 4, 7,  0, 0, 1            ; 0???: ??      | OUT 001, AX
-               db 3, 5, 5                      ; 0???: ??      | IN AX, DX
-               db 3, 5, 6                      ; 0???: ??      | OUT DX, AL
-               db 3, 6, 0                      ; 0???: ??      | LOCK
-               db 3, 6, 1                      ; 0???: ??      | UNDEFINED
-               db 3, 6, 3                      ; 0???: ??      | REP
-               db 3, 6, 4                      ; 0???: ??      | HLT
-               db 3, 7, 1                      ; 0???: ??      | STC
-               db 3, 7, 2                      ; 0???: ??      | CLI
-               db 3, 7, 4                      ; 0???: ??      | CLD
-
-               db 0FFh
-
-    ; Byte-sized register
-    Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DL', 'BH'
-
-    ; Word-sized register
+    ; Word-sized registers
     Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
 
-    ; Segment register:
+    ; Segment registers
     SR dw 'ES', 'CS', 'SS', 'DS'  
 
+    ; Registers used as base in EA formation
+    EAb dw 'BX', 'BX', 'BP', 'BP', 'SI', 'DI', 'BP', 'BX'
+
+    ; Registers used as index in EA formation
+    EAi dw 'SI', 'DI', 'SI', 'DI'
+
     sep db '=============================================================================$'
+
+    data_octal  db 0, 0, 1,  3, 1, 0          ; 0???: ??      | ADD AX, CX
+    db 0, 0, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD word ptr [SI+111], DX
+    db 0, 0, 1,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [SI+222111], DX
+    db 0, 0, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD word ptr [BP+DI+111], AX
+    db 0, 0, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [BP+DI+222111], AX
+    db 0, 0, 1,  0, 2, 4                      ; 0???: ??      | ADD word ptr [SI], DX
+    db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
+    db 0, 0, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [222111], BX
+ 
+    db 0FFh
+
+    ;db 0, 0, 3,  3, 0, 1            ; 0???: ??      | ADD AX, CX
+
+    db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
+    db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
+    db 0, 0, 7                      ; 0???: ??      | POP ES
+    db 0, 1, 1                      ; 0???: ??      | _011_or_rm_reg_word
+    db 0, 1, 4,  1, 1, 1            ; 0???: ??      | OR AL, 111
+    db 0, 1, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR AX, 222111
+    db 0, 1, 6                      ; 0???: ??      | PUSH CS
+    db 0, 2, 4,  1, 1, 1            ; 0???: ??      | ADC AL, 111
+    db 0, 2, 5                      ; 0???: ??      | 025 !! (ADC AX, 111025)
+    db 0, 2, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADC AX, 222111 !! (XCHG DX, AX)
+    db 0, 2, 7                      ; 0???: ??      | POP SS 
+    db 0, 3, 6                      ; 0???: ??      | PUSH DS
+    db 0, 4, 7                      ; 0???: ??      | DAA
+    db 0, 5, 4,  1, 1, 1            ; 0???: ??      | SUB AL, 111
+    db 0, 5, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB AX, 222111
+    db 0, 7, 4,  1, 1, 1            ; 0???: ??      | XOR AL, 111 !! (CMP AL, 111)
+    db 0, 7, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, 222111 !! (CMP AX, 222111)
+    db 0, 7, 7                      ; 0???: ??      | AAS
+
+    db 1, 0, 6                      ; 0???: ??      | INC SI
+    db 1, 1, 3                      ; 0???: ??      | DEC BX
+    db 1, 2, 0                      ; 0???: ??      | PUSH AX
+    db 1, 3, 1                      ; 0???: ??      | POP CX
+    db 1, 4, 5                      ; 0???: ??      | UNDEFINED
+
+    db 2, 2, 0                      ; 0???: ??      | NOP
+    db 2, 2, 5                      ; 0???: ??      | XCHG BP, AX
+    db 2, 3, 0                      ; 0???: ??      | CBW
+    db 2, 3, 3                      ; 0???: ??      | WAIT
+    db 2, 3, 7                      ; 0???: ??      | LAHF
+    db 2, 4, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AL, [222111]
+    db 2, 4, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AX, [222111]
+    db 2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AL
+    db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
+    db 2, 4, 4                      ; 0???: ??      | MOVSB
+    db 2, 4, 7                      ; 0???: ??      | CMPSW
+    db 2, 5, 0,  1, 1, 1            ; 0???: ????    | TEST AL, 043 ?? (TEST AL, 111)
+    db 2, 5, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??????  | TEST AX, 336001 ?? (TEST AX, 222111)
+    db 2, 5, 2                      ; 0???: ??      | STOSB
+    db 2, 5, 5                      ; 0???: ??      | LODSW
+    db 2, 5, 7                      ; 0???: ??      | SCASW
+    db 2, 6, 4,  0, 1, 1            ; 0???: ????    | MOV AH, 011
+    db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0???: ??????  | MOV DX, 001336
+    
+    db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
+    db 3, 0, 3                      ; 0???: ??      | RET
+    db 3, 1, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RETF 222111
+    db 3, 1, 3                      ; 0???: ??      | RETF
+    db 3, 1, 5,  0, 4, 1            ; 0???: ??      | INT 041
+    db 3, 1, 6                      ; 0???: ??      | INTO
+    db 3, 2, 4                      ; 0???: ??      | UNDEFINED
+    db 3, 2, 4,  0, 1, 2            ; 0???: ??      | AAM
+    db 3, 2, 6                      ; 0???: ??      | UNDEFINED
+    db 3, 2, 7                      ; 0???: ??      | XLAT
+    db 3, 4, 4,  1, 1, 1            ; 0???: ??      | IN AL, 111
+    db 3, 4, 7,  0, 0, 1            ; 0???: ??      | OUT 001, AX
+    db 3, 5, 5                      ; 0???: ??      | IN AX, DX
+    db 3, 5, 6                      ; 0???: ??      | OUT DX, AL
+    db 3, 6, 0                      ; 0???: ??      | LOCK
+    db 3, 6, 1                      ; 0???: ??      | UNDEFINED
+    db 3, 6, 3                      ; 0???: ??      | REP
+    db 3, 6, 4                      ; 0???: ??      | HLT
+    db 3, 7, 1                      ; 0???: ??      | STC
+    db 3, 7, 2                      ; 0???: ??      | CLI
+    db 3, 7, 4                      ; 0???: ??      | CLD
+
+    db 0FFh
 
 ; ============================================================
 ;  CODE
@@ -345,39 +364,358 @@ _00x:
     mov al, bl
 
     cmp al, 4
-    jb short __00_0123
+    jb short __00_0123_add_reg_rm
     je _004_add_acc_imm_byte
     jmp _005_add_acc_imm_word
+; ------------------------------------------------------------
 
-    __00_0123:
-        cmp al, 2
-        jb short __00_01
-        je _002_add_reg_rm_byte
-        jmp _003_add_reg_rm_word
+__00_0123_add_reg_rm:
+    m_puts 'ADD '
 
-    __00_01:
+    ; AL so far contains 3 bits '0dw' as an octal number
+    ; check 'd' (destination) bit
+    cmp al, 2
+    jb __add_rm_reg  ; so d = 0
+
+    ; d = 1
+    __add_reg_rm:
+        cmp al, 3
+        jb __add_reg_rm_byte ; so w = 0
+
+        ; w = 1
+        __add_reg_rm_word:
+            ; get 'mod' value (2 bits, represented as an octal number)
+            inc si
+            mov al, byte ptr [data_octal+si]
+
+            ; check 'mod' value
+            cmp al, 3
+            jb __add_reg_mem_word ; so 'r/m' is memory (according to 'mod')
+
+            ; 'r/m' is register (according to 'mod')
+            _add__reg__rm_is_reg__word:
+                ; TODO
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                m_exit0
+
+           ; 'r/m' is memory (according to 'mod')
+           __add_reg_mem_word:
+                ; TODO
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                m_exit0
+
+        ; w = 0
+        __add_reg_rm_byte:
+            ; get 'mod' value (2 bits, represented as an octal number)
+            inc si
+            mov al, byte ptr [data_octal+si]
+
+            ; check 'mod' value
+            cmp al, 3
+            jb __add_reg_mem_byte ; so 'r/m' is memory (according to 'mod')
+
+            ; 'r/m' is register (according to 'mod')
+            _add__reg__rm_is_reg__byte:
+                ; TODO
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                m_exit0
+
+           ; 'r/m' is memory (according to 'mod')
+           __add_reg_mem_byte:
+                ; TODO
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                m_exit0
+
+    ; d = 0
+    __add_rm_reg:
+        ; check 'w' (word) bit
         cmp al, 1
-        je _001_add_rm_reg_word
+        jb __add_rm_reg_byte ; so w = 0
 
-; ------------------------------------------------------------
-_000_add_rm_reg_byte:
-    m_putsln '_000_add_rm_reg_byte'
-    jmp _xxx
+        ; w = 1
+        __add_rm_reg_word:
+            ; get 'mod' value (2 bits, represented as an octal number)
+            inc si
+            mov al, byte ptr [data_octal+si]
 
-; ------------------------------------------------------------
-_001_add_rm_reg_word:
-    m_putsln '_001_add_rm_reg_word'
-    jmp _xxx
+            ; check 'mod' value
+            cmp al, 3
+            jb __add_mem_reg_word ; so 'r/m' is memory (according to 'mod')
 
-; ------------------------------------------------------------
-_002_add_reg_rm_byte:
-    m_putsln '_002_add_reg_rm_byte'
-    jmp _xxx
+            ; 'r/m' is register (according to 'mod')
+            _add__rm_is_reg__reg__word:
+                ; get 'r/m' value
+                inc si
+                inc si
+                mov al, byte ptr [data_octal+si]
 
-; ------------------------------------------------------------
-_003_add_reg_rm_word:
-    m_putsln '_003_add_reg_rm_word'
-    jmp _xxx
+                mov bl, al
+                shl bl, 1 ; times 2
+                ; print word register according to 'r/m' value
+                m_print_reg Rw
+
+                m_puts ', '
+
+                ; get 'reg' value
+                dec si
+                mov al, byte ptr [data_octal+si]
+
+                mov bl, al
+                shl bl, 1 ; times 2
+                ; print word register according to 'reg' value
+                m_print_reg Rw
+
+                m_print_nl
+                inc si ; make SI point to the last byte read ('r/m' in this case)
+                jmp _xxx
+
+            ; 'r/m' is memory (according to 'mod')
+            __add_mem_reg_word:
+                ; check 'mod' value again
+                cmp al, 1
+                jb __add_mem_reg_word_no_offset ; so offset is not used for EA (according to 'mod')
+
+                ; offset is used for EA (according to 'mod')
+                __add_mem_reg_word_offset:
+                    ; place 'mod' value in CL (needed later for specifying offset)
+                    mov cl, al
+
+                    ; place 'reg' value in CH (needed later for register)
+                    inc si
+                    mov ch, byte ptr [data_octal+si]
+
+                    ; get 'r/m' value (3 bits, represented as an octal number)
+                    inc si
+                    mov al, byte ptr [data_octal+si]
+
+                    ; check 'r/m' value
+                    cmp al, 4
+                    jb _add_mem_reg_word_offset_index ; so index register is also used for EA
+
+                    ; index register is not used for EA
+                    _add_mem_reg_word_offset_no_index:
+                        m_puts 'word ptr ['
+
+                        ; AL contains 'r/m' value
+                        mov bl, al 
+                        shl bl, 1 ; times 2
+                        ; print register (used as a base) according to 'r/m' value
+                        m_print_reg EAb
+
+                        m_puts '+'
+
+                        ; CL contains 'mod' value
+                        cmp cl, 2
+                        jb o1_print_next_byte ; offset is one byte (according to 'mod')
+
+                        ; offset is two bytes (according to 'mod')
+                        o1_print_next_word:
+                            call p_print_next_word
+                            jmp o1_offset_printed
+
+                        ; offset is one byte (according to 'mod')
+                        o1_print_next_byte:
+                            call p_print_next_byte
+
+                        o1_offset_printed:
+                            m_puts '], '
+
+                        ; CH contains 'reg' value
+                        mov bl, ch
+                        shl bl, 1 ; times 2
+                        ; print word register according to 'reg' value
+                        m_print_reg Rw
+
+                        m_print_nl
+                        ; SI already points to the last byte read (offset)
+                        jmp _xxx
+
+                    ; index register is also used for EA
+                    _add_mem_reg_word_offset_index:
+                        m_puts 'word ptr ['
+
+                        ; AL contains 'r/m' value
+                        mov bl, al 
+                        shl bl, 1 ; times 2
+                        ; print register (used as a base) according to 'r/m' value
+                        m_print_reg EAb
+                        m_puts '+'
+                        ; print register (used as an index) according to 'r/m' value
+                        m_print_reg EAi
+
+                        m_puts '+'
+
+                        ; CL contains 'mod' value
+                        cmp cl, 2
+                        jb o2_print_next_byte ; offset is one byte (according to 'mod')
+
+                        ; offset is two bytes (according to 'mod')
+                        o2_print_next_word:
+                            call p_print_next_word
+                            jmp o2_offset_printed
+
+                        ; offset is one byte (according to 'mod')
+                        o2_print_next_byte:
+                            call p_print_next_byte
+
+                        o2_offset_printed:
+                            m_puts '], '
+
+                        ; CH contains 'reg' value
+                        mov bl, ch
+                        shl bl, 1 ; times 2
+                        ; print word register according to 'reg' value
+                        m_print_reg Rw
+
+                        m_print_nl
+                        ; SI already points to the last byte read (offset)
+                        jmp _xxx
+
+                ; offset is not used for EA (according to 'mod')
+                __add_mem_reg_word_no_offset:
+                    ; get 'r/m' value
+                    inc si
+                    inc si
+                    mov al, byte ptr [data_octal+si]
+
+                    ; check 'r/m' value for a special case - direct address
+                    cmp al, 6
+                    je _add_mem_reg_word_no_offset_direct_address ; so only direct address is used for EA
+
+                    ; check 'r/m' value again
+                    cmp al, 4
+                    jb _add_mem_reg_word_no_offset_index ; a register, used as an index, is used for EA
+
+                    ; index is not used for EA
+                    _add_mem_reg_word_no_offset_no_index:
+                        m_puts 'word ptr ['
+
+                        ; AL contains 'r/m' value
+                        mov bl, al 
+                        shl bl, 1 ; times 2
+                        ; print register (used as a base) according to 'r/m' value
+                        m_print_reg EAb
+
+                        m_puts '], '
+
+                        ; get 'reg' value
+                        dec si
+                        mov al, byte ptr [data_octal+si]
+
+                        mov bl, al
+                        shl bl, 1 ; times 2
+                        ; print word register according to 'reg' value
+                        m_print_reg Rw
+
+                        m_print_nl
+                        inc si ; make SI point to the last byte read (r/m in this case)
+                        jmp _xxx
+
+                    _add_mem_reg_word_no_offset_index:
+                        m_puts 'word ptr ['
+
+                        ; AL contains 'r/m' value
+                        mov bl, al 
+                        shl bl, 1 ; times 2
+                        ; print register (used as a base) according to 'r/m' value
+                        m_print_reg EAb
+                        m_puts '+'
+                        ; print register (used as an index) according to 'r/m' value
+                        m_print_reg EAi
+
+                        m_puts '], '
+
+                        ; get 'reg' value
+                        dec si
+                        mov al, byte ptr [data_octal+si]
+
+                        mov bl, al
+                        shl bl, 1 ; times 2
+                        ; print word register according to 'reg' value
+                        m_print_reg Rw
+
+                        m_print_nl
+                        inc si ; make SI point to the last byte read (r/m in this case)
+                        jmp _xxx
+
+                    ; only direct address is used for EA
+                    _add_mem_reg_word_no_offset_direct_address:
+                        m_puts 'word ptr ['
+                        ; print direct address (two bytes)
+                        call p_print_next_word
+                        m_puts '], '
+
+                        ; get 'reg' value
+                        dec si
+                        mov al, byte ptr [data_octal+si]
+
+                        ; print word register, according to 'reg' value
+                        mov bl, al
+                        shl bl, 1 ; times 2
+                        ; print word register according to 'reg' value
+                        m_print_reg Rw
+
+                        m_print_nl
+                        inc si ; make SI point to the last byte read ('r/m' in this case)
+                        jmp _xxx
+
+        ; w = 0
+        __add_rm_reg_byte:
+            ; get 'mod' value (2 bits, represented as an octal number)
+            inc si
+            mov al, byte ptr [data_octal+si]
+
+            ; check 'mod' value
+            cmp al, 3
+            jb __add_mem_reg_byte ; so 'r/m' is memory (according to 'mod')
+
+            ; 'r/m' is register (according to 'mod')
+            _add__rm_is_reg__reg__byte:
+                ; TODO
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                m_exit0
+
+            ; 'r/m' is memory (according to 'mod')
+            __add_mem_reg_byte:
+                ; TODO
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                ; ...
+                m_exit0
 
 ; -------------------------------------------------------------
 _004_add_acc_imm_byte:
