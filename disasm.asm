@@ -126,39 +126,40 @@ m_decode_rm macro word
 
             ; check 'r/m' value again
             cmp al, 4
-            jae short _no_index_0; so index register is not used for EA
+            jae no_index_L0; so index register is not used for EA
 
             ; index register is also used for EA
-            _add_index_0:
+            add_index_L0:
                 ; print register (used as an index) according to 'r/m' value
                 m_print_reg EAi
                 m_puts '+'
 
             ; if jumped to this label, index register is not used for EA
-            _no_index_0:
+            no_index_L0:
 
             ; CH contains 'mod' value
             cmp ch, 2
-            jb o1_print_next_byte ; offset is one byte (according to 'mod')
+            jb print_offset_byte ; offset is one byte (according to 'mod')
 
             ; offset is two bytes (according to 'mod')
-            o1_print_next_word:
+            print_offset_word:
                 call p_print_next_word
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 6
                 ; place SI back to point at 'r/m'
                 sub si, 6
-                jmp o1_offset_printed
+
+                jmp offset_printed_L0
 
             ; offset is one byte (according to 'mod')
-            o1_print_next_byte:
+            print_offset_byte:
                 call p_print_next_byte
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 3
                 ; place SI back to point at 'r/m'
                 sub si, 3
 
-            o1_offset_printed:
+            offset_printed_L0:
                 m_puts ']'
 
             ; place SI back to point at 'mod'
@@ -186,16 +187,16 @@ m_decode_rm macro word
 
             ; check 'r/m' value again
             cmp al, 4
-            jae short _no_index_1; so index register is not used for EA
+            jae short no_index_L1; so index register is not used for EA
 
             ; index register is also used for EA
-            _add_index_1:
+            _add_index_L1:
                 ; print register (used as an index) according to 'r/m' value
                 m_puts '+'
                 m_print_reg EAi
 
             ; if jumped to this label, index register is not used for EA
-            _no_index_1:
+            _no_index_L1:
 
             m_puts ']'
 
@@ -245,7 +246,6 @@ jumps
 ; ============================================================
 
 .data
-
     ; Byte-sized registers
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
 
@@ -263,6 +263,7 @@ jumps
 
     sep db '=============================================================================$'
 
+; ==================================== TESTING ===============================================
     data_octal  db 0, 0, 1,  3, 1, 0          ; 0???: ??      | ADD AX, CX
     db 0, 0, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD word ptr [SI+111], DX
     db 0, 0, 1,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [SI+222111], DX
@@ -343,6 +344,7 @@ jumps
     db 3, 7, 4                      ; 0???: ??      | CLD
 
     db 0FFh
+; ============================================================================================
 
 ; ============================================================
 ;  CODE
@@ -354,7 +356,10 @@ jumps
 ; PROCEDURES
 ; ------------------------------------------------------------
 
-; increases SI by 3
+; Before call: SI must point to the first octal 
+; digit of the byte to be printed
+;
+; After call: SI increases by 3
 proc p_print_next_byte
     push ax dx
     inc si
@@ -376,7 +381,10 @@ proc p_print_next_byte
     ret
 endp
 
-; increases SI by 6
+; Before call: SI must point to the first octal 
+; digit of the youngest byte
+;
+; After call: SI increases by 6
 proc p_print_next_word
     push ax dx
     inc si
