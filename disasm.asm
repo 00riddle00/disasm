@@ -99,30 +99,22 @@ jumps
     sep db '=============================================================================$'
 
 ; ==================================== TESTING ===============================================
-    data_octal db 0, 0, 0,  3, 1, 0          ; 0???: ??      | ADD AL, CL
-               db 0, 1, 1,  3, 1, 0          ; 0???: ??      | OR AX, CX
 
-    db 0, 2, 0,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADC byte ptr [SI+111], DL
-    db 0, 3, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | SBB word ptr [SI+111], DX
+; --------------------------------------------------------------------------------------------
+; --------------------------------------------------------------------------------------------
 
-    db 0, 4, 0,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | AND byte ptr [SI+222111], DL
-    db 0, 5, 1,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB word ptr [SI+222111], DX
-
-    db 0, 6, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | XOR byte ptr [BP+DI+111], AL
-    db 0, 7, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | CMP word ptr [BP+DI+111], AX
-
-    db 2, 1, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV byte ptr [BP+DI+222111], AL
-    db 2, 1, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV word ptr [BP+DI+222111], AX
+; ------------------------------------- GROUP 0 ----------------------------------------------
+    data_octal db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
+    db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
 
     db 0, 0, 0,  0, 2, 4                      ; 0???: ??      | ADD byte ptr [SI], DL
     db 0, 0, 1,  0, 2, 4                      ; 0???: ??      | ADD word ptr [SI], DX
 
-    db 0, 0, 0,  0, 2, 0                      ; 0???: ??      | ADD byte ptr [BX+SI], DL
-    db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
+    db 0, 0, 0,  3, 1, 0                      ; 0???: ??      | ADD AL, CL
+    db 0, 1, 1,  3, 1, 0                      ; 0???: ??      | OR AX, CX
 
     db 0, 0, 0,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [222111], BL
     db 0, 0, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [222111], BX
- 
 
     db 0, 0, 2,  3, 1, 0                      ; 0???: ??      | ADD CL, AL
     db 0, 0, 3,  3, 1, 0                      ; 0???: ??      | ADD CX, AX
@@ -133,48 +125,82 @@ jumps
     db 0, 0, 2,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DL, byte ptr [SI+222111]
     db 0, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DX, word ptr [SI+222111]
 
-    db 2, 1, 2,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AL, byte ptr [BP+DI+111]
-    db 2, 1, 3,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AX, word ptr [BP+DI+111]
+    db 0, 1, 2,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR BL, byte ptr [222111]
+    db 0, 0, 3,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BX, word ptr [222111]
 
-    db 0, 7, 2,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CMP AL, byte ptr [BP+DI+222111]
-    db 0, 6, 3,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, word ptr [BP+DI+222111]
-
-    db 0, 5, 2,  0, 2, 4                      ; 0???: ??      | SUB DL, byte ptr [SI]
-    db 0, 4, 3,  0, 2, 4                      ; 0???: ??      | AND DX, word ptr [SI]
+    db 0, 2, 0,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADC byte ptr [SI+111], DL
+    db 0, 3, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | SBB word ptr [SI+111], DX
 
     db 0, 3, 2,  0, 2, 0                      ; 0???: ??      | SBB DL, byte ptr [BX+SI]
     db 0, 2, 3,  0, 2, 0                      ; 0???: ??      | ADC DX, word ptr [BX+SI]
 
-    db 0, 1, 2,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR BL, byte ptr [222111]
-    db 0, 0, 3,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BX, word ptr [222111]
+    db 0, 4, 0,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | AND byte ptr [SI+222111], DL
+    db 0, 5, 1,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB word ptr [SI+222111], DX
 
-    db 0FFh
+    db 0, 5, 2,  0, 2, 4                      ; 0???: ??      | SUB DL, byte ptr [SI]
+    db 0, 4, 3,  0, 2, 4                      ; 0???: ??      | AND DX, word ptr [SI]
 
+    db 0, 6, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | XOR byte ptr [BP+DI+111], AL
+    db 0, 7, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | CMP word ptr [BP+DI+111], AX
+
+    db 0, 7, 2,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CMP AL, byte ptr [BP+DI+222111]
+    db 0, 6, 3,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, word ptr [BP+DI+222111]
+
+; ------------------------------------- GROUP 2 ----------------------------------------------
+    db 2, 0, 0,  1, 0, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | ADD byte ptr [SI+222], 333
+    ;     80        44        92        DB                           = ADD byte ptr [SI+92h], 0DBh
+    ;     80        44        92        DB                           = ADD byte ptr [SI-06Eh], 0DBh
+
+    db 2, 0, 3,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | ADD word ptr [SI+222111], 377333
+    ;     83        84        49        92        DB                 = ADD word ptr [SI+9249h], 0FFDBh
+    ;                                                                = ADD word ptr [SI-6DB7h], 0FFDBh
+
+    db 2, 0, 0,  1, 1, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | OR byte ptr [SI+222], 333
+    db 2, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | ADC word ptr [SI+222111], 377333
+
+    db 2, 0, 0,  1, 3, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | SBB byte ptr [SI+222], 333
+    db 2, 0, 3,  2, 4, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | AND word ptr [SI+222111], 377333
+
+    db 2, 0, 0,  1, 5, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | SUB byte ptr [SI+222], 333
+    db 2, 0, 0,  1, 6, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | XOR byte ptr [SI+222], 333
+    db 2, 0, 3,  2, 7, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | CMP word ptr [SI+222111], 377333
+
+    db 2, 1, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV byte ptr [BP+DI+222111], AL
+    db 2, 1, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV word ptr [BP+DI+222111], AX
+
+    db 2, 1, 2,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AL, byte ptr [BP+DI+111]
+    db 2, 1, 3,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AX, word ptr [BP+DI+111]
+
+; --------------------------------------------------------------------------------------------
+; --------------------------------------------------------------------------------------------
+
+; ------------------------------------- GROUP 0 ----------------------------------------------
     db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
     db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
     db 0, 0, 7                      ; 0???: ??      | POP ES
-    db 0, 1, 1                      ; 0???: ??      | _011_or_rm_reg_word
+    db 0, 1, 1,  3, 1, 0            ; 0???: ??      | OR AX, CX
     db 0, 1, 4,  1, 1, 1            ; 0???: ??      | OR AL, 111
     db 0, 1, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR AX, 222111
     db 0, 1, 6                      ; 0???: ??      | PUSH CS
     db 0, 2, 4,  1, 1, 1            ; 0???: ??      | ADC AL, 111
-    db 0, 2, 5                      ; 0???: ??      | 025 !! (ADC AX, 111025)
-    db 0, 2, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADC AX, 222111 !! (XCHG DX, AX)
+    db 0, 2, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADC AX, 222111
     db 0, 2, 7                      ; 0???: ??      | POP SS 
     db 0, 3, 6                      ; 0???: ??      | PUSH DS
     db 0, 4, 7                      ; 0???: ??      | DAA
     db 0, 5, 4,  1, 1, 1            ; 0???: ??      | SUB AL, 111
     db 0, 5, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB AX, 222111
-    db 0, 7, 4,  1, 1, 1            ; 0???: ??      | XOR AL, 111 !! (CMP AL, 111)
-    db 0, 7, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, 222111 !! (CMP AX, 222111)
+    db 0, 7, 4,  1, 1, 1            ; 0???: ??      | CMP AL, 111
+    db 0, 7, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CMP AX, 222111
     db 0, 7, 7                      ; 0???: ??      | AAS
 
+; ------------------------------------- GROUP 1 ----------------------------------------------
     db 1, 0, 6                      ; 0???: ??      | INC SI
     db 1, 1, 3                      ; 0???: ??      | DEC BX
     db 1, 2, 0                      ; 0???: ??      | PUSH AX
     db 1, 3, 1                      ; 0???: ??      | POP CX
     db 1, 4, 5                      ; 0???: ??      | UNDEFINED
 
+; ------------------------------------- GROUP 2 ----------------------------------------------
     db 2, 2, 0                      ; 0???: ??      | NOP
     db 2, 2, 5                      ; 0???: ??      | XCHG BP, AX
     db 2, 3, 0                      ; 0???: ??      | CBW
@@ -186,14 +212,15 @@ jumps
     db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
     db 2, 4, 4                      ; 0???: ??      | MOVSB
     db 2, 4, 7                      ; 0???: ??      | CMPSW
-    db 2, 5, 0,  1, 1, 1            ; 0???: ????    | TEST AL, 043 ?? (TEST AL, 111)
-    db 2, 5, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??????  | TEST AX, 336001 ?? (TEST AX, 222111)
+    db 2, 5, 0,  1, 1, 1            ; 0???: ????    | TEST AL, 111
+    db 2, 5, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??????  | TEST AX, 222111
     db 2, 5, 2                      ; 0???: ??      | STOSB
     db 2, 5, 5                      ; 0???: ??      | LODSW
     db 2, 5, 7                      ; 0???: ??      | SCASW
     db 2, 6, 4,  0, 1, 1            ; 0???: ????    | MOV AH, 011
     db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0???: ??????  | MOV DX, 001336
     
+; ------------------------------------- GROUP 3 ----------------------------------------------
     db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
     db 3, 0, 3                      ; 0???: ??      | RET
     db 3, 1, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RETF 222111
@@ -494,10 +521,96 @@ proc p_decode_rm
     ret
 endp
 
+; Handles printing "r/m, immediate" for the 
+; commands of the format:
+; 1000 00sw mod XXX r/m [offset] lsb [msb]
+; where each 'X' is one of 0 or 1.
+proc p_op_0sw_rm_imm
+    push ax bx dx
+
+    ; AL so far contains 3 bits '0sw' as an octal number.
+    inc si ; SI must point to 'mod' before calling 
+           ; the decode procedure
+    mov dl, al
+    and dl, 10b
+    ; now DL has information (w=0)/(w=1)
+    ; which is expected by the decode procedure
+    call p_decode_rm
+    ; after the procedure, CL contains how many bytes
+    ; the offset took (if any)
+
+    m_puts ', '
+    
+    ; TODO wrap this in macro/proc
+    ; point SI to the last byte read
+    inc si 
+    inc si ; SI points to r/m now
+
+    cmp cl, 0
+    je si_in_right_place_L0 ; offset was not used
+
+    ; offset was used
+    ; point SI to the last byte read
+    ;
+    ; cl contains information about how many 
+    ; bytes (=octal digits?) were read as an offset or direct address
+    xor ch, ch
+    loop_L0:
+        inc si
+    loop loop_L0
+
+    si_in_right_place_L0:
+
+    ; AL still contains '0sw'
+    ; check 'w' bit
+    cmp dl, 1
+    jb imm_1_byte
+
+    ; w = 1
+    ; check 's' bit (info about immediate operand)
+    cmp al, 2
+    jb imm_2_bytes ; so s = 0
+
+    ; w = 1, s = 1
+    imm_byte_to_word_sign_extended:
+        ; get 1st octal digit of lsb
+        inc si
+        mov al, byte ptr [data_octal+si]
+        dec si
+
+        cmp al, 2
+        jb zero_padding
+
+        one_padding:
+            m_puts "377"
+            jmp padding_done
+
+        zero_padding:
+            m_puts "000"
+
+        padding_done:
+        call p_print_next_byte
+        jmp endp_op_0sw_rm_imm
+
+    ; w = 0, s = 0 or 1
+    imm_1_byte:
+        call p_print_next_byte
+        jmp endp_op_0sw_rm_imm
+
+    ; w = 1, s = 0
+    imm_2_bytes:
+        call p_print_next_word
+
+    endp_op_0sw_rm_imm:
+        m_print_nl
+        pop dx bx ax
+    ret
+endp
+
 ; Handles printing "reg, r/m" or "r/m, reg" for the 
 ; commands of the format:
 ;   XXXX X0dw mod reg r/m [offset]  
-; where X is one of 0 or 1.
+; where each 'X' is one of 0 or 1.
 ;
 ; It applies to 
 ;   ADD, OR, ADC, SBB, AND, SUB, XOR, CMP (all from 1st octal group) 
@@ -508,7 +621,7 @@ endp
 ;
 ; After call: SI points to the last byte read in a command
 proc p_op_0dw_reg_rm
-    push ax bx cx dx
+    push ax bx dx
     inc si ; si must point to 'mod' before calling decode procedures
 
     ; AL so far contains 3 bits '0dw' as an octal number.
@@ -551,7 +664,7 @@ proc p_op_0dw_reg_rm
         inc si
 
         cmp cl, 0
-        je si_in_right_place ; offset was not used
+        je si_in_right_place_L1 ; offset was not used
 
         ; offset was used
         ; point SI to the last byte read
@@ -563,9 +676,9 @@ proc p_op_0dw_reg_rm
             inc si
         loop loop_L1
 
-    si_in_right_place:
+    si_in_right_place_L1:
     m_print_nl
-    pop dx cx bx ax
+    pop dx bx ax
     ret
 endp
 
@@ -1304,60 +1417,76 @@ _20x:
     __20_0123:
         inc si ; point to 'mod'
         inc si ; point SI to next octal digit after 'mod'
-        mov al, byte ptr [data_octal+si]
+        mov bl, byte ptr [data_octal+si]
         dec si
         dec si ; return SI back
         ; find out which operation is used
-        cmp al, 4
+        cmp bl, 4
         jb short __20_0123_mod_0123
         je _20_0123_and_rm_imm
 
-        cmp al, 6
+        cmp bl, 6
         jb _20_0123_sub_rm_imm
         je _20_0123_xor_rm_imm
         jmp _20_0123_cmp_rm_imm
 
     __20_0123_mod_0123:
-        cmp al, 2
+        cmp bl, 2
         jb short __20_0123_mod_01
         je _20_0123_adc_rm_imm
         jmp _20_0123_sbb_rm_imm
 
     __20_0123_mod_01:
-        cmp al, 1
+        cmp bl, 1
         jb _20_0123_add_rm_imm
         jmp _20_0123_or_rm_imm
 
 ; ------------------------------------------------------------
 _20_0123_add_rm_imm:
+    m_puts 'ADD '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_or_rm_imm:
+    m_puts 'OR '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_adc_rm_imm:
+    m_puts 'ADC '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_sbb_rm_imm:
+    m_puts 'SBB '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_and_rm_imm:
+    m_puts 'AND '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_sub_rm_imm:
+    m_puts 'SUB '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_xor_rm_imm:
+    m_puts 'XOR '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_cmp_rm_imm:
+    m_puts 'CMP '
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------

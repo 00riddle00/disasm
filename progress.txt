@@ -76,14 +76,14 @@
 # o200 - o277                                                                                               #
 =============================================================================================================
 -------------------------------------o200--------------------------------------------------------------------
-1000 00sw mod 000 r/m [poslinkis] bojb [bovb] | ADD registras/atmintis += betarpiškas operandas
-1000 00sw mod 001 r/m [poslinkis] bojb [bovb] | OR registras/atmintis V betarpiškas operandas
-1000 00sw mod 010 r/m [poslinkis] bojb [bovb] | ADC registras/atmintis += betarpiškas operandas
-1000 00sw mod 011 r/m [poslinkis] bojb [bovb] | SBB registras/atmintis -= betarpiškas operandas
-1000 00sw mod 100 r/m [poslinkis] bojb [bovb] | AND registras/atmintis & betarpiškas operandas
-1000 00sw mod 101 r/m [poslinkis] bojb [bovb] | SUB registras/atmintis -= betarpiškas operandas
-1000 00sw mod 110 r/m [poslinkis] bojb [bovb] | XOR registras/atmintis @ betarpiškas operandas
-1000 00sw mod 111 r/m [poslinkis] bojb [bovb] | CMP registras/atmintis ~ betarpiškas operandas
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | ++ ++++++++++++++++++ + +++++++++++ +++++++++
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
+++++ ++++ +++ +++ +++ +++++++++++ ++++ +++++] | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
 
 1000 010w mod reg r/m [poslinkis]             | TEST registras ? registras/atmintis
 1000 011w mod reg r/m [poslinkis]             | XCHG registras <--> registras/atmintis
