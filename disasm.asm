@@ -100,16 +100,16 @@ jumps
 
 ; ==================================== TESTING ===============================================
     data_octal db 0, 0, 0,  3, 1, 0          ; 0???: ??      | ADD AL, CL
-               db 0, 0, 1,  3, 1, 0          ; 0???: ??      | ADD AX, CX
+               db 0, 1, 1,  3, 1, 0          ; 0???: ??      | OR AX, CX
 
-    db 0, 0, 0,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD byte ptr [SI+111], DL
-    db 0, 0, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD word ptr [SI+111], DX
+    db 0, 2, 0,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADC byte ptr [SI+111], DL
+    db 0, 3, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | SBB word ptr [SI+111], DX
 
-    db 0, 0, 0,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [SI+222111], DL
-    db 0, 0, 1,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [SI+222111], DX
+    db 0, 4, 0,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | AND byte ptr [SI+222111], DL
+    db 0, 5, 1,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SUB word ptr [SI+222111], DX
 
-    db 0, 0, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD byte ptr [BP+DI+111], AL
-    db 0, 0, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD word ptr [BP+DI+111], AX
+    db 0, 6, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | XOR byte ptr [BP+DI+111], AL
+    db 0, 7, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | CMP word ptr [BP+DI+111], AX
 
     db 0, 0, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [BP+DI+222111], AL
     db 0, 0, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [BP+DI+222111], AX
@@ -126,7 +126,6 @@ jumps
 
     db 0, 0, 2,  3, 1, 0                      ; 0???: ??      | ADD CL, AL
     db 0, 0, 3,  3, 1, 0                      ; 0???: ??      | ADD CX, AX
-    db 0, 0, 3,  3, 0, 1                      ; 0???: ??      | ADD AX, CX
 
     db 0, 0, 2,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DL, byte ptr [SI+111]
     db 0, 0, 3,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DX, word ptr [SI+111]
@@ -137,21 +136,19 @@ jumps
     db 0, 0, 2,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD AL, byte ptr [BP+DI+111]
     db 0, 0, 3,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD AX, word ptr [BP+DI+111]
 
-    db 0, 0, 2,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AL, byte ptr [BP+DI+222111]
-    db 0, 0, 3,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, word ptr [BP+DI+222111]
+    db 0, 7, 2,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CMP AL, byte ptr [BP+DI+222111]
+    db 0, 6, 3,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, word ptr [BP+DI+222111]
 
-    db 0, 0, 2,  0, 2, 4                      ; 0???: ??      | ADD DL, byte ptr [SI]
-    db 0, 0, 3,  0, 2, 4                      ; 0???: ??      | ADD DX, word ptr [SI]
+    db 0, 5, 2,  0, 2, 4                      ; 0???: ??      | SUB DL, byte ptr [SI]
+    db 0, 4, 3,  0, 2, 4                      ; 0???: ??      | AND DX, word ptr [SI]
 
-    db 0, 0, 2,  0, 2, 0                      ; 0???: ??      | ADD DL, byte ptr [BX+SI]
-    db 0, 0, 3,  0, 2, 0                      ; 0???: ??      | ADD DX, word ptr [BX+SI]
+    db 0, 3, 2,  0, 2, 0                      ; 0???: ??      | SBB DL, byte ptr [BX+SI]
+    db 0, 2, 3,  0, 2, 0                      ; 0???: ??      | ADC DX, word ptr [BX+SI]
 
-    db 0, 0, 2,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BL, byte ptr [222111]
+    db 0, 1, 2,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR BL, byte ptr [222111]
     db 0, 0, 3,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BX, word ptr [222111]
 
-
     db 0FFh
-
 
     db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
     db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
@@ -499,8 +496,8 @@ endp
 
 ; Handles printing "reg, r/m" or "r/m, reg" for the 
 ; commands of the format:
-;   XXXX 10dw mod reg r/m [offset]  
-; where XXXX are any 4 bits. 
+;   XXXX X0dw mod reg r/m [offset]  
+; where X is one of 0 or 1.
 ;
 ; It applies to 
 ;   ADD, OR, ADC, SBB, AND, SUB, XOR, CMP (all from 1st octal group) 
@@ -510,7 +507,7 @@ endp
 ;              AL should contain the value of '0dw' as an octal digit
 ;
 ; After call: SI points to the last byte read in a command
-proc p_op_dw_reg_rm
+proc p_op_0dw_reg_rm
     push ax bx cx dx
     inc si ; si must point to 'mod' before calling decode procedures
 
@@ -706,11 +703,11 @@ _00x:
     jb short __00_0123_add_reg_rm
     je _004_add_acc_imm_byte
     jmp _005_add_acc_imm_word
-; ------------------------------------------------------------
 
+; ------------------------------------------------------------
 __00_0123_add_reg_rm:
     m_puts 'ADD '
-    call p_op_dw_reg_rm
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -735,38 +732,14 @@ _01x:
     mov al, bl
 
     cmp al, 4
-    jb short __01_0123
+    jb short __01_0123_or_reg_rm
     je _014_or_acc_imm_byte
     jmp _015_or_acc_imm_word
 
-    __01_0123:
-        cmp al, 2
-        jb short __01_01
-        je _012_or_reg_rm_byte
-        jmp _013_or_reg_rm_word
-
-    __01_01:
-        cmp al, 1
-        je _011_or_rm_reg_word
-
 ; ------------------------------------------------------------
-_010_or_rm_reg_byte:
-    m_putsln '_010_or_rm_reg_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_011_or_rm_reg_word:
-    m_putsln '_011_or_rm_reg_word'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_012_or_reg_rm_byte:
-    m_putsln '_012_or_reg_rm_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_013_or_reg_rm_word:
-    m_putsln '_013_or_reg_rm_word'
+__01_0123_or_reg_rm:
+    m_puts 'OR '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -791,41 +764,17 @@ _02x:
     mov al, bl
 
     cmp al, 4
-    jb short __02_0123
+    jb short __02_0123_adc_reg_rm
     je _024_adc_acc_imm_byte
     jmp _025_adc_acc_imm_word
-
-    __02_0123:
-        cmp al, 2
-        jb short __02_01
-        je _022_adc_reg_rm_byte
-        jmp _023_adc_reg_rm_word
-
-    __02_01:
-        cmp al, 1
-        je _021_adc_rm_reg_word
-
+    
 ; ------------------------------------------------------------
-_020_adc_rm_reg_byte:
-    m_putsln '_020_adc_rm_reg_byte'
+__02_0123_adc_reg_rm:
+    m_puts 'ADC '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; ------------------------------------------------------------
-_021_adc_rm_reg_word:
-    m_putsln '_021_adc_rm_reg_word'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_022_adc_reg_rm_byte:
-    m_putsln '_022_adc_reg_rm_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_023_adc_reg_rm_word:
-    m_putsln '_023_adc_reg_rm_word'
-    jmp _xxx
-
-; -------------------------------------------------------------
 _024_adc_acc_imm_byte:
     m_puts 'ADC AL, '
     call p_print_next_byte
@@ -847,38 +796,14 @@ _03x:
     mov al, bl
 
     cmp al, 4
-    jb short __03_0123
+    jb short __03_0123_sbb_reg_rm
     je _034_sbb_acc_imm_byte
     jmp _035_sbb_acc_imm_word
 
-    __03_0123:
-        cmp al, 2
-        jb short __03_01
-        je _032_sbb_reg_rm_byte
-        jmp _033_sbb_reg_rm_word
-
-    __03_01:
-        cmp al, 1
-        je _031_sbb_rm_reg_word
-
 ; ------------------------------------------------------------
-_030_sbb_rm_reg_byte:
-    m_putsln '_030_sbb_rm_reg_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_031_sbb_rm_reg_word:
-    m_putsln '_031_sbb_rm_reg_word'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_032_sbb_reg_rm_byte:
-    m_putsln '_032_sbb_reg_rm_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_033_sbb_reg_rm_word:
-    m_putsln '_033_sbb_reg_rm_word'
+__03_0123_sbb_reg_rm:
+    m_puts 'SBB '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -903,38 +828,14 @@ _04x:
     mov al, bl
 
     cmp al, 4
-    jb short __04_0123
+    jb short __04_0123_and_reg_rm
     je _044_and_acc_imm_byte
     jmp _045_and_acc_imm_word
 
-    __04_0123:
-        cmp al, 2
-        jb short __04_01
-        je _042_and_reg_rm_byte
-        jmp _043_and_reg_rm_word
-
-    __04_01:
-        cmp al, 1
-        je _041_and_rm_reg_word
-
 ; ------------------------------------------------------------
-_040_and_rm_reg_byte:
-    m_putsln '_040_and_rm_reg_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_041_and_rm_reg_word:
-    m_putsln '_041_and_rm_reg_word'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_042_and_reg_rm_byte:
-    m_putsln '_042_and_reg_rm_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_043_and_reg_rm_word:
-    m_putsln '_043_and_reg_rm_word'
+__04_0123_and_reg_rm:
+    m_puts 'AND '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -959,38 +860,14 @@ _05x:
     mov al, bl
 
     cmp al, 4
-    jb short __05_0123
+    jb short __05_0123_sub_reg_rm
     je _054_sub_acc_imm_byte
     jmp _055_sub_acc_imm_word
 
-    __05_0123:
-        cmp al, 2
-        jb short __05_01
-        je _052_sub_reg_rm_byte
-        jmp _053_sub_reg_rm_word
-
-    __05_01:
-        cmp al, 1
-        je _051_sub_rm_reg_word
-
 ; ------------------------------------------------------------
-_050_sub_rm_reg_byte:
-    m_putsln '_050_sub_rm_reg_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_051_sub_rm_reg_word:
-    m_putsln '_051_sub_rm_reg_word'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_052_sub_reg_rm_byte:
-    m_putsln '_052_sub_reg_rm_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_053_sub_reg_rm_word:
-    m_putsln '_053_sub_reg_rm_word'
+__05_0123_sub_reg_rm:
+    m_puts 'SUB '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -1015,38 +892,14 @@ _06x:
     mov al, bl
 
     cmp al, 4
-    jb short __06_0123
+    jb short __06_0123_xor_reg_rm
     je _064_xor_acc_imm_byte
     jmp _065_xor_acc_imm_word
 
-    __06_0123:
-        cmp al, 2
-        jb short __06_01
-        je _062_xor_reg_rm_byte
-        jmp _063_xor_reg_rm_word
-
-    __06_01:
-        cmp al, 1
-        je _061_xor_rm_reg_word
-
 ; ------------------------------------------------------------
-_060_xor_rm_reg_byte:
-    m_putsln '_060_xor_rm_reg_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_061_xor_rm_reg_word:
-    m_putsln '_061_xor_rm_reg_word'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_062_xor_reg_rm_byte:
-    m_putsln '_062_xor_reg_rm_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_063_xor_reg_rm_word:
-    m_putsln '_063_xor_reg_rm_word'
+__06_0123_xor_reg_rm:
+    m_puts 'XOR '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -1071,38 +924,14 @@ _07x:
     mov al, bl
 
     cmp al, 4
-    jb short __07_0123
+    jb short __07_0123_cmp_reg_rm
     je _074_cmp_acc_imm_byte
     jmp _075_cmp_acc_imm_word
 
-    __07_0123:
-        cmp al, 2
-        jb short __07_01
-        je _072_cmp_reg_rm_byte
-        jmp _073_cmp_reg_rm_word
-
-    __07_01:
-        cmp al, 1
-        je _071_cmp_rm_reg_word
-
 ; ------------------------------------------------------------
-_070_cmp_rm_reg_byte:
-    m_putsln '_070_cmp_rm_reg_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_071_cmp_rm_reg_word:
-    m_putsln '_071_cmp_rm_reg_word'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_072_cmp_reg_rm_byte:
-    m_putsln '_072_cmp_reg_rm_byte'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_073_cmp_reg_rm_word:
-    m_putsln '_073_cmp_reg_rm_word'
+__07_0123_cmp_reg_rm:
+    m_puts 'CMP '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
