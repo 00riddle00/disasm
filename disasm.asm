@@ -111,8 +111,8 @@ jumps
     db 0, 6, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | XOR byte ptr [BP+DI+111], AL
     db 0, 7, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | CMP word ptr [BP+DI+111], AX
 
-    db 0, 0, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [BP+DI+222111], AL
-    db 0, 0, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [BP+DI+222111], AX
+    db 2, 1, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV byte ptr [BP+DI+222111], AL
+    db 2, 1, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV word ptr [BP+DI+222111], AX
 
     db 0, 0, 0,  0, 2, 4                      ; 0???: ??      | ADD byte ptr [SI], DL
     db 0, 0, 1,  0, 2, 4                      ; 0???: ??      | ADD word ptr [SI], DX
@@ -133,8 +133,8 @@ jumps
     db 0, 0, 2,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DL, byte ptr [SI+222111]
     db 0, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DX, word ptr [SI+222111]
 
-    db 0, 0, 2,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD AL, byte ptr [BP+DI+111]
-    db 0, 0, 3,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD AX, word ptr [BP+DI+111]
+    db 2, 1, 2,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AL, byte ptr [BP+DI+111]
+    db 2, 1, 3,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AX, word ptr [BP+DI+111]
 
     db 0, 7, 2,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CMP AL, byte ptr [BP+DI+222111]
     db 0, 6, 3,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, word ptr [BP+DI+222111]
@@ -514,10 +514,10 @@ proc p_op_0dw_reg_rm
     ; AL so far contains 3 bits '0dw' as an octal number.
     ; check 'd' (destination) bit
     cmp al, 2
-    jb __add_rm_reg  ; so d = 0
+    jb __op_rm_reg  ; so d = 0
 
     ; d = 1
-    __add_reg_rm:
+    __op_reg_rm:
         ; AL currently contains either 2 (w=0) or 3 (w=1)
         ; By subtracting 2 from AL, AL will contain either 0 (w=0) or 1 (w=1)
         ; This information will be used by the decode procedures
@@ -533,7 +533,7 @@ proc p_op_0dw_reg_rm
         jmp move_index
 
     ; d = 0
-    __add_rm_reg:
+    __op_rm_reg:
         ; AL currently contains either 0 (w=0) or 1 (w=1)
         ; This information will be used by the decode procedures
         ;
@@ -1359,63 +1359,40 @@ _21x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _217
+    je _217_pop_rm
     ja undefined
 
-    cmp al, 3
-    jb short __21_012
-    je _213
-    jmp short __21_456
+    cmp al, 4
+    jb short __21_0123_mov_reg_rm
+    je _214_mov_rm_segreg
 
-    __21_012:
-        cmp al, 1
-        jb short _210
-        je _211
-        jmp _212
-
-    __21_456:
-        cmp al, 5
-        jb _214
-        je _215
-        jmp _216
+    cmp al, 6
+    jb _215_lea_reg_mem
+    jmp _216_mov_segreg_rm
 
 ; ------------------------------------------------------------
-_210:
-    m_putsln '210'
+__21_0123_mov_reg_rm:
+    m_puts 'MOV '
+    call p_op_0dw_reg_rm
     jmp _xxx
 
 ; ------------------------------------------------------------
-_211:
-    m_putsln '211'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_212:
-    m_putsln '212'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_213:
-    m_putsln '213'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_214:
+_214_mov_rm_segreg:
     m_putsln '214'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_215:
+_215_lea_reg_mem:
     m_putsln '215'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_216:
+_216_mov_segreg_rm:
     m_putsln '216'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_217:
+_217_pop_rm:
     m_putsln '217'
     jmp _xxx
 
