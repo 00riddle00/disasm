@@ -1290,63 +1290,93 @@ _20x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _207
+    je _207_xchg_reg_rm_word
     ja undefined
 
-    cmp al, 3
-    jb short __20_012
-    je _203
-    jmp short __20_456
+    cmp al, 4
+    jb short __20_0123
+    je _204_test_reg_rm_byte
 
-    __20_012:
+    cmp al, 6
+    jb _205_test_reg_rm_word
+    jmp _206_xchg_reg_rm_byte
+
+    __20_0123:
+        inc si ; point to 'mod'
+        inc si ; point SI to next octal digit after 'mod'
+        mov al, byte ptr [data_octal+si]
+        dec si
+        dec si ; return SI back
+        ; find out which operation is used
+        cmp al, 4
+        jb short __20_0123_mod_0123
+        je _20_0123_and_rm_imm
+
+        cmp al, 6
+        jb _20_0123_sub_rm_imm
+        je _20_0123_xor_rm_imm
+        jmp _20_0123_cmp_rm_imm
+
+    __20_0123_mod_0123:
+        cmp al, 2
+        jb short __20_0123_mod_01
+        je _20_0123_adc_rm_imm
+        jmp _20_0123_sbb_rm_imm
+
+    __20_0123_mod_01:
         cmp al, 1
-        jb short _200
-        je _201
-        jmp _202
-
-    __20_456:
-        cmp al, 5
-        jb _204
-        je _205
-        jmp _206
+        jb _20_0123_add_rm_imm
+        jmp _20_0123_or_rm_imm
 
 ; ------------------------------------------------------------
-_200:
-    m_putsln '200'
+_20_0123_add_rm_imm:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_201:
-    m_putsln '201'
+_20_0123_or_rm_imm:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_202:
-    m_putsln '202'
+_20_0123_adc_rm_imm:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_203:
-    m_putsln '203'
+_20_0123_sbb_rm_imm:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_204:
+_20_0123_and_rm_imm:
+    jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_sub_rm_imm:
+    jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_xor_rm_imm:
+    jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_cmp_rm_imm:
+    jmp _xxx
+
+; ------------------------------------------------------------
+_204_test_reg_rm_byte:
     m_putsln '204'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_205:
+_205_test_reg_rm_word:
     m_putsln '205'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_206:
+_206_xchg_reg_rm_byte:
     m_putsln '206'
     jmp _xxx
 
 ; ------------------------------------------------------------
-_207:
+_207_xchg_reg_rm_word:
     m_putsln '207'
     jmp _xxx
 
