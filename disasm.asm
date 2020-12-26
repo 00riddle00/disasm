@@ -497,6 +497,81 @@ proc p_decode_rm
     ret
 endp
 
+; Handles printing "reg, r/m" or "r/m, reg" for the 
+; commands of the format:
+;   XXXX 10dw mod reg r/m [offset]  
+; where XXXX are any 4 bits. 
+;
+; It applies to 
+;   ADD, OR, ADC, SBB, AND, SUB, XOR, CMP (all from 1st octal group) 
+;   and one MOV command
+;
+; Before call: SI should point to the octal digit for '0dw',
+;              AL should contain the value of '0dw' as an octal digit
+;
+; After call: SI points to the last byte read in a command
+proc p_op_dw_reg_rm
+    push ax bx cx dx
+    inc si ; si must point to 'mod' before calling decode procedures
+
+    ; AL so far contains 3 bits '0dw' as an octal number.
+    ; check 'd' (destination) bit
+    cmp al, 2
+    jb __add_rm_reg  ; so d = 0
+
+    ; d = 1
+    __add_reg_rm:
+        ; AL currently contains either 2 (w=0) or 3 (w=1)
+        ; By subtracting 2 from AL, AL will contain either 0 (w=0) or 1 (w=1)
+        ; This information will be used by the decode procedures
+        sub al, 2
+        ; place (w=0)/(w=1) information in DL,
+        ; which is expected by decode procedures
+        mov dl, al
+        ; decode which register is used in place of 'reg'
+        call p_decode_reg
+        m_puts ', '
+        ; decode what should be used in place of 'r/m'
+        call p_decode_rm
+        jmp move_index
+
+    ; d = 0
+    __add_rm_reg:
+        ; AL currently contains either 0 (w=0) or 1 (w=1)
+        ; This information will be used by the decode procedures
+        ;
+        ; place (w=0)/(w=1) information in DL,
+        ; which is expected by decode procedures
+        mov dl, al
+        call p_decode_rm
+        m_puts ', '
+        call p_decode_reg
+
+    ; move SI to the last byte read
+    move_index:
+        ; point SI to 'r/m'
+        inc si
+        inc si
+
+        cmp cl, 0
+        je si_in_right_place ; offset was not used
+
+        ; offset was used
+        ; point SI to the last byte read
+        ;
+        ; cl contains information about how many 
+        ; bytes were read as an offset or direct address
+        xor ch, ch
+        loop_L1:
+            inc si
+        loop loop_L1
+
+    si_in_right_place:
+    m_print_nl
+    pop dx cx bx ax
+    ret
+endp
+
 ; -----------------------------------------------------------/
 
 start:
@@ -635,62 +710,7 @@ _00x:
 
 __00_0123_add_reg_rm:
     m_puts 'ADD '
-    inc si ; si must point to 'mod' before calling decode procedures
-
-    ; AL so far contains 3 bits '0dw' as an octal number.
-    ; check 'd' (destination) bit
-    cmp al, 2
-    jb __add_rm_reg  ; so d = 0
-
-    ; d = 1
-    __add_reg_rm:
-        ; AL currently contains either 2 (w=0) or 3 (w=1)
-        ; By subtracting 2 from AL, AL will contain either 0 (w=0) or 1 (w=1)
-        ; This information will be used by the decode procedures
-        sub al, 2
-        ; place (w=0)/(w=1) information in DL,
-        ; which is expected by decode procedures
-        mov dl, al
-        ; decode which register is used in place of 'reg'
-        call p_decode_reg
-        m_puts ', '
-        ; decode what should be used in place of 'r/m'
-        call p_decode_rm
-        jmp move_index
-
-    ; d = 0
-    __add_rm_reg:
-        ; AL currently contains either 0 (w=0) or 1 (w=1)
-        ; This information will be used by the decode procedures
-        ;
-        ; place (w=0)/(w=1) information in DL,
-        ; which is expected by decode procedures
-        mov dl, al
-        call p_decode_rm
-        m_puts ', '
-        call p_decode_reg
-
-    ; move SI to the last byte read
-    move_index:
-        ; point SI to 'r/m'
-        inc si
-        inc si
-
-        cmp cl, 0
-        je si_in_right_place ; offset was not used
-
-        ; offset was used
-        ; point SI to the last byte read
-        ;
-        ; cl contains information about how many 
-        ; bytes were read as an offset or direct address
-        xor ch, ch
-        loop_L1:
-            inc si
-        loop loop_L1
-
-    si_in_right_place:
-    m_print_nl
+    call p_op_dw_reg_rm
     jmp _xxx
 
 ; -------------------------------------------------------------
