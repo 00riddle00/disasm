@@ -47,185 +47,20 @@ m_print_reg macro reg_group
    pop dx bx ax
 endm
 
-; TODO description
-; TODO use argument passed
-; TODO simplify
-m_decode_reg macro word
-    push ax bx dx
+; print asm pointer directive
+; ::param:: DL must be either 0 (=byte) or 1 (=word)
+m_print_ptr macro
+local @@word_ptr, @@byte_ptr, @@endmacro
+    cmp dl, 1
+    jb @@byte_ptr
 
-    ; get 'reg' value (3 bits, represented as an octal number)
-    inc si
-    mov al, byte ptr [data_octal+si]
+    ; word_ptr:
+    m_puts 'word ptr'
+    jmp @@endmacro
 
-    mov bl, al
-    shl bl, 1 ; times 2
-    ; print word register according to 'reg' value
-    m_print_reg Rw
-
-    ; place SI back to point at 'mod'
-    dec si
-
-    pop dx bx ax
-endm
-
-; TODO description
-; TODO use argument passed
-; TODO simplify
-m_decode_rm macro word
-    push ax bx dx
-
-    ; get 'mod' value (2 bits, represented as an octal number)
-    mov al, byte ptr [data_octal+si]
-
-    ; check 'mod' value
-    cmp al, 3
-    jb __rm_is_mem ; so 'r/m' is memory (according to 'mod')
-
-    ; 'r/m' is register (according to 'mod')
-    _rm_is_reg:
-        ; get 'r/m' value
-        inc si
-        inc si
-        mov al, byte ptr [data_octal+si]
-
-        mov bl, al
-        shl bl, 1 ; times 2
-        ; print word register according to 'r/m' value
-        m_print_reg Rw
-
-        ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
-        mov cl, 0 
-        ; place SI back to point at 'mod'
-        dec si
-        dec si
-        jmp endm_decode_rm
-
-    ; 'r/m' is memory (according to 'mod')
-    __rm_is_mem:
-        ; check 'mod' value again
-        cmp al, 1
-        jb _rm_is_mem_no_offset ; so offset is not used for EA (according to 'mod')
-
-        ; offset is used for EA (according to 'mod')
-        _rm_is_mem_with_offset:
-            ; place 'mod' value in CH (needed later for specifying offset)
-            mov ch, al
-
-            ; get 'r/m' value (3 bits, represented as an octal number)
-            inc si
-            inc si
-            mov al, byte ptr [data_octal+si]
-
-            m_puts 'word ptr ['
-
-            mov bl, al 
-            shl bl, 1 ; times 2
-            ; print register (used as a base) according to 'r/m' value
-            m_print_reg EAb
-            m_puts '+'
-
-            ; check 'r/m' value again
-            cmp al, 4
-            jae no_index_L0; so index register is not used for EA
-
-            ; index register is also used for EA
-            add_index_L0:
-                ; print register (used as an index) according to 'r/m' value
-                m_print_reg EAi
-                m_puts '+'
-
-            ; if jumped to this label, index register is not used for EA
-            no_index_L0:
-
-            ; CH contains 'mod' value
-            cmp ch, 2
-            jb print_offset_byte ; offset is one byte (according to 'mod')
-
-            ; offset is two bytes (according to 'mod')
-            print_offset_word:
-                call p_print_next_word
-                ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
-                mov cl, 6
-                ; place SI back to point at 'r/m'
-                sub si, 6
-
-                jmp offset_printed_L0
-
-            ; offset is one byte (according to 'mod')
-            print_offset_byte:
-                call p_print_next_byte
-                ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
-                mov cl, 3
-                ; place SI back to point at 'r/m'
-                sub si, 3
-
-            offset_printed_L0:
-                m_puts ']'
-
-            ; place SI back to point at 'mod'
-            dec si
-            dec si
-            jmp endm_decode_rm
-
-        ; offset is not used for EA (according to 'mod')
-        _rm_is_mem_no_offset:
-            ; get 'r/m' value (3 bits, represented as an octal number)
-            inc si
-            inc si
-            mov al, byte ptr [data_octal+si]
-
-            ; check 'r/m' value for a special case - direct address
-            cmp al, 6
-            je _rm_is_mem_no_offset_direct_address ; so only direct address is used for EA
-
-            m_puts 'word ptr ['
-
-            mov bl, al 
-            shl bl, 1 ; times 2
-            ; print register (used as a base) according to 'r/m' value
-            m_print_reg EAb
-
-            ; check 'r/m' value again
-            cmp al, 4
-            jae short no_index_L1; so index register is not used for EA
-
-            ; index register is also used for EA
-            _add_index_L1:
-                ; print register (used as an index) according to 'r/m' value
-                m_puts '+'
-                m_print_reg EAi
-
-            ; if jumped to this label, index register is not used for EA
-            _no_index_L1:
-
-            m_puts ']'
-
-            ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
-            mov cl, 0 
-            ; place SI back to point at 'mod'
-            dec si
-            dec si
-            jmp endm_decode_rm
-
-            ; only direct address is used for EA
-            _rm_is_mem_no_offset_direct_address:
-                m_puts 'word ptr ['
-                ; print direct address (two bytes)
-                call p_print_next_word
-                m_puts ']'
-
-                ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
-                mov cl, 6
-
-                ; place SI back to point at 'r/m'
-                sub si, 6
-
-                ; place SI back to point at 'mod'
-                dec si
-                dec si
-                jmp endm_decode_rm
-    endm_decode_rm:
-        pop dx bx ax
+    @@byte_ptr:
+        m_puts 'byte ptr'
+@@endmacro:
 endm
 
 ; ============================================================
@@ -264,18 +99,59 @@ jumps
     sep db '=============================================================================$'
 
 ; ==================================== TESTING ===============================================
-    data_octal  db 0, 0, 1,  3, 1, 0          ; 0???: ??      | ADD AX, CX
+    data_octal db 0, 0, 0,  3, 1, 0          ; 0???: ??      | ADD AL, CL
+               db 0, 0, 1,  3, 1, 0          ; 0???: ??      | ADD AX, CX
+
+    db 0, 0, 0,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD byte ptr [SI+111], DL
     db 0, 0, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD word ptr [SI+111], DX
+
+    db 0, 0, 0,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [SI+222111], DL
     db 0, 0, 1,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [SI+222111], DX
+
+    db 0, 0, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD byte ptr [BP+DI+111], AL
     db 0, 0, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD word ptr [BP+DI+111], AX
+
+    db 0, 0, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [BP+DI+222111], AL
     db 0, 0, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [BP+DI+222111], AX
+
+    db 0, 0, 0,  0, 2, 4                      ; 0???: ??      | ADD byte ptr [SI], DL
     db 0, 0, 1,  0, 2, 4                      ; 0???: ??      | ADD word ptr [SI], DX
+
+    db 0, 0, 0,  0, 2, 0                      ; 0???: ??      | ADD byte ptr [BX+SI], DL
     db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
+
+    db 0, 0, 0,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [222111], BL
     db 0, 0, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [222111], BX
  
+
+    db 0, 0, 2,  3, 1, 0                      ; 0???: ??      | ADD CL, AL
+    db 0, 0, 3,  3, 1, 0                      ; 0???: ??      | ADD CX, AX
+    db 0, 0, 3,  3, 0, 1                      ; 0???: ??      | ADD AX, CX
+
+    db 0, 0, 2,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DL, byte ptr [SI+111]
+    db 0, 0, 3,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DX, word ptr [SI+111]
+
+    db 0, 0, 2,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DL, byte ptr [SI+222111]
+    db 0, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DX, word ptr [SI+222111]
+
+    db 0, 0, 2,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD AL, byte ptr [BP+DI+111]
+    db 0, 0, 3,  1, 0, 3,  1, 1, 1            ; 0???: ??      | ADD AX, word ptr [BP+DI+111]
+
+    db 0, 0, 2,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AL, byte ptr [BP+DI+222111]
+    db 0, 0, 3,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, word ptr [BP+DI+222111]
+
+    db 0, 0, 2,  0, 2, 4                      ; 0???: ??      | ADD DL, byte ptr [SI]
+    db 0, 0, 3,  0, 2, 4                      ; 0???: ??      | ADD DX, word ptr [SI]
+
+    db 0, 0, 2,  0, 2, 0                      ; 0???: ??      | ADD DL, byte ptr [BX+SI]
+    db 0, 0, 3,  0, 2, 0                      ; 0???: ??      | ADD DX, word ptr [BX+SI]
+
+    db 0, 0, 2,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BL, byte ptr [222111]
+    db 0, 0, 3,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BX, word ptr [222111]
+
+
     db 0FFh
 
-    ;db 0, 0, 3,  3, 0, 1            ; 0???: ??      | ADD AX, CX
 
     db 0, 0, 4,  1, 1, 1            ; 0???: ??      | ADD AL, 111
     db 0, 0, 5,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD AX, 222111
@@ -421,6 +297,206 @@ proc p_print_next_word
     pop dx ax
     ret
 endp
+
+; Decode 'reg' from 'mod reg r/m [offset]'
+; Before call: SI must point to 'mod' byte
+;              DL must be either 0 (=byte) or 1 (=word)
+;
+; After call: SI is not changed.
+proc p_decode_reg
+    push ax bx dx
+ 
+    ; get 'reg' value (3 bits, represented as an octal number)
+    inc si
+    mov al, byte ptr [data_octal+si]
+
+    ; check if it's byte or word instruction
+    cmp dl, 1
+    jb print_byte_reg
+
+    print_word_reg:
+        ; TODO move this part to m_print_reg macro
+        mov bl, al
+        shl bl, 1 ; times 2
+        m_print_reg Rw
+        jmp reg_printed
+
+    ; print byte register according to 'reg' value
+    print_byte_reg:
+        ; TODO move this part to m_print_reg macro
+        mov bl, al
+        shl bl, 1 ; times 2
+        m_print_reg Rb
+
+    reg_printed:
+    ; place SI back to point at 'mod'
+    dec si
+    pop dx bx ax
+    ret
+endp
+
+; Decode 'r/m' from 'mod reg r/m [offset]'
+; Before call: SI must point to 'mod' byte
+;              DL must be either 0 (=byte) or 1 (=word)
+;
+; After call: SI is not changed.
+;             CL will contain how many bytes (as in octal digits)
+;                were used for offset (or direct address)
+proc p_decode_rm
+    push ax bx dx
+
+    ; get 'mod' value (2 bits, represented as an octal number)
+    mov al, byte ptr [data_octal+si]
+
+    ; check 'mod' value
+    cmp al, 3
+    jb __rm_is_mem ; so 'r/m' is memory (according to 'mod')
+
+    ; 'r/m' is register (according to 'mod')
+    _rm_is_reg:
+        ; point SI to 'reg' and call decode_reg procedure.
+        inc si
+        ; It will think that SI points to 'mod', and will treat
+        ; 'r/m' as 'reg', which is what is needed here.
+        ; TODO comment: it will use DL
+        call p_decode_reg 
+        ; point SI back to 'mod'
+        dec si
+
+        ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
+        mov cl, 0 
+        jmp endp_decode_rm
+
+    ; 'r/m' is memory (according to 'mod')
+    __rm_is_mem:
+        ; check 'mod' value again
+        cmp al, 1
+        jb _rm_is_mem_no_offset ; so offset is not used for EA (according to 'mod')
+
+        ; offset is used for EA (according to 'mod')
+        _rm_is_mem_with_offset:
+            ; place 'mod' value in CH (needed later for specifying offset)
+            mov ch, al
+
+            ; get 'r/m' value (3 bits, represented as an octal number)
+            inc si
+            inc si
+            mov al, byte ptr [data_octal+si]
+
+            m_print_ptr
+            m_puts ' ['
+
+            mov bl, al 
+            shl bl, 1 ; times 2
+            ; print register (used as a base) according to 'r/m' value
+            m_print_reg EAb
+            m_puts '+'
+
+            ; check 'r/m' value again
+            cmp al, 4
+            jae no_index_L0; so index register is not used for EA
+
+            ; index register is also used for EA
+            add_index_L0:
+                ; print register (used as an index) according to 'r/m' value
+                m_print_reg EAi
+                m_puts '+'
+
+            ; if jumped to this label, index register is not used for EA
+            no_index_L0:
+            ; CH contains 'mod' value
+            cmp ch, 2
+            jb print_offset_byte ; offset is one byte (according to 'mod')
+
+            ; offset is two bytes (according to 'mod')
+            print_offset_word:
+                call p_print_next_word
+                ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
+                mov cl, 6
+                ; place SI back to point at 'r/m'
+                sub si, 6
+
+                jmp offset_printed
+
+            ; offset is one byte (according to 'mod')
+            print_offset_byte:
+                call p_print_next_byte
+                ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
+                mov cl, 3
+                ; place SI back to point at 'r/m'
+                sub si, 3
+
+            offset_printed:
+            m_puts ']'
+
+            ; place SI back to point at 'mod'
+            dec si
+            dec si
+            jmp endp_decode_rm
+
+        ; offset is not used for EA (according to 'mod')
+        _rm_is_mem_no_offset:
+            ; get 'r/m' value (3 bits, represented as an octal number)
+            inc si
+            inc si
+            mov al, byte ptr [data_octal+si]
+
+            ; check 'r/m' value for a special case - direct address
+            cmp al, 6
+            je _rm_is_mem_no_offset_direct_address ; so only direct address is used for EA
+
+            m_print_ptr
+            m_puts ' ['
+
+            mov bl, al 
+            shl bl, 1 ; times 2
+            ; print register (used as a base) according to 'r/m' value
+            m_print_reg EAb
+
+            ; check 'r/m' value again
+            cmp al, 4
+            jae short no_index_L1; so index register is not used for EA
+
+            ; index register is also used for EA
+            add_index_L1:
+                ; print register (used as an index) according to 'r/m' value
+                m_puts '+'
+                m_print_reg EAi
+
+            ; if jumped to this label, index register is not used for EA
+            no_index_L1:
+            m_puts ']'
+
+            ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
+            mov cl, 0 
+            ; place SI back to point at 'mod'
+            dec si
+            dec si
+            jmp endp_decode_rm
+
+            ; only direct address is used for EA
+            _rm_is_mem_no_offset_direct_address:
+                m_print_ptr
+                m_puts ' ['
+                ; print direct address (two bytes)
+                call p_print_next_word
+                m_puts ']'
+
+                ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
+                mov cl, 6
+
+                ; place SI back to point at 'r/m'
+                sub si, 6
+
+                ; place SI back to point at 'mod'
+                dec si
+                dec si
+
+    endp_decode_rm:
+        pop dx bx ax
+    ret
+endp
+
 ; -----------------------------------------------------------/
 
 start:
@@ -559,142 +635,63 @@ _00x:
 
 __00_0123_add_reg_rm:
     m_puts 'ADD '
+    inc si ; si must point to 'mod' before calling decode procedures
 
-    ; AL so far contains 3 bits '0dw' as an octal number
+    ; AL so far contains 3 bits '0dw' as an octal number.
     ; check 'd' (destination) bit
     cmp al, 2
     jb __add_rm_reg  ; so d = 0
 
     ; d = 1
     __add_reg_rm:
-        cmp al, 3
-        jb __add_reg_rm_byte ; so w = 0
-
-        ; w = 1
-        __add_reg_rm_word:
-            ; get 'mod' value (2 bits, represented as an octal number)
-            inc si
-            mov al, byte ptr [data_octal+si]
-
-            ; check 'mod' value
-            cmp al, 3
-            jb __add_reg_mem_word ; so 'r/m' is memory (according to 'mod')
-
-            ; 'r/m' is register (according to 'mod')
-            _add__reg__rm_is_reg__word:
-                ; TODO
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                m_exit0
-
-           ; 'r/m' is memory (according to 'mod')
-           __add_reg_mem_word:
-                ; TODO
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                m_exit0
-
-        ; w = 0
-        __add_reg_rm_byte:
-            ; get 'mod' value (2 bits, represented as an octal number)
-            inc si
-            mov al, byte ptr [data_octal+si]
-
-            ; check 'mod' value
-            cmp al, 3
-            jb __add_reg_mem_byte ; so 'r/m' is memory (according to 'mod')
-
-            ; 'r/m' is register (according to 'mod')
-            _add__reg__rm_is_reg__byte:
-                ; TODO
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                m_exit0
-
-           ; 'r/m' is memory (according to 'mod')
-           __add_reg_mem_byte:
-                ; TODO
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                m_exit0
+        ; AL currently contains either 2 (w=0) or 3 (w=1)
+        ; By subtracting 2 from AL, AL will contain either 0 (w=0) or 1 (w=1)
+        ; This information will be used by the decode procedures
+        sub al, 2
+        ; place (w=0)/(w=1) information in DL,
+        ; which is expected by decode procedures
+        mov dl, al
+        ; decode which register is used in place of 'reg'
+        call p_decode_reg
+        m_puts ', '
+        ; decode what should be used in place of 'r/m'
+        call p_decode_rm
+        jmp move_index
 
     ; d = 0
     __add_rm_reg:
-        ; check 'w' (word) bit
-        cmp al, 1
-        jb __add_rm_reg_byte ; so w = 0
+        ; AL currently contains either 0 (w=0) or 1 (w=1)
+        ; This information will be used by the decode procedures
+        ;
+        ; place (w=0)/(w=1) information in DL,
+        ; which is expected by decode procedures
+        mov dl, al
+        call p_decode_rm
+        m_puts ', '
+        call p_decode_reg
 
-        ; w = 1
-        __add_rm_reg_word:
-            inc si ; si must point to 'mod'
-            m_decode_rm 1
-            m_puts ', '
-            m_decode_reg 1
-            ; point SI to 'r/m'
+    ; move SI to the last byte read
+    move_index:
+        ; point SI to 'r/m'
+        inc si
+        inc si
+
+        cmp cl, 0
+        je si_in_right_place ; offset was not used
+
+        ; offset was used
+        ; point SI to the last byte read
+        ;
+        ; cl contains information about how many 
+        ; bytes were read as an offset or direct address
+        xor ch, ch
+        loop_L1:
             inc si
-            inc si
-            ; point SI to the last byte read
-            xor ch, ch
-            l1:
-                inc si
-            loop l1
+        loop loop_L1
 
-            m_print_nl
-            jmp _xxx
-
-        ; w = 0
-        __add_rm_reg_byte:
-            ; get 'mod' value (2 bits, represented as an octal number)
-            inc si
-            mov al, byte ptr [data_octal+si]
-
-            ; check 'mod' value
-            cmp al, 3
-            jb __add_mem_reg_byte ; so 'r/m' is memory (according to 'mod')
-
-            ; 'r/m' is register (according to 'mod')
-            _add__rm_is_reg__reg__byte:
-                ; TODO
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                m_exit0
-
-            ; 'r/m' is memory (according to 'mod')
-            __add_mem_reg_byte:
-                ; TODO
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                ; ...
-                m_exit0
+    si_in_right_place:
+    m_print_nl
+    jmp _xxx
 
 ; -------------------------------------------------------------
 _004_add_acc_imm_byte:
