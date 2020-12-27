@@ -63,6 +63,36 @@ local @@word_ptr, @@byte_ptr, @@endmacro
 @@endmacro:
 endm
 
+; TODO description
+m_before_decode macro
+    mov dl, al
+    and dl, 001b ; will be used for decode procedure
+    inc si ; si points to 'mod' now
+endm
+
+; TODO description
+m_move_index macro
+    local @@loop_start, @@si_in_right_place
+    ; point SI to 'r/m'
+    inc si
+    inc si
+
+    cmp cl, 0
+    je @@si_in_right_place ; offset was not used
+
+    ; offset was used
+    ; point SI to the last byte read
+    ;
+    ; cl contains information about how many 
+    ; bytes were read as an offset or direct address
+    xor ch, ch
+    @@loop_start:
+        inc si
+    loop @@loop_start
+
+    @@si_in_right_place:
+endm
+
 ; ============================================================
 ;  SETTINGS
 ; ============================================================
@@ -105,6 +135,15 @@ jumps
 
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
+
+    db 3, 6, 6,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | NOT byte ptr [222111]
+    db 3, 6, 7,  3, 3, 5                      ; 0???: ??      | NEG BP
+
+    db 3, 6, 6,  0, 4, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MUL byte ptr [222111]
+    db 3, 6, 7,  3, 5, 5                      ; 0???: ??      | IMUL BP
+
+    db 3, 6, 6,  0, 6, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | DIV byte ptr [222111]
+    db 3, 6, 7,  3, 7, 5                      ; 0???: ??      | IDIV BP
 
     db 2, 0, 4,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | TEST BL, byte ptr [222111]
     db 2, 0, 5,  0, 2, 4                      ; 0???: ??      | TEST DX, word ptr [SI]
@@ -734,6 +773,12 @@ _xxx:
     jmp _2xx
 
     jmp short _xxx
+
+undefined_byte:
+    inc si
+    inc si
+    inc si
+    jmp short undefined
 
 undefined_1st_octal:
     inc si
@@ -2351,8 +2396,32 @@ _36x:
     cmp al, 6
     jb short __36_012345
 
-    ; TODO __36_67
-    ; ...
+    __36_67:
+        inc si ; point to 'mod'
+        inc si ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+si]
+        dec si
+        dec si ; return SI back
+        ; find out which operation is used
+        cmp bl, 4
+        jb short __36_67_mod_0123
+        je _36_67_mul_rm
+
+        cmp bl, 6
+        jb _36_67_imul_rm
+        je _36_67_div_rm
+        jmp _36_67_idiv_rm
+
+    __36_67_mod_0123:
+        cmp bl, 2
+        jb short __36_67_mod_01
+        je _36_67_not_rm
+        jmp _36_67_neg_rm
+
+    __36_67_mod_01:
+        cmp bl, 1
+        jb _36_67_test_rm_imm
+        jmp undefined_byte; _36_67_mod_001_rm
 
     __36_012345:
         cmp al, 3
@@ -2392,6 +2461,74 @@ _36_4_hlt:
 ; -------------------------------------------------------------
 _36_5_cmc:
     m_putsln 'CMC'
+    jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_test_rm_imm:
+; -------------------------------------------------------------
+_36_67_not_rm:
+    m_puts 'NOT '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
+    jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_neg_rm:
+    m_puts 'NEG '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
+    jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_mul_rm:
+    m_puts 'MUL '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
+    jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_imul_rm:
+    m_puts 'IMUL '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
+    jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_div_rm:
+    m_puts 'DIV '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
+    jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_idiv_rm:
+    m_puts 'IDIV '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------

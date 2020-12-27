@@ -184,12 +184,12 @@
 
 1111 011w mod 000 r/m [poslinkis] bojb [bovb] | TEST registras/atmintis ? betarpiškas operandas
 
-1111 011w mod 010 r/m [poslinkis]             | NOT registras/atmintis
-1111 011w mod 011 r/m [poslinkis]             | NEG registras/atmintis
-1111 011w mod 100 r/m [poslinkis]             | MUL registras/atmintis
-1111 011w mod 101 r/m [poslinkis]             | IMUL registras/atmintis
-1111 011w mod 110 r/m [poslinkis]             | DIV registras/atmintis
-1111 011w mod 111 r/m [poslinkis]             | IDIV registras/atmintis
+++++ ++++ +++ +++ +++ +++++++++++             | +++ ++++++++++++++++++
+++++ ++++ +++ +++ +++ +++++++++++             | +++ ++++++++++++++++++
+++++ ++++ +++ +++ +++ +++++++++++             | +++ ++++++++++++++++++
+++++ ++++ +++ +++ +++ +++++++++++             | ++++ ++++++++++++++++++
+++++ ++++ +++ +++ +++ +++++++++++             | +++ ++++++++++++++++++
+++++ ++++ +++ +++ +++ +++++++++++             | ++++ ++++++++++++++++++
 -------------------------------------o370--------------------------------------------------------------------
 ++++ ++++                                     | +++
 ++++ ++++                                     | +++
