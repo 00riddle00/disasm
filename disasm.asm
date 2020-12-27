@@ -2,7 +2,7 @@
 ;  DESCRIPTION
 ; ============================================================
 ; Subject: Computer Architecture
-; LAB-2 and LAB-3: x8086 Disassembler
+; LAB-2 and LAB-3: Intel 8088 Disassembler, written in TASM
 ; Vilnius University, MIF
 ; Author: Tomas Giedraitis
 ;
