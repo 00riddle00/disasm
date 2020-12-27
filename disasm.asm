@@ -63,7 +63,7 @@ local @@word_ptr, @@byte_ptr, @@endmacro
 @@endmacro:
 endm
 
-; TODO description
+; TODO description, this is one of the vaguest points!
 m_before_decode macro
     mov dl, al
     and dl, 001b ; will be used for decode procedure
@@ -135,6 +135,11 @@ jumps
 
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
+
+    db 3, 0, 4,  2, 6, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | LES SI, dword ptr [BP+DI+222111] 
+    db 3, 0, 5,  1, 7, 6,  1, 1, 1            ; 0???: ??      | LDS DI, dword ptr [BP+111] 
+    db 3, 0, 5,  3, 0, 3                      ; 0???: ??      | UNDEFINED
+
 
     db 2, 1, 7,  0, 6, 0                      ; 0???: ??      | POP word ptr [BX+SI]
     db 2, 1, 7,  0, 7, 0                      ; 0???: ??      | UNDEFINED
@@ -2037,13 +2042,27 @@ _30x:
     cmp al, 7
     ja undefined
 
-    cmp al, 4
-    jb short __30_23
-    je _304_les_reg_mem
-
     cmp al, 6
-    jb _305_lds_reg_mem
+    jb short __30_2345
     jmp _30_67_mov_rm_imm
+
+    __30_2345:
+        cmp al, 4
+        jb short __30_23
+
+    __30_45_xx:
+        inc si ; point to 'mod'
+        mov bl, byte ptr [data_octal+si]
+        dec si ; return SI back
+        ; find out if it's a legit opcode
+        cmp bl, 3 ; mod cannot be '11'
+        jb short __30_45
+        jmp undefined_byte
+
+    __30_45:
+        cmp al, 5
+        jb _304_les_reg_mem
+        jmp _305_lds_reg_mem
 
     __30_23:
         cmp al, 3
@@ -2064,12 +2083,36 @@ _303_ret:
 
 ; ------------------------------------------------------------
 _304_les_reg_mem:
-    m_putsln '304_les_reg_mem'
+    m_puts 'LES '
+    ; AL contains '100'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+    call p_decode_reg
+    m_puts ', d' ; 'd' is for 'dword', since the next 
+                 ; operand  must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _305_lds_reg_mem:
-    m_putsln '_305_lds_reg_mem'
+    m_puts 'LDS '
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+    call p_decode_reg
+    m_puts ', d' ; 'd' is for 'dword', since the next 
+                 ; operand  must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
