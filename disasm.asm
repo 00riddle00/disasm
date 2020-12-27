@@ -136,6 +136,9 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
+    db 2, 1, 5,  2, 6, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | LEA SI, dword ptr [BP+DI+222111] 
+    db 2, 1, 5,  3, 7, 6                      ; 0???: ??      | UNDEFINED
+
     db 3, 0, 4,  2, 6, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | LES SI, dword ptr [BP+DI+222111] 
     db 3, 0, 5,  1, 7, 6,  1, 1, 1            ; 0???: ??      | LDS DI, dword ptr [BP+111] 
     db 3, 0, 5,  3, 0, 3                      ; 0???: ??      | UNDEFINED
@@ -1650,6 +1653,14 @@ _21x:
     je short __217_mod_xxx
     ja undefined
 
+    cmp al, 4
+    jb short __21_0123_mov_reg_rm
+    je _214_mov_rm_segreg
+
+    cmp al, 6
+    jb _215_lea_reg_mem
+    jmp _216_mov_segreg_rm
+
     __217_mod_xxx:
         inc si ; point to 'mod'
         inc si ; point SI to next octal digit after 'mod'
@@ -1660,14 +1671,6 @@ _21x:
         cmp bl, 6
         je _217_pop_rm
         jmp undefined_byte
-
-    cmp al, 4
-    jb short __21_0123_mov_reg_rm
-    je _214_mov_rm_segreg
-
-    cmp al, 6
-    jb _215_lea_reg_mem
-    jmp _216_mov_segreg_rm
 
 ; ------------------------------------------------------------
 __21_0123_mov_reg_rm:
@@ -1682,7 +1685,29 @@ _214_mov_rm_segreg:
 
 ; ------------------------------------------------------------
 _215_lea_reg_mem:
-    m_putsln '215'
+    ; check if mod is not '11'
+    inc si ; point to 'mod'
+    mov bl, byte ptr [data_octal+si]
+    dec si ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 3 ; mod cannot be '11'
+    je undefined_byte
+
+    m_puts 'LEA '
+
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+    call p_decode_reg
+    m_puts ', d' ; 'd' is for 'dword', since the next 
+                 ; operand  must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
