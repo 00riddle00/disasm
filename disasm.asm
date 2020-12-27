@@ -158,6 +158,9 @@ jumps
     db 2, 0, 0,  1, 1, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | OR byte ptr [SI+222], 333
     db 2, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | ADC word ptr [SI+222111], 377333
 
+    db 2, 0, 1,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4  ; 0???: ?? | ADD word ptr [SI+222111], 444333
+    db 2, 0, 2,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | ADD byte ptr [SI+222111], 333
+
     db 2, 0, 0,  1, 3, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | SBB byte ptr [SI+222], 333
     db 2, 0, 3,  2, 4, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | AND word ptr [SI+222111], 377333
 
@@ -532,7 +535,7 @@ proc p_op_0sw_rm_imm
     inc si ; SI must point to 'mod' before calling 
            ; the decode procedure
     mov dl, al
-    and dl, 10b
+    and dl, 01b
     ; now DL has information (w=0)/(w=1)
     ; which is expected by the decode procedure
     call p_decode_rm
@@ -562,6 +565,8 @@ proc p_op_0sw_rm_imm
     si_in_right_place_L0:
 
     ; AL still contains '0sw'
+    ; DL still contains (w=0) or (w=1)
+
     ; check 'w' bit
     cmp dl, 1
     jb imm_1_byte
