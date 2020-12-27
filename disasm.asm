@@ -136,6 +136,13 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
+    db 2, 1, 4,  0, 1, 0                      ; 0???: ??      | MOV word ptr [BX+SI], CS
+    db 2, 1, 4,  0, 4, 0                      ; 0???: ??      | UNDEFINED
+
+    db 2, 1, 6,  3, 2, 2                      ; 0???: ??      | MOV SS, DX
+    db 2, 1, 6,  3, 1, 2                      ; 0???: ??      | UNDEFINED
+
+
     db 2, 1, 5,  2, 6, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | LEA SI, dword ptr [BP+DI+222111] 
     db 2, 1, 5,  3, 7, 6                      ; 0???: ??      | UNDEFINED
 
@@ -143,6 +150,7 @@ jumps
     db 3, 0, 5,  1, 7, 6,  1, 1, 1            ; 0???: ??      | LDS DI, dword ptr [BP+111] 
     db 3, 0, 5,  3, 0, 3                      ; 0???: ??      | UNDEFINED
 
+    db 0FFh
 
     db 2, 1, 7,  0, 6, 0                      ; 0???: ??      | POP word ptr [BX+SI]
     db 2, 1, 7,  0, 7, 0                      ; 0???: ??      | UNDEFINED
@@ -1655,11 +1663,10 @@ _21x:
 
     cmp al, 4
     jb short __21_0123_mov_reg_rm
-    je _214_mov_rm_segreg
 
-    cmp al, 6
-    jb _215_lea_reg_mem
-    jmp _216_mov_segreg_rm
+    cmp al, 5
+    je _215_lea_reg_mem
+    jmp _21_46_mov_rm_segreg
 
     __217_mod_xxx:
         inc si ; point to 'mod'
@@ -1679,9 +1686,63 @@ __21_0123_mov_reg_rm:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_214_mov_rm_segreg:
-    m_putsln '214'
-    jmp _xxx
+_21_46_mov_rm_segreg:
+    ; check if 'reg' is not '1xx'
+    inc si ; point to 'mod'
+    inc si ; point to 'reg'
+    mov bl, byte ptr [data_octal+si]
+    dec si 
+    dec si ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 4 ; reg cannot be '1xx'
+    jae undefined_byte
+
+    m_puts 'MOV '
+
+    ; AL containts '1d0'
+    cmp al, 6
+    je _21_6_mov_segreg_rm
+
+    _21_4_mov_rm_segreg:
+        mov al, 001
+        m_before_decode ; it will put '001' from AL to DL,
+                        ; which is what is needed.
+                        ; this will tell the decode procedure
+                        ; that the operand is a word
+        call p_decode_rm
+        m_move_index
+
+        m_puts ', '
+
+        ; BL still contains 'reg', which is '0sr'
+        shl bl, 1 ; times 2
+        m_print_reg SR
+
+        m_print_nl
+        jmp _xxx
+
+    _21_6_mov_segreg_rm:
+        ; BL still contains 'reg', which is '0sr'
+        ; if 'd'=1, which is the case here, 0sr cannot be
+        ; 001, since it cannot be written to 'CS'
+        cmp bl, 1 
+        je undefined_byte
+
+        shl bl, 1 ; times 2
+        m_print_reg SR
+
+        m_puts ', '
+
+        mov al, 001
+        m_before_decode ; it will put '001' from AL to DL,
+                        ; which is what is needed.
+                        ; this will tell the decode procedure
+                        ; that the operand is a word
+        call p_decode_rm
+        m_move_index
+
+        m_print_nl
+        jmp _xxx
 
 ; ------------------------------------------------------------
 _215_lea_reg_mem:
@@ -1708,11 +1769,6 @@ _215_lea_reg_mem:
     m_move_index
 
     m_print_nl
-    jmp _xxx
-
-; ------------------------------------------------------------
-_216_mov_segreg_rm:
-    m_putsln '216'
     jmp _xxx
 
 ; ------------------------------------------------------------
