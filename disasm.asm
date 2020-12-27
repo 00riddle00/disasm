@@ -48,19 +48,26 @@ m_print_reg macro reg_group
 endm
 
 ; print asm pointer directive
-; ::param:: DL must be either 0 (=byte) or 1 (=word)
+; ::param:: DL can be 0 (=byte), 1 (=word),
+;           or else the ptr will not be printed
+;           (no ptr has its use case for
+;            printing ESC codes)
 m_print_ptr macro
-local @@word_ptr, @@byte_ptr, @@endmacro
+local @@word_ptr, @@endm_print_ptr
+    cmp dl, 2
+    jae @@endm_print_ptr
+
     cmp dl, 1
-    jb @@byte_ptr
+    je @@word_ptr
 
-    ; word_ptr:
-    m_puts 'word ptr'
-    jmp @@endmacro
+    ; byte_ptr
+    m_puts 'byte ptr '
+    jmp @@endm_print_ptr
 
-    @@byte_ptr:
-        m_puts 'byte ptr'
-@@endmacro:
+    @@word_ptr:
+    m_puts 'word ptr '
+
+@@endm_print_ptr:
 endm
 
 ; TODO description, this is one of the vaguest points!
@@ -136,12 +143,17 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
+    db 3, 3, 0,  0, 4, 0                      ; 0???: ??      | <ESC code> [BX+SI]
+    db 3, 3, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | <ESC code> [222111]
+    db 3, 3, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | <ESC code> [BP+111]
+    db 3, 3, 3,  2, 1, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | <ESC code> [BP+222111]
+    db 3, 3, 4,  3, 0, 0                      ; 0???: ??      | <ESC code> 
+
     db 2, 1, 4,  0, 1, 0                      ; 0???: ??      | MOV word ptr [BX+SI], CS
     db 2, 1, 4,  0, 4, 0                      ; 0???: ??      | UNDEFINED
 
     db 2, 1, 6,  3, 2, 2                      ; 0???: ??      | MOV SS, DX
     db 2, 1, 6,  3, 1, 2                      ; 0???: ??      | UNDEFINED
-
 
     db 2, 1, 5,  2, 6, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | LEA SI, dword ptr [BP+DI+222111] 
     db 2, 1, 5,  3, 7, 6                      ; 0???: ??      | UNDEFINED
@@ -445,7 +457,9 @@ endp
 
 ; Decode 'r/m' from 'mod reg r/m [offset]'
 ; Before call: SI must point to 'mod' byte
-;              DL must be either 0 (=byte) or 1 (=word)
+;              DL should be either 0 (=byte) or 1 (=word)
+;              or else ptr directive will not be printed
+;              (this effect is also useful for ESC codes)
 ;
 ; After call: SI is not changed.
 ;             CL will contain how many bytes (as in octal digits)
@@ -492,7 +506,7 @@ proc p_decode_rm
             mov al, byte ptr [data_octal+si]
 
             m_print_ptr
-            m_puts ' ['
+            m_puts '['
 
             mov bl, al 
             shl bl, 1 ; times 2
@@ -554,7 +568,7 @@ proc p_decode_rm
             je _rm_is_mem_no_offset_direct_address ; so only direct address is used for EA
 
             m_print_ptr
-            m_puts ' ['
+            m_puts '['
 
             mov bl, al 
             shl bl, 1 ; times 2
@@ -585,7 +599,7 @@ proc p_decode_rm
             ; only direct address is used for EA
             _rm_is_mem_no_offset_direct_address:
                 m_print_ptr
-                m_puts ' ['
+                m_puts '['
                 ; print direct address (two bytes)
                 call p_print_next_word
                 m_puts ']'
@@ -2333,69 +2347,32 @@ _327_xlat:
 ;  _33X
 ; ------------------------------------------------------------
 _33x:
-    ; get 3rd octal digit
-    inc si
+    m_puts '<ESC code> '
+
+    inc si ; 3rd octal digit of opcode ('xxx')
+    inc si ; points to 'mod'
     mov al, byte ptr [data_octal+si]
 
-    cmp al, 7
-    je _337
-    ja undefined
-
     cmp al, 3
-    jb short __33_012
-    je _333
-    jmp short __33_456
+    je _33x_3
 
-    __33_012:
-        cmp al, 1
-        jb short _330
-        je _331
-        jmp _332
+    mov dl, 002 ; preparing for decode proc
+                ; si already points to 'mod'
+                ;
+                ; DL above 1 means no pointer
+                ; directive will be printed
+    call p_decode_rm
+    m_move_index
 
-    __33_456:
-        cmp al, 5
-        jb _334
-        je _335
-        jmp _336
+    jmp short _33x_end
 
-; ------------------------------------------------------------
-_330:
-    m_putsln '330'
-    jmp _xxx
+    _33x_3:
+        inc si
+        inc si ; point to last byte read
+        jmp _33x_end
 
-; ------------------------------------------------------------
-_331:
-    m_putsln '331'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_332:
-    m_putsln '332'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_333:
-    m_putsln '333'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_334:
-    m_putsln '334'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_335:
-    m_putsln '335'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_336:
-    m_putsln '336'
-    jmp _xxx
-
-; ------------------------------------------------------------
-_337:
-    m_putsln '337'
+    _33x_end:
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
