@@ -105,6 +105,16 @@ jumps
 
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
+
+    db 2, 0, 4,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | TEST BL, byte ptr [222111]
+    db 2, 0, 5,  0, 2, 4                      ; 0???: ??      | TEST DX, word ptr [SI]
+
+    db 2, 0, 6,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XCHG AL, byte ptr [BP+DI+222111]
+    db 2, 0, 7,  3, 1, 4                      ; 0???: ??      | XCHG CX, SP
+
+    db 0FFh
+
+    ;data_octal db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
     db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
 
     db 0, 0, 0,  0, 2, 4                      ; 0???: ??      | ADD byte ptr [SI], DL
@@ -1408,16 +1418,14 @@ _20x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _207_xchg_reg_rm_word
     ja undefined
 
     cmp al, 4
     jb short __20_0123
-    je _204_test_reg_rm_byte
 
     cmp al, 6
-    jb _205_test_reg_rm_word
-    jmp _206_xchg_reg_rm_byte
+    jb _20_45_test_reg_rm
+    jmp _20_67_xchg_reg_rm
 
     __20_0123:
         inc si ; point to 'mod'
@@ -1495,23 +1503,71 @@ _20_0123_cmp_rm_imm:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_204_test_reg_rm_byte:
-    m_putsln '204'
+_20_45_test_reg_rm:
+    m_puts 'TEST '
+    ; AL contains '10w'
+    mov dl, al
+    and dl, 001b ; will be used for decode procedures
+
+    inc si ; si points to 'mod' now
+
+    call p_decode_reg
+    m_puts ', '
+    call p_decode_rm
+
+    ; point SI to 'r/m'
+    inc si
+    inc si
+
+    cmp cl, 0
+    je si_in_right_place_L2 ; offset was not used
+
+    ; offset was used
+    ; point SI to the last byte read
+    ;
+    ; cl contains information about how many 
+    ; bytes were read as an offset or direct address
+    xor ch, ch
+    loop_L2:
+        inc si
+    loop loop_L2
+
+    si_in_right_place_L2:
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
-_205_test_reg_rm_word:
-    m_putsln '205'
-    jmp _xxx
+_20_67_xchg_reg_rm:
+    m_puts 'XCHG '
+    ; AL contains '11w'
+    mov dl, al
+    and dl, 001b ; will be used for decode procedures
 
-; ------------------------------------------------------------
-_206_xchg_reg_rm_byte:
-    m_putsln '206'
-    jmp _xxx
+    inc si ; si points to 'mod' now
 
-; ------------------------------------------------------------
-_207_xchg_reg_rm_word:
-    m_putsln '207'
+    call p_decode_reg
+    m_puts ', '
+    call p_decode_rm
+
+    ; point SI to 'r/m'
+    inc si
+    inc si
+
+    cmp cl, 0
+    je si_in_right_place_L3 ; offset was not used
+
+    ; offset was used
+    ; point SI to the last byte read
+    ;
+    ; cl contains information about how many 
+    ; bytes were read as an offset or direct address
+    xor ch, ch
+    loop_L3:
+        inc si
+    loop loop_L3
+
+    si_in_right_place_L3:
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
