@@ -135,7 +135,7 @@
 1100 0100 mod reg r/m [poslinkis]             | LES registras <- atmintis
 1100 0101 mod reg r/m [poslinkis]             | LDS registras <- atmintis
 
-1100 011w mod 000 r/m [poslinkis] bojb [bovb] | MOV registras/atmintis <- betarpiškas operandas
+++++ ++++ +++ +++ +++ +++++++++++ ++++ ++++++ | +++ ++++++++++++++++++ ++ +++++++++++ +++++++++
 -------------------------------------o310--------------------------------------------------------------------
 ++++ ++++ ++++ ++++                           | ++++ +++++++++++ +++++++++
 ++++ ++++                                     | ++++

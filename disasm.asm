@@ -134,12 +134,12 @@ jumps
 ; --------------------------------------------------------------------------------------------
 
 ; ------------------------------------- GROUP 0 ----------------------------------------------
-    data_octal db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
+    data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
-    db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3  ; 0???: ??   | TEST byte ptr [SI+222], 333
-    db 3, 6, 6,  0, 0, 1,  3, 3, 3            ; 0???: ??   | TEST byte ptr [BX+DI], 333
-    db 3, 6, 7,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4  ; 0???: ??  | TEST word ptr [SI+222111], 444333
-    db 3, 6, 7,  3, 0, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??   | TEST SP, 222111
+    db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3  ; 0???: ??      | TEST byte ptr [SI+222], 333
+    db 3, 6, 6,  0, 0, 1,  3, 3, 3            ; 0???: ??      | TEST byte ptr [BX+DI], 333
+    db 3, 0, 7,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4  ; 0???: ??  | MOV word ptr [SI+222111], 444333
+    db 3, 0, 7,  3, 0, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV SP, 222111
 
     db 0FFh
 
@@ -158,7 +158,7 @@ jumps
     db 2, 0, 6,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XCHG AL, byte ptr [BP+DI+222111]
     db 2, 0, 7,  3, 1, 4                      ; 0???: ??      | XCHG CX, SP
 
-    db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
+    db 0, 0, 0,  0, 2, 0                      ; 0???: ??      | ADD byte ptr [BX+SI], DL
     db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
 
     db 0, 0, 0,  0, 2, 4                      ; 0???: ??      | ADD byte ptr [SI], DL
@@ -2015,8 +2015,7 @@ _30x:
 
     cmp al, 6
     jb _305_lds_reg_mem
-    je _306_mov_rm_imm_byte
-    jmp _307_mov_rm_imm_word
+    jmp _30_67_mov_rm_imm
 
     __30_23:
         cmp al, 3
@@ -2046,13 +2045,18 @@ _305_lds_reg_mem:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_306_mov_rm_imm_byte:
-    m_putsln '_306_mov_rm_imm_byte'
-    jmp _xxx
+_30_67_mov_rm_imm:
+    m_puts 'MOV '
+    ; AL so far contains 3 bits '11w' as an octal number.
 
-; ------------------------------------------------------------
-_307_mov_rm_imm_word:
-    m_putsln '_307_mov_rm_imm_word'
+    ; keep only the last bit (ie. set 's' to 0)
+    and al, 001b
+
+    ; now the following procedure can be called. 
+    ; It will think that it is indeed the command
+    ; of format '0sw', which is exactly what is needed here.
+    ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
+    call p_op_0sw_rm_imm
     jmp _xxx
 
 ; ------------------------------------------------------------
