@@ -136,6 +136,17 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
+    db 2, 1, 7,  0, 6, 0                      ; 0???: ??      | POP word ptr [BX+SI]
+    db 2, 1, 7,  0, 7, 0                      ; 0???: ??      | UNDEFINED
+
+    db 3, 7, 6,  0, 0, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | INC byte ptr [222111]
+    db 3, 7, 7,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | INC word ptr [BP+DI+222111]
+
+    db 3, 7, 6,  3, 1, 0                      ; 0???: ??      | DEC AL
+    db 3, 7, 7,  3, 1, 2                      ; 0???: ??      | DEC DX
+
+    db 3, 7, 7,  3, 6, 5                      ; 0???: ??      | PUSH BP
+
     db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3  ; 0???: ??      | TEST byte ptr [SI+222], 333
     db 3, 6, 6,  0, 0, 1,  3, 3, 3            ; 0???: ??      | TEST byte ptr [BX+DI], 333
     db 3, 0, 7,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4  ; 0???: ??  | MOV word ptr [SI+222111], 444333
@@ -676,14 +687,11 @@ endp
 ;   XXXX X0dw mod reg r/m [offset]  
 ; where each 'X' is one of 0 or 1.
 ;
-; It applies to 
-;   ADD, OR, ADC, SBB, AND, SUB, XOR, CMP (all from 1st octal group) 
-;   and one MOV command
-;
 ; Before call: SI should point to the octal digit for '0dw',
 ;              AL should contain the value of '0dw' as an octal digit
 ;
 ; After call: SI points to the last byte read in a command
+; TODO make this proc apply to XXdw, not only X0dw
 proc p_op_0dw_reg_rm
     push ax bx dx
     inc si ; si must point to 'mod' before calling decode procedures
@@ -1634,8 +1642,19 @@ _21x:
     mov al, byte ptr [data_octal+si]
 
     cmp al, 7
-    je _217_pop_rm
+    je short __217_mod_xxx
     ja undefined
+
+    __217_mod_xxx:
+        inc si ; point to 'mod'
+        inc si ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+si]
+        dec si
+        dec si ; return SI back
+        ; find out if it's a legit opcode
+        cmp bl, 6
+        je _217_pop_rm
+        jmp undefined_byte
 
     cmp al, 4
     jb short __21_0123_mov_reg_rm
@@ -1668,7 +1687,16 @@ _216_mov_segreg_rm:
 
 ; ------------------------------------------------------------
 _217_pop_rm:
-    m_putsln '217'
+    m_puts 'POP '
+    ; AL contains '111'
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is a word
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -2570,10 +2598,36 @@ _37x:
     ja undefined
 
     cmp al, 6
-    jb short __37_012345
+    jb __37_012345
 
-    ; TODO __37_67
-    ; ...
+    __37_67:
+        inc si ; point to 'mod'
+        inc si ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+si]
+        dec si
+        dec si ; return SI back
+        ; find out which operation is used
+        cmp bl, 2
+        jb short __37_67_mod_01
+        je _377_call_near_absolute_indirect
+
+        cmp bl, 5
+        jb short __377_mod_34
+        je _377_jmp_far_absolute_indirect
+
+        cmp bl, 7
+        jb _377_push_rm
+        jmp undefined_byte; _377_mod_111_rm
+
+    __37_67_mod_01:
+        cmp bl, 1
+        jb _37_67_inc_rm
+        jmp _37_67_dec_rm
+
+    __377_mod_34:
+        cmp bl, 4
+        jb _377_call_far_absolute_indirect
+        jmp _377_jmp_near_absolute_indirect
 
     __37_012345:
         cmp al, 3
@@ -2618,6 +2672,64 @@ _37_4_cld:
 ; -------------------------------------------------------------
 _37_5_std:
     m_putsln 'STD'
+    jmp _xxx
+
+; -----------------------------------------------------------/
+_37_67_inc_rm:
+    m_puts 'INC '
+    ; AL contains '11w'
+    m_before_decode ; it will put '00w' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is byte/word
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
+    jmp _xxx
+
+; -----------------------------------------------------------/
+_37_67_dec_rm:
+    m_puts 'DEC '
+    ; AL contains '11w'
+    m_before_decode ; it will put '00w' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is byte/word
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
+    jmp _xxx
+
+; -----------------------------------------------------------/
+_377_call_near_absolute_indirect:
+    jmp _xxx
+
+; -----------------------------------------------------------/
+_377_call_far_absolute_indirect:
+    jmp _xxx
+
+; -----------------------------------------------------------/
+_377_jmp_near_absolute_indirect:
+    jmp _xxx
+
+; -----------------------------------------------------------/
+_377_jmp_far_absolute_indirect:
+    jmp _xxx
+
+; -----------------------------------------------------------/
+_377_push_rm:
+    m_puts 'PUSH '
+    ; AL contains '111'
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is a word
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; -----------------------------------------------------------/

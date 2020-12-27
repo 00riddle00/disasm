@@ -91,7 +91,7 @@
 ++++ ++++ +++ +++ +++ +++++++++++             | +++ +++++++++ ++++ ++++++++++++++++++
 1000 11d0 mod 0sr r/m [poslinkis]             | MOV segmento registras <--> registras/atmintis
 1000 1101 mod reg r/m [poslinkis]             | LEA registras <- atmintis
-1000 1111 mod 110 r/m [poslinkis]             | POP registras/atmintis 
+++++ ++++ +++ +++ +++ +++++++++++             | +++ ++++++++++++++++++ 
 -------------------------------------o220--------------------------------------------------------------------
 ++++ ++++                                     | ++++ ++++ +++ ++
 ++++ ++++                                     | ++++ +++++++++ ++++ ++++++++++++++ ++++
@@ -198,11 +198,11 @@
 ++++ ++++                                     | +++
 ++++ ++++                                     | +++
 
-1111 111w mod 000 r/m [poslinkis]             | INC registras/atmintis
-1111 111w mod 001 r/m [poslinkis]             | DEC registras/atmintis
+++++ ++++ +++ +++ +++ +++++++++++             | +++ ++++++++++++++++++ 
+++++ ++++ +++ +++ +++ +++++++++++             | +++ ++++++++++++++++++ 
 1111 1111 mod 010 r/m [poslinkis]             | CALL adresas (vidinis netiesioginis)
 1111 1111 mod 011 r/m [poslinkis]             | CALL adresas (išorinis netiesioginis)
 1111 1111 mod 100 r/m [poslinkis]             | JMP adresas (vidinis netiesioginis)
 1111 1111 mod 101 r/m [poslinkis]             | JMP adresas (išorinis netiesioginis)
-1111 1111 mod 110 r/m [poslinkis]             | PUSH registras/atmintis
+++++ ++++ +++ +++ +++ +++++++++++             | ++++ ++++++++++++++++++ 
 -------------------------------------------------------------------------------------------------------------
