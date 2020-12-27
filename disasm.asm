@@ -136,6 +136,13 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
 
+    db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3  ; 0???: ??   | TEST byte ptr [SI+222], 333
+    db 3, 6, 6,  0, 0, 1,  3, 3, 3            ; 0???: ??   | TEST byte ptr [BX+DI], 333
+    db 3, 6, 7,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4  ; 0???: ??  | TEST word ptr [SI+222111], 444333
+    db 3, 6, 7,  3, 0, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??   | TEST SP, 222111
+
+    db 0FFh
+
     db 3, 6, 6,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | NOT byte ptr [222111]
     db 3, 6, 7,  3, 3, 5                      ; 0???: ??      | NEG BP
 
@@ -151,9 +158,7 @@ jumps
     db 2, 0, 6,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XCHG AL, byte ptr [BP+DI+222111]
     db 2, 0, 7,  3, 1, 4                      ; 0???: ??      | XCHG CX, SP
 
-    db 0FFh
-
-    ;data_octal db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
+    db 0, 0, 0,  0, 2, 0           ; 0???: ??      | ADD byte ptr [BX+SI], DL
     db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
 
     db 0, 0, 0,  0, 2, 4                      ; 0???: ??      | ADD byte ptr [SI], DL
@@ -575,8 +580,13 @@ endp
 
 ; Handles printing "r/m, immediate" for the 
 ; commands of the format:
-; 1000 00sw mod XXX r/m [offset] lsb [msb]
+; 1000 00sw mod XXX r/m [offset] lsb_immediate [msb_immediate]
 ; where each 'X' is one of 0 or 1.
+; 
+; Before call: SI should point to the octal digit for '0sw',
+;              AL should contain the value of '0sw' as an octal digit
+;
+; After call: SI points to the last byte read in a command
 proc p_op_0sw_rm_imm
     push ax bx dx
 
@@ -2465,6 +2475,19 @@ _36_5_cmc:
 
 ; -------------------------------------------------------------
 _36_67_test_rm_imm:
+    m_puts 'TEST '
+    ; AL so far contains 3 bits '11w' as an octal number.
+
+    ; keep only the last bit (ie. set 's' to 0)
+    and al, 001b
+
+    ; now the following procedure can be called. 
+    ; It will think that it is indeed the command
+    ; of format '0sw', which is exactly what is needed here.
+    ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
+    call p_op_0sw_rm_imm
+    jmp _xxx
+
 ; -------------------------------------------------------------
 _36_67_not_rm:
     m_puts 'NOT '
