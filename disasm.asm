@@ -143,6 +143,17 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
+    db 3, 2, 0,  0, 0, 0                      ; 0???: ??      | ROL byte ptr [BX+SI], 1
+    db 3, 2, 1,  3, 1, 2                      ; 0???: ??      | ROR DX, 1
+    db 3, 2, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | RCL byte ptr [BP+111], CL
+    db 3, 2, 3,  2, 3, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RCR word ptr [BP+DI+222111], CL
+    db 3, 2, 0,  3, 4, 0                      ; 0???: ??      | SHL AL, 1
+    db 3, 2, 1,  3, 5, 5                      ; 0???: ??      | SHR BP, 1
+    db 3, 2, 2,  3, 6, 5                      ; 0???: ??      | UNDEFINED
+    db 3, 2, 3,  0, 7, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SAR word ptr [222111], CL
+
+    db 0FFh
+
     db 3, 3, 0,  0, 4, 0                      ; 0???: ??      | <ESC code> [BX+SI]
     db 3, 3, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | <ESC code> [222111]
     db 3, 3, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | <ESC code> [BP+111]
@@ -2299,13 +2310,39 @@ _32x:
     jb short __32_0123
 
     cmp al, 6
-    jb short __32_45
+    jb __32_45
     je undefined ; _326
     jmp _327_xlat
 
     __32_0123:
-        ; TODO
-        ; ...
+        inc si ; point to 'mod'
+        inc si ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+si]
+        dec si
+        dec si ; return SI back
+
+        ; find out which operation is used
+        cmp bl, 2
+        jb short __32_0123_mod_01
+        je _32_0123_rcl_rm_times
+
+        cmp bl, 5
+        jb short __32_0123_mod_34
+        je _32_0123_shr_rm_times
+
+        cmp bl, 7
+        je _32_0123_sar_rm_times
+        jmp undefined_byte; _32X_0123_mod_6
+
+    __32_0123_mod_01:
+        cmp bl, 1
+        jb _32_0123_rol_times
+        jmp _32_0123_ror_times
+
+    __32_0123_mod_34:
+        cmp bl, 4
+        jb _32_0123_rcr_times
+        jmp _32_0123_shl_times
 
     __32_45:
         ; check if next byte is part of AAM/AAD opcode
@@ -2327,6 +2364,63 @@ _32x:
         cmp al, 4
         je _324_aam
         jmp _325_aad
+
+; -------------------------------------------------------------
+_32_0123_rol_times:
+    m_puts 'ROL '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_ror_times:
+    m_puts 'ROR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_rcl_rm_times:
+    m_puts 'RCL '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_rcr_times:
+    m_puts 'RCR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_shl_times:
+    m_puts 'SHL '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_shr_rm_times:
+    m_puts 'SHR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_sar_rm_times:
+    m_puts 'SAR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_fin:
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    m_puts ', '
+
+    ; AL still contains '0vw'
+    cmp al, 2
+    jb short times_is_1
+
+    times_is_cl:
+        m_puts 'CL'
+        m_print_nl
+        jmp _xxx
+
+    times_is_1:
+        m_puts '1'
+        m_print_nl
+        jmp _xxx
 
 ; -------------------------------------------------------------
 _324_aam:
