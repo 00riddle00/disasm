@@ -143,6 +143,11 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
+    db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??      | CALL 022064:126170 (=9A 78 56 34 12) (=JMP 1234h:5678h)
+    db 3, 5, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??      | JMP 022064:126170  (=EA 78 56 34 12) (=JMP 1234h:5678h)
+
+    db 0FFh
+
     db 3, 7, 7,  0, 2, 0                      ; 0???: ??      | CALL [BX+SI] (=FF 10)
     db 3, 7, 7,  1, 2, 0,  1, 1, 1            ; 0???: ??      | CALL [BX+SI+111] (=FF 50 49)
     db 3, 7, 7,  1, 2, 0,  3, 1, 1            ; 0???: ??      | CALL [BX+SI+311] (=FF 50 C9)
@@ -160,8 +165,6 @@ jumps
     db 3, 7, 7,  2, 5, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | JMP dword ptr [BX+SI+222111] (=FF A8 49 92)
     db 3, 7, 7,  3, 5, 0                      ; 0???: ??      | UNDEFINED
 
-    db 0FFh
-
     db 3, 2, 0,  0, 0, 0                      ; 0???: ??      | ROL byte ptr [BX+SI], 1
     db 3, 2, 1,  3, 1, 2                      ; 0???: ??      | ROR DX, 1
     db 3, 2, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | RCL byte ptr [BP+111], CL
@@ -170,8 +173,6 @@ jumps
     db 3, 2, 1,  3, 5, 5                      ; 0???: ??      | SHR BP, 1
     db 3, 2, 2,  3, 6, 5                      ; 0???: ??      | UNDEFINED
     db 3, 2, 3,  0, 7, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SAR word ptr [222111], CL
-
-    db 0FFh
 
     db 3, 3, 0,  0, 4, 0                      ; 0???: ??      | <ESC code> [BX+SI]
     db 3, 3, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | <ESC code> [222111]
@@ -1899,7 +1900,15 @@ _231_cwd:
 
 ; ------------------------------------------------------------
 _232_call_label_far_absolute:
-    m_putsln '_232_call_label_far_absolute'
+    m_puts 'CALL '
+    add si, 6 ; first print the second word
+    call p_print_next_word
+    m_puts ':'
+    sub si, 12 ; then print the first word
+    call p_print_next_word
+    add si, 6 ; move SI to the last byte read
+
+    m_print_nl
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -2610,7 +2619,15 @@ _351_jmp_label_near_relative:
 
 ; ------------------------------------------------------------
 _352_jmp_label_far_absolute:
-    m_putsln '_352_jmp_label_far_absolute'
+    m_puts 'JMP '
+    add si, 6 ; first print the second word
+    call p_print_next_word
+    m_puts ':'
+    sub si, 12 ; then print the first word
+    call p_print_next_word
+    add si, 6 ; move SI to the last byte read
+
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
