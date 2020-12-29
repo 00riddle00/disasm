@@ -143,6 +143,25 @@ jumps
 ; ------------------------------------- GROUP 0 ----------------------------------------------
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
+    db 3, 7, 7,  0, 2, 0                      ; 0???: ??      | CALL [BX+SI] (=FF 10)
+    db 3, 7, 7,  1, 2, 0,  1, 1, 1            ; 0???: ??      | CALL [BX+SI+111] (=FF 50 49)
+    db 3, 7, 7,  1, 2, 0,  3, 1, 1            ; 0???: ??      | CALL [BX+SI+311] (=FF 50 C9)
+    db 3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL [222111]
+    db 3, 7, 7,  3, 2, 0                      ; 0???: ??      | CALL AX      (=FF D0)
+
+    db 3, 7, 7,  0, 4, 0                      ; 0???: ??      | JMP [BX+SI]  (=FF 20)
+    db 3, 7, 7,  3, 4, 0                      ; 0???: ??      | JMP AX       (=FF E0)
+
+    db 3, 7, 7,  1, 3, 0,  1, 1, 1            ; 0???: ??      | CALL dword ptr [BX+SI+111] (=FF 58 49)
+    db 3, 7, 7,  2, 3, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL dword ptr [BX+SI+222111] (=FF 98 49 92)
+    db 3, 7, 7,  3, 3, 0                      ; 0???: ??      | UNDEFINED
+
+    db 3, 7, 7,  1, 5, 0,  1, 1, 1            ; 0???: ??      | JMP dword ptr [BX+SI+111]  (=FF 68 49)
+    db 3, 7, 7,  2, 5, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | JMP dword ptr [BX+SI+222111] (=FF A8 49 92)
+    db 3, 7, 7,  3, 5, 0                      ; 0???: ??      | UNDEFINED
+
+    db 0FFh
+
     db 3, 2, 0,  0, 0, 0                      ; 0???: ??      | ROL byte ptr [BX+SI], 1
     db 3, 2, 1,  3, 1, 2                      ; 0???: ??      | ROR DX, 1
     db 3, 2, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | RCL byte ptr [BP+111], CL
@@ -2899,18 +2918,94 @@ _37_67_dec_rm:
 
 ; -----------------------------------------------------------/
 _377_call_near_absolute_indirect:
+    m_puts 'CALL '
+    inc si ; points to 'mod'
+
+    mov dl, 002 ; preparing for decode proc
+                ; si already points to 'mod'
+                ;
+                ; DL above 1 means no pointer
+                ; directive will be printed
+                ; (it will have a default meaning
+                ; that the operand is a word)
+ 
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_call_far_absolute_indirect:
+    ; check if mod is not '11'
+    inc si ; point to 'mod'
+    mov bl, byte ptr [data_octal+si]
+    dec si ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 3 ; mod cannot be '11'
+    je undefined_byte
+
+    m_puts 'CALL '
+
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+
+    m_puts 'd' ; 'd' is for 'dword', since the next 
+                 ; operand must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_jmp_near_absolute_indirect:
+    m_puts 'JMP '
+    inc si ; points to 'mod'
+
+    mov dl, 002 ; preparing for decode proc
+                ; si already points to 'mod'
+                ;
+                ; DL above 1 means no pointer
+                ; directive will be printed
+                ; (it will have a default meaning
+                ; that the operand is a word)
+ 
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_jmp_far_absolute_indirect:
+    ; check if mod is not '11'
+    inc si ; point to 'mod'
+    mov bl, byte ptr [data_octal+si]
+    dec si ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 3 ; mod cannot be '11'
+    je undefined_byte
+
+    m_puts 'JMP '
+
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+
+    m_puts 'd' ; 'd' is for 'dword', since the next 
+                 ; operand must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    m_print_nl
     jmp _xxx
 
 ; -----------------------------------------------------------/
