@@ -70,6 +70,27 @@ local @@word_ptr, @@endm_print_ptr
 @@endm_print_ptr:
 endm
 
+; TODO description
+m_print_sign_extension macro
+local @@one_padding, @@zero_padding, @@padding_done
+    ; get 1st octal digit of lsb
+    inc si
+    mov al, byte ptr [data_octal+si]
+    dec si
+
+    cmp al, 2
+    jb @@zero_padding
+
+    @@one_padding:
+        m_puts "377"
+        jmp @@padding_done
+
+    @@zero_padding:
+        m_puts "000"
+
+    @@padding_done:
+endm
+
 ; TODO description, this is one of the vaguest points!
 m_before_decode macro
     mov dl, al
@@ -146,12 +167,23 @@ jumps
     db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??      | CALL 022064:126170 (=9A 78 56 34 12) (=JMP 1234h:5678h)
     db 3, 5, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??      | JMP 022064:126170  (=EA 78 56 34 12) (=JMP 1234h:5678h)
 
-    db 0FFh
 
     db 3, 7, 7,  0, 2, 0                      ; 0???: ??      | CALL [BX+SI] (=FF 10)
-    db 3, 7, 7,  1, 2, 0,  1, 1, 1            ; 0???: ??      | CALL [BX+SI+111] (=FF 50 49)
-    db 3, 7, 7,  1, 2, 0,  3, 1, 1            ; 0???: ??      | CALL [BX+SI+311] (=FF 50 C9)
-    db 3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL [222111]
+    db 3, 7, 7,  1, 2, 0,  1, 1, 1            ; 0???: ??      | CALL [BX+SI+000111] (=FF 50 49)
+    db 3, 7, 7,  2, 2, 0,  1, 1, 1,  3, 7, 7  ; 0???: ??      | CALL [BX+SI+377111] (=FF 90 49 FF)
+
+    db 3, 7, 7,  2, 2, 0,  3, 1, 1,  0, 0, 0  ; 0???: ??      | CALL [BX+SI+000311] (=FF 90 C9 00) 
+    db 3, 7, 7,  2, 2, 0,  3, 1, 1,  3, 7, 6  ; 0???: ??      | CALL [BX+SI+376311] (=FF 90 C9 FE) 
+
+    db 3, 7, 7,  1, 2, 0,  2, 1, 1            ; 0???: ??      | CALL [BX+SI+377211] ; (=FF 50 89)
+    db 3, 7, 7,  2, 2, 0,  2, 1, 1,  0, 0, 0  ; 0???: ??      | CALL [BX+SI+000211]  ; (=FF 90 89 00)
+
+    db 3, 7, 7,  2, 2, 0,  3, 1, 1,  0, 0, 1  ; 0???: ??      | CALL [BX+SI+01311]  (=FF 90 C9 01)
+
+    db 3, 7, 7,  2, 2, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL [BX+SI+222111] (=FF 90 49 92) 
+
+
+    db 3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL [222111] (=FF 16 49 92)
     db 3, 7, 7,  3, 2, 0                      ; 0???: ??      | CALL AX      (=FF D0)
 
     db 3, 7, 7,  0, 4, 0                      ; 0???: ??      | JMP [BX+SI]  (=FF 20)
@@ -572,7 +604,9 @@ proc p_decode_rm
                 jmp offset_printed
 
             ; offset is one byte (according to 'mod')
-            print_offset_byte:
+            print_offset_byte: ; FIXME actually prints two bytes!
+
+                m_print_sign_extension
                 call p_print_next_byte
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 3
@@ -708,28 +742,10 @@ proc p_op_0sw_rm_imm
     jb imm_2_bytes ; so s = 0
 
     ; w = 1, s = 1
-    imm_byte_to_word_sign_extended:
-        ; get 1st octal digit of lsb
-        inc si
-        mov al, byte ptr [data_octal+si]
-        dec si
-
-        cmp al, 2
-        jb zero_padding
-
-        one_padding:
-            m_puts "377"
-            jmp padding_done
-
-        zero_padding:
-            m_puts "000"
-
-        padding_done:
-        call p_print_next_byte
-        jmp endp_op_0sw_rm_imm
+    m_print_sign_extension
 
     ; w = 0, s = 0 or 1
-    imm_1_byte:
+    imm_1_byte: ; or in case of 'byte to word sign extended', print the required byte after sign padding byte.
         call p_print_next_byte
         jmp endp_op_0sw_rm_imm
 
@@ -1216,9 +1232,22 @@ _0x6_push_seg:
     m_print_nl
     jmp _xxx
 
+; TODO
 _0x6_seg_change_prefix:
     ; 2nd octal digit is already in AL
     ; AL is one of {4,5,6,7}
+
+    ;001 sr 110
+
+    ;001 00 110
+    ;001 01 110
+    ;001 10 110
+    ;001 11 110
+
+    ;  0  4   6
+    ;  0  5   6
+    ;  0  6   6
+    ;  0  7   6
 
     m_putsln '0x6_seg_change_prefix'
     jmp _xxx
@@ -2251,6 +2280,7 @@ _305_lds_reg_mem:
 
 ; ------------------------------------------------------------
 _30_67_mov_rm_imm:
+    ; TODO check for other code than '000' between mod and r/m !
     m_puts 'MOV '
     ; AL so far contains 3 bits '11w' as an octal number.
 
