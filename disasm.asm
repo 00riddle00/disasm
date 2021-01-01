@@ -2,7 +2,8 @@
 ;  DESCRIPTION
 ; ============================================================
 ; Subject: Computer Architecture
-; LAB-2 and LAB-3: Intel 8088 Disassembler, written in TASM
+; LAB-2 and LAB-3: Intel 8088 Disassembler
+;     written in TASM, intended for TASM as well.
 ; Vilnius University, MIF
 ; Author: Tomas Giedraitis
 ;
@@ -91,6 +92,38 @@ local @@one_padding, @@zero_padding, @@padding_done
     @@padding_done:
 endm
 
+m_print_sr_prefix_default macro
+local @@sr_prefix_default, @@sr_prefix_done
+    mov bl, dh
+    cmp bl, 0
+    je @@sr_prefix_default
+
+    dec bl
+    shl bl, 1 ; times 2
+    m_print_reg SR
+    m_puts ':'
+    jmp @@sr_prefix_done
+
+    @@sr_prefix_default:
+        m_puts 'DS:'
+
+@@sr_prefix_done:
+endm
+
+m_print_sr_prefix macro
+local @@sr_prefix_done
+    mov bl, dh
+    cmp bl, 0
+    je @@sr_prefix_done
+
+    dec bl
+    shl bl, 1 ; times 2
+    m_print_reg SR
+    m_puts ':'
+
+@@sr_prefix_done:
+endm
+
 ; TODO description, this is one of the vaguest points!
 m_before_decode macro
     mov dl, al
@@ -154,19 +187,20 @@ jumps
     ; Registers used as index in EA formation
     EAi dw 'SI', 'DI', 'SI', 'DI'
 
-    sep db '=============================================================================$'
-
 ; ==================================== TESTING ===============================================
 
 ; --------------------------------------------------------------------------------------------
+;                                     CASES 1                                                ;
 ; --------------------------------------------------------------------------------------------
 
-; ------------------------------------- GROUP 0 ----------------------------------------------
-    data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
+    data_octal db 8, 8, 8                               ; 0???: ??      | UNDEFINED
 
-    db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??      | CALL 022064:126170 (=9A 78 56 34 12) (=JMP 1234h:5678h)
-    db 3, 5, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??      | JMP 022064:126170  (=EA 78 56 34 12) (=JMP 1234h:5678h)
+    db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??  | CALL 022064:126170 (=9A 78 56 34 12) (=JMP 1234h:5678h)
+    db 3, 5, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??  | JMP 022064:126170  (=EA 78 56 34 12) (=JMP 1234h:5678h)
 
+    db 0, 4, 6,  3, 7, 7,  1, 2, 0,  1, 1, 1            ; 0???: ??  | CALL ES:[BX+SI+000111] (=26 FF 50 49)
+    db 3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2            ; 0???: ??  | CALL DS:[222111] (=FF 16 49 92)
+    db 0, 6, 6,  3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??  | CALL SS:[222111] (=36 FF 16 49 92)
 
     db 3, 7, 7,  0, 2, 0                      ; 0???: ??      | CALL [BX+SI] (=FF 10)
     db 3, 7, 7,  1, 2, 0,  1, 1, 1            ; 0???: ??      | CALL [BX+SI+000111] (=FF 50 49)
@@ -182,33 +216,35 @@ jumps
 
     db 3, 7, 7,  2, 2, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL [BX+SI+222111] (=FF 90 49 92) 
 
-
-    db 3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL [222111] (=FF 16 49 92)
+    db 3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL DS:[222111] (=FF 16 49 92)
     db 3, 7, 7,  3, 2, 0                      ; 0???: ??      | CALL AX      (=FF D0)
 
     db 3, 7, 7,  0, 4, 0                      ; 0???: ??      | JMP [BX+SI]  (=FF 20)
     db 3, 7, 7,  3, 4, 0                      ; 0???: ??      | JMP AX       (=FF E0)
 
-    db 3, 7, 7,  1, 3, 0,  1, 1, 1            ; 0???: ??      | CALL dword ptr [BX+SI+111] (=FF 58 49)
+    db 3, 7, 7,  1, 3, 0,  1, 1, 1            ; 0???: ??      | CALL dword ptr [BX+SI+000111] (=FF 58 49)
     db 3, 7, 7,  2, 3, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CALL dword ptr [BX+SI+222111] (=FF 98 49 92)
     db 3, 7, 7,  3, 3, 0                      ; 0???: ??      | UNDEFINED
 
-    db 3, 7, 7,  1, 5, 0,  1, 1, 1            ; 0???: ??      | JMP dword ptr [BX+SI+111]  (=FF 68 49)
+    db 3, 7, 7,  1, 5, 0,  1, 1, 1            ; 0???: ??      | JMP dword ptr [BX+SI+000111]  (=FF 68 49)
     db 3, 7, 7,  2, 5, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | JMP dword ptr [BX+SI+222111] (=FF A8 49 92)
     db 3, 7, 7,  3, 5, 0                      ; 0???: ??      | UNDEFINED
 
+    ;db 0FFh
+; --------------------------------------------------------------------------------------------
+
     db 3, 2, 0,  0, 0, 0                      ; 0???: ??      | ROL byte ptr [BX+SI], 1
     db 3, 2, 1,  3, 1, 2                      ; 0???: ??      | ROR DX, 1
-    db 3, 2, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | RCL byte ptr [BP+111], CL
+    db 3, 2, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | RCL byte ptr [BP+000111], CL
     db 3, 2, 3,  2, 3, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RCR word ptr [BP+DI+222111], CL
     db 3, 2, 0,  3, 4, 0                      ; 0???: ??      | SHL AL, 1
     db 3, 2, 1,  3, 5, 5                      ; 0???: ??      | SHR BP, 1
     db 3, 2, 2,  3, 6, 5                      ; 0???: ??      | UNDEFINED
-    db 3, 2, 3,  0, 7, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SAR word ptr [222111], CL
+    db 3, 2, 3,  0, 7, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | SAR word ptr DS:[222111], CL
 
     db 3, 3, 0,  0, 4, 0                      ; 0???: ??      | <ESC code> [BX+SI]
-    db 3, 3, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | <ESC code> [222111]
-    db 3, 3, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | <ESC code> [BP+111]
+    db 3, 3, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | <ESC code> DS:[222111]
+    db 3, 3, 2,  1, 2, 6,  1, 1, 1            ; 0???: ??      | <ESC code> [BP+000111]
     db 3, 3, 3,  2, 1, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | <ESC code> [BP+222111]
     db 3, 3, 4,  3, 0, 0                      ; 0???: ??      | <ESC code> 
 
@@ -222,15 +258,16 @@ jumps
     db 2, 1, 5,  3, 7, 6                      ; 0???: ??      | UNDEFINED
 
     db 3, 0, 4,  2, 6, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | LES SI, dword ptr [BP+DI+222111] 
-    db 3, 0, 5,  1, 7, 6,  1, 1, 1            ; 0???: ??      | LDS DI, dword ptr [BP+111] 
+    db 3, 0, 5,  1, 7, 6,  1, 1, 1            ; 0???: ??      | LDS DI, dword ptr [BP+000111] 
     db 3, 0, 5,  3, 0, 3                      ; 0???: ??      | UNDEFINED
 
-    db 0FFh
+    ;db 0FFh
+; --------------------------------------------------------------------------------------------
 
     db 2, 1, 7,  0, 6, 0                      ; 0???: ??      | POP word ptr [BX+SI]
     db 2, 1, 7,  0, 7, 0                      ; 0???: ??      | UNDEFINED
 
-    db 3, 7, 6,  0, 0, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | INC byte ptr [222111]
+    db 3, 7, 6,  0, 0, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | INC byte ptr DS:[222111]
     db 3, 7, 7,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | INC word ptr [BP+DI+222111]
 
     db 3, 7, 6,  3, 1, 0                      ; 0???: ??      | DEC AL
@@ -238,28 +275,36 @@ jumps
 
     db 3, 7, 7,  3, 6, 5                      ; 0???: ??      | PUSH BP
 
-    db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3  ; 0???: ??      | TEST byte ptr [SI+222], 333
-    db 3, 6, 6,  0, 0, 1,  3, 3, 3            ; 0???: ??      | TEST byte ptr [BX+DI], 333
+    db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3                      ; 0???: ??  | TEST byte ptr [SI+377222], 333
+    db 3, 6, 6,  0, 0, 1,  3, 3, 3                                ; 0???: ??  | TEST byte ptr [BX+DI], 333
     db 3, 0, 7,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4  ; 0???: ??  | MOV word ptr [SI+222111], 444333
-    db 3, 0, 7,  3, 0, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV SP, 222111
+    db 3, 0, 7,  3, 0, 4,  1, 1, 1,  2, 2, 2                      ; 0???: ??  | MOV SP, 222111
 
-    db 0FFh
+    ;db 0FFh
+; --------------------------------------------------------------------------------------------
 
-    db 3, 6, 6,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | NOT byte ptr [222111]
+    db 3, 6, 6,  0, 2, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | NOT byte ptr DS:[222111]
     db 3, 6, 7,  3, 3, 5                      ; 0???: ??      | NEG BP
 
-    db 3, 6, 6,  0, 4, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MUL byte ptr [222111]
+    db 3, 6, 6,  0, 4, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MUL byte ptr DS:[222111]
     db 3, 6, 7,  3, 5, 5                      ; 0???: ??      | IMUL BP
 
-    db 3, 6, 6,  0, 6, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | DIV byte ptr [222111]
+    db 3, 6, 6,  0, 6, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | DIV byte ptr DS:[222111]
     db 3, 6, 7,  3, 7, 5                      ; 0???: ??      | IDIV BP
 
-    db 2, 0, 4,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | TEST BL, byte ptr [222111]
+    db 2, 0, 4,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | TEST BL, byte ptr DS:[222111]
     db 2, 0, 5,  0, 2, 4                      ; 0???: ??      | TEST DX, word ptr [SI]
 
     db 2, 0, 6,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XCHG AL, byte ptr [BP+DI+222111]
     db 2, 0, 7,  3, 1, 4                      ; 0???: ??      | XCHG CX, SP
 
+    ;db 0FFh
+
+; --------------------------------------------------------------------------------------------
+;                                     CASES 2                                                ;
+; --------------------------------------------------------------------------------------------
+
+; ------------------------------------- GROUP 0 ----------------------------------------------
     db 0, 0, 0,  0, 2, 0                      ; 0???: ??      | ADD byte ptr [BX+SI], DL
     db 0, 0, 1,  0, 2, 0                      ; 0???: ??      | ADD word ptr [BX+SI], DX
 
@@ -269,23 +314,23 @@ jumps
     db 0, 0, 0,  3, 1, 0                      ; 0???: ??      | ADD AL, CL
     db 0, 1, 1,  3, 1, 0                      ; 0???: ??      | OR AX, CX
 
-    db 0, 0, 0,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr [222111], BL
-    db 0, 0, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr [222111], BX
+    db 0, 0, 0,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD byte ptr DS:[222111], BL
+    db 0, 0, 1,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD word ptr DS:[222111], BX
 
     db 0, 0, 2,  3, 1, 0                      ; 0???: ??      | ADD CL, AL
     db 0, 0, 3,  3, 1, 0                      ; 0???: ??      | ADD CX, AX
 
-    db 0, 0, 2,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DL, byte ptr [SI+111]
-    db 0, 0, 3,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DX, word ptr [SI+111]
+    db 0, 0, 2,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DL, byte ptr [SI+000111]
+    db 0, 0, 3,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADD DX, word ptr [SI+000111]
 
     db 0, 0, 2,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DL, byte ptr [SI+222111]
     db 0, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD DX, word ptr [SI+222111]
 
-    db 0, 1, 2,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR BL, byte ptr [222111]
-    db 0, 0, 3,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BX, word ptr [222111]
+    db 0, 1, 2,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | OR BL, byte ptr DS:[222111]
+    db 0, 0, 3,  0, 3, 6,  1, 1, 1,  2, 2, 2  ; 0???: ??      | ADD BX, word ptr DS:[222111]
 
-    db 0, 2, 0,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADC byte ptr [SI+111], DL
-    db 0, 3, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | SBB word ptr [SI+111], DX
+    db 0, 2, 0,  1, 2, 4,  1, 1, 1            ; 0???: ??      | ADC byte ptr [SI+000111], DL
+    db 0, 3, 1,  1, 2, 4,  1, 1, 1            ; 0???: ??      | SBB word ptr [SI+000111], DX
 
     db 0, 3, 2,  0, 2, 0                      ; 0???: ??      | SBB DL, byte ptr [BX+SI]
     db 0, 2, 3,  0, 2, 0                      ; 0???: ??      | ADC DX, word ptr [BX+SI]
@@ -296,14 +341,16 @@ jumps
     db 0, 5, 2,  0, 2, 4                      ; 0???: ??      | SUB DL, byte ptr [SI]
     db 0, 4, 3,  0, 2, 4                      ; 0???: ??      | AND DX, word ptr [SI]
 
-    db 0, 6, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | XOR byte ptr [BP+DI+111], AL
-    db 0, 7, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | CMP word ptr [BP+DI+111], AX
+    db 0, 6, 0,  1, 0, 3,  1, 1, 1            ; 0???: ??      | XOR byte ptr [BP+DI+000111], AL
+    db 0, 7, 1,  1, 0, 3,  1, 1, 1            ; 0???: ??      | CMP word ptr [BP+DI+000111], AX
 
     db 0, 7, 2,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | CMP AL, byte ptr [BP+DI+222111]
     db 0, 6, 3,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | XOR AX, word ptr [BP+DI+222111]
 
+    ;db 0FFh
+
 ; ------------------------------------- GROUP 2 ----------------------------------------------
-    db 2, 0, 0,  1, 0, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | ADD byte ptr [SI+222], 333
+    db 2, 0, 0,  1, 0, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | ADD byte ptr [SI+377222], 333
     ;     80        44        92        DB                           = ADD byte ptr [SI+92h], 0DBh
     ;     80        44        92        DB                           = ADD byte ptr [SI-06Eh], 0DBh
 
@@ -311,26 +358,30 @@ jumps
     ;     83        84        49        92        DB                 = ADD word ptr [SI+9249h], 0FFDBh
     ;                                                                = ADD word ptr [SI-6DB7h], 0FFDBh
 
-    db 2, 0, 0,  1, 1, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | OR byte ptr [SI+222], 333
+    db 2, 0, 0,  1, 1, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | OR byte ptr [SI+377222], 333
     db 2, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | ADC word ptr [SI+222111], 377333
 
     db 2, 0, 1,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4  ; 0???: ?? | ADD word ptr [SI+222111], 444333
     db 2, 0, 2,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | ADD byte ptr [SI+222111], 333
+    db 2, 0, 2,  0, 0, 6,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | ADD byte ptr DS:[222111], 333
 
-    db 2, 0, 0,  1, 3, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | SBB byte ptr [SI+222], 333
+    db 2, 0, 0,  1, 3, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | SBB byte ptr [SI+377222], 333
     db 2, 0, 3,  2, 4, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | AND word ptr [SI+222111], 377333
 
-    db 2, 0, 0,  1, 5, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | SUB byte ptr [SI+222], 333
-    db 2, 0, 0,  1, 6, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | XOR byte ptr [SI+222], 333
+    db 2, 0, 0,  1, 5, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | SUB byte ptr [SI+377222], 333
+    db 2, 0, 0,  1, 6, 4,  2, 2, 2,  3, 3, 3            ; 0???: ??   | XOR byte ptr [SI+377222], 333
     db 2, 0, 3,  2, 7, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3  ; 0???: ??   | CMP word ptr [SI+222111], 377333
 
-    db 2, 1, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV byte ptr [BP+DI+222111], AL
-    db 2, 1, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV word ptr [BP+DI+222111], AX
+    db 2, 1, 0,  2, 0, 3,  1, 1, 1,  2, 2, 2            ; 0???: ??   | MOV byte ptr [BP+DI+222111], AL
+    db 2, 1, 1,  2, 0, 3,  1, 1, 1,  2, 2, 2            ; 0???: ??   | MOV word ptr [BP+DI+222111], AX
 
-    db 2, 1, 2,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AL, byte ptr [BP+DI+111]
-    db 2, 1, 3,  1, 0, 3,  1, 1, 1            ; 0???: ??      | MOV AX, word ptr [BP+DI+111]
+    db 2, 1, 2,  1, 0, 3,  1, 1, 1                      ; 0???: ??   | MOV AL, byte ptr [BP+DI+000111]
+    db 2, 1, 3,  1, 0, 3,  1, 1, 1                      ; 0???: ??   | MOV AX, word ptr [BP+DI+000111]
+
+    ;db 0FFh
 
 ; --------------------------------------------------------------------------------------------
+;                                     CASES 3                                                ;
 ; --------------------------------------------------------------------------------------------
 
 ; ------------------------------------- GROUP 0 ----------------------------------------------
@@ -360,24 +411,25 @@ jumps
     db 1, 4, 5                      ; 0???: ??      | UNDEFINED
 
 ; ------------------------------------- GROUP 2 ----------------------------------------------
-    db 2, 2, 0                      ; 0???: ??      | NOP
-    db 2, 2, 5                      ; 0???: ??      | XCHG BP, AX
-    db 2, 3, 0                      ; 0???: ??      | CBW
-    db 2, 3, 3                      ; 0???: ??      | WAIT
-    db 2, 3, 7                      ; 0???: ??      | LAHF
-    db 2, 4, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AL, [222111]
-    db 2, 4, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AX, [222111]
-    db 2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AL
-    db 2, 4, 3,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV [222111], AX
-    db 2, 4, 4                      ; 0???: ??      | MOVSB
-    db 2, 4, 7                      ; 0???: ??      | CMPSW
-    db 2, 5, 0,  1, 1, 1            ; 0???: ????    | TEST AL, 111
-    db 2, 5, 1,  1, 1, 1,  2, 2, 2  ; 0???: ??????  | TEST AX, 222111
-    db 2, 5, 2                      ; 0???: ??      | STOSB
-    db 2, 5, 5                      ; 0???: ??      | LODSW
-    db 2, 5, 7                      ; 0???: ??      | SCASW
-    db 2, 6, 4,  0, 1, 1            ; 0???: ????    | MOV AH, 011
-    db 2, 7, 2,  3, 3, 6,  0, 0, 1  ; 0???: ??????  | MOV DX, 001336
+    db 2, 2, 0                                ; 0???: ??      | NOP
+    db 2, 2, 5                                ; 0???: ??      | XCHG BP, AX
+    db 2, 3, 0                                ; 0???: ??      | CBW
+    db 2, 3, 3                                ; 0???: ??      | WAIT
+    db 2, 3, 7                                ; 0???: ??      | LAHF
+    db 2, 4, 0,  1, 1, 1,  2, 2, 2            ; 0???: ??      | MOV AL, byte ptr DS:[222111]
+    db 0, 4, 6,  2, 4, 0,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV AL, byte ptr ES:[222111]
+    db 2, 4, 1,  1, 1, 1,  2, 2, 2            ; 0???: ??      | MOV AX, word ptr DS:[222111]
+    db 0, 6, 6,  2, 4, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | MOV byte ptr SS:[222111], AL
+    db 2, 4, 3,  1, 1, 1,  2, 2, 2            ; 0???: ??      | MOV word ptr DS:[222111], AX
+    db 2, 4, 4                                ; 0???: ??      | MOVSB
+    db 2, 4, 7                                ; 0???: ??      | CMPSW
+    db 2, 5, 0,  1, 1, 1                      ; 0???: ????    | TEST AL, 111
+    db 2, 5, 1,  1, 1, 1,  2, 2, 2            ; 0???: ??????  | TEST AX, 222111
+    db 2, 5, 2                                ; 0???: ??      | STOSB
+    db 2, 5, 5                                ; 0???: ??      | LODSW
+    db 2, 5, 7                                ; 0???: ??      | SCASW
+    db 2, 6, 4,  0, 1, 1                      ; 0???: ????    | MOV AH, 011
+    db 2, 7, 2,  3, 3, 6,  0, 0, 1            ; 0???: ??????  | MOV DX, 001336
     
 ; ------------------------------------- GROUP 3 ----------------------------------------------
     db 3, 0, 2,  1, 1, 1,  2, 2, 2  ; 0???: ??      | RET 222111
@@ -569,6 +621,7 @@ proc p_decode_rm
             mov al, byte ptr [data_octal+si]
 
             m_print_ptr
+            m_print_sr_prefix
             m_puts '['
 
             mov bl, al 
@@ -664,7 +717,9 @@ proc p_decode_rm
             ; only direct address is used for EA
             _rm_is_mem_no_offset_direct_address:
                 m_print_ptr
+                m_print_sr_prefix_default
                 m_puts '['
+
                 ; print direct address (two bytes)
                 call p_print_next_word
                 m_puts ']'
@@ -838,19 +893,15 @@ start:
     mov ds, ax                     ; move AX (@data) to DS (data segment)
     mov es, ax                     ; move AX (@data) to ES (extended data segment)
 
-    ; print program description
-    m_println sep
-    m_puts   '                                   '
-    m_puts   'DISASM'
-    m_putsln '                                   '
-    m_println sep
-
     xor ax, ax
     xor si, si
 
     mov si, 0FFFFh
 
 _xxx:
+    xor dh, dh
+
+_xxx_after_clean_dh:
     ; get 1st octal digit
     inc si
     mov al, byte ptr [data_octal+si]
@@ -1222,6 +1273,8 @@ _075_cmp_acc_imm_word:
 _0x6_push_seg:
     ; 2nd octal digit is already in AL
     ; it is one of {0,1,2,3}
+    ;
+    ; SI already points to the last octal digit read
 
     m_puts 'PUSH '
 
@@ -1236,21 +1289,12 @@ _0x6_push_seg:
 _0x6_seg_change_prefix:
     ; 2nd octal digit is already in AL
     ; AL is one of {4,5,6,7}
+    ;
+    ; SI already points to the last octal digit read
+    sub al, 3
+    mov dh, al
 
-    ;001 sr 110
-
-    ;001 00 110
-    ;001 01 110
-    ;001 10 110
-    ;001 11 110
-
-    ;  0  4   6
-    ;  0  5   6
-    ;  0  6   6
-    ;  0  7   6
-
-    m_putsln '0x6_seg_change_prefix'
-    jmp _xxx
+    jmp _xxx_after_clean_dh
 
 ; ------------------------------------------------------------
 ;  _0X7
@@ -1998,28 +2042,40 @@ _24x:
 
 ; -------------------------------------------------------------
 _240_mov_acc_mem_byte:
-    m_puts 'MOV AL, ['
+    m_puts 'MOV AL, byte ptr '
+    m_print_sr_prefix_default
+    m_puts '['
+
     call p_print_next_word
     m_putsln ']'
     jmp _xxx
 
 ; -------------------------------------------------------------
 _241_mov_acc_mem_word:
-    m_puts 'MOV AX, ['
+    m_puts 'MOV AX, word ptr '
+    m_print_sr_prefix_default
+    m_puts '['
+
     call p_print_next_word
     m_putsln ']'
     jmp _xxx
 
 ; -------------------------------------------------------------
 _242_mov_mem_acc_byte:
-    m_puts 'MOV ['
+    m_puts 'MOV byte ptr '
+    m_print_sr_prefix_default
+    m_puts '['
+
     call p_print_next_word
     m_putsln '], AL'
     jmp _xxx
 
 ; -------------------------------------------------------------
 _243_mov_mem_acc_word:
-    m_puts 'MOV ['
+    m_puts 'MOV word ptr '
+    m_print_sr_prefix_default
+    m_puts '['
+
     call p_print_next_word
     m_putsln '], AX'
     jmp _xxx
