@@ -92,6 +92,19 @@ local @@one_padding, @@zero_padding, @@padding_done
     @@padding_done:
 endm
 
+; TODO description
+m_print_near_offset_byte macro
+    m_putsln '<NEAR_OFFSET_BYTE>'
+    add si, 2
+endm
+
+; TODO description
+m_print_near_offset_word macro
+    m_putsln '<NEAR_OFFSET_WORD>'
+    add si, 5
+endm
+
+; TODO description
 m_print_sr_prefix_default macro
 local @@sr_prefix_default, @@sr_prefix_done
     mov bl, dh
@@ -110,6 +123,7 @@ local @@sr_prefix_default, @@sr_prefix_done
 @@sr_prefix_done:
 endm
 
+; TODO description
 m_print_sr_prefix macro
 local @@sr_prefix_done
     mov bl, dh
@@ -193,7 +207,36 @@ jumps
 ;                                     CASES 1                                                ;
 ; --------------------------------------------------------------------------------------------
 
-    data_octal db 8, 8, 8                               ; 0???: ??      | UNDEFINED
+    data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
+
+    db 1, 6, 0,  1, 1, 1                      ; 0???: ??      | JO ...
+    db 1, 6, 1,  1, 1, 1                      ; 0???: ??      | JNO ...
+    db 1, 6, 2,  1, 1, 1                      ; 0???: ??      | JB ...
+    db 1, 6, 3,  1, 1, 1                      ; 0???: ??      | JAE ...
+    db 1, 6, 4,  1, 1, 1                      ; 0???: ??      | JE ...
+    db 1, 6, 5,  1, 1, 1                      ; 0???: ??      | JNE ...
+    db 1, 6, 6,  1, 1, 1                      ; 0???: ??      | JBE ...
+    db 1, 6, 7,  1, 1, 1                      ; 0???: ??      | JA ...
+
+    db 1, 7, 0,  1, 1, 1                      ; 0???: ??      | JS ...
+    db 1, 7, 1,  1, 1, 1                      ; 0???: ??      | JNS ...
+    db 1, 7, 2,  1, 1, 1                      ; 0???: ??      | JP ...
+    db 1, 7, 3,  1, 1, 1                      ; 0???: ??      | JNP ...
+    db 1, 7, 4,  1, 1, 1                      ; 0???: ??      | JL ...
+    db 1, 7, 5,  1, 1, 1                      ; 0???: ??      | JGE ...
+    db 1, 7, 6,  1, 1, 1                      ; 0???: ??      | JLE ...
+    db 1, 7, 7,  1, 1, 1                      ; 0???: ??      | JG ...
+
+    db 3, 4, 0,  1, 1, 1                      ; 0???: ??      | LOOPNE ...
+    db 3, 4, 1,  1, 1, 1                      ; 0???: ??      | LOOPE ...
+    db 3, 4, 2,  1, 1, 1                      ; 0???: ??      | LOOP ...
+    db 3, 4, 3,  1, 1, 1                      ; 0???: ??      | JCXZ ...
+
+    db 3, 5, 0,  1, 1, 1,  2, 2, 2            ; 0???: ??      | CALL ... ...
+    db 3, 5, 1,  1, 1, 1,  2, 2, 2            ; 0???: ??      | JMP ... ...
+    db 3, 5, 3,  1, 1, 1                      ; 0???: ??      | JMP SHORT ...
+
+    db 0FFh
 
     db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??  | CALL 022064:126170 (=9A 78 56 34 12) (=JMP 1234h:5678h)
     db 3, 5, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2  ; 0???: ??  | JMP 022064:126170  (=EA 78 56 34 12) (=JMP 1234h:5678h)
@@ -1448,65 +1491,76 @@ _16x:
     inc si
     mov al, byte ptr [data_octal+si]
 
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+
     cmp al, 7
-    je _167
+    je _167_ja_near
     ja undefined
 
     cmp al, 3
     jb short __16_012
-    je _163
+    je _163_jae_near
     jmp short __16_456
 
     __16_012:
         cmp al, 1
-        jb short _160
-        je _161
-        jmp _162
+        jb short _160_jo_near
+        je _161_jno_near
+        jmp _162_jb_near
 
     __16_456:
         cmp al, 5
-        jb _164
-        je _165
-        jmp _166
+        jb _164_je_near
+        je _165_jne_near
+        jmp _166_jbe_near
 
 ; ------------------------------------------------------------
-_160:
-    m_putsln '160'
+_160_jo_near:
+    m_puts 'JO '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_161:
-    m_putsln '161'
+_161_jno_near:
+    m_puts 'JNO '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_162:
-    m_putsln '162'
+_162_jb_near:
+    m_puts 'JB '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_163:
-    m_putsln '163'
+_163_jae_near:
+    m_puts 'JAE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_164:
-    m_putsln '164'
+_164_je_near:
+    m_puts 'JE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_165:
-    m_putsln '165'
+_165_jne_near:
+    m_puts 'JNE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_166:
-    m_putsln '166'
+_166_jbe_near:
+    m_puts 'JBE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_167:
-    m_putsln '167'
+_167_ja_near:
+    m_puts 'JA '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -1517,65 +1571,76 @@ _17x:
     inc si
     mov al, byte ptr [data_octal+si]
 
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+
     cmp al, 7
-    je _177
+    je _177_jg_near
     ja undefined
 
     cmp al, 3
     jb short __17_012
-    je _173
+    je _173_jnp_near
     jmp short __17_456
 
     __17_012:
         cmp al, 1
-        jb short _170
-        je _171
-        jmp _172
+        jb short _170_js_near
+        je _171_jns_near
+        jmp _172_jp_near
 
     __17_456:
         cmp al, 5
-        jb _174
-        je _175
-        jmp _176
+        jb _174_jl_near
+        je _175_jge_near
+        jmp _176_jle_near
 
 ; ------------------------------------------------------------
-_170:
-    m_putsln '170'
+_170_js_near:
+    m_puts 'JS '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_171:
-    m_putsln '171'
+_171_jns_near:
+    m_puts 'JNS '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_172:
-    m_putsln '172'
+_172_jp_near:
+    m_puts 'JP '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_173:
-    m_putsln '173'
+_173_jnp_near:
+    m_puts 'JNP '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_174:
-    m_putsln '174'
+_174_jl_near:
+    m_puts 'JL '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_175:
-    m_putsln '175'
+_175_jge_near:
+    m_puts 'JGE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_176:
-    m_putsln '176'
+_176_jle_near:
+    m_puts 'JLE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_177:
-    m_putsln '177'
+_177_jg_near:
+    m_puts 'JG '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ============================================================
@@ -1953,7 +2018,7 @@ _23x:
     __23_0123:
         cmp al, 2
         jb short __23_01
-        je _232_call_label_far_absolute
+        je _232_call_far_absolute_direct
         jmp _233_wait
 
     __23_01:
@@ -1972,7 +2037,7 @@ _231_cwd:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_232_call_label_far_absolute:
+_232_call_far_absolute_direct:
     m_puts 'CALL '
     add si, 6 ; first print the second word
     call p_print_next_word
@@ -2606,32 +2671,44 @@ _34x:
     __34_0123:
         cmp al, 2
         jb short __34_01
-        je _342_loop_label
-        jmp _343_jcxz_label
+        je _342_loop_near
+        jmp _343_jcxz_near
 
     __34_01:
         cmp al, 1
-        jb short _340_loopne_label
-        jmp _341_loope_label
+        jb short _340_loopne_near
+        jmp _341_loope_near
 
 ; ------------------------------------------------------------
-_340_loopne_label:
-    m_putsln '_340_loopne_label'
+_340_loopne_near:
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+    m_puts 'LOOPNE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_341_loope_label:
-    m_putsln '_341_loope_label'
+_341_loope_near:
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+    m_puts 'LOOPE '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_342_loop_label:
-    m_putsln '_342_loop_label'
+_342_loop_near:
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+    m_puts 'LOOP '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; ------------------------------------------------------------
-_343_jcxz_label:
-    m_putsln '343_343_jcxz_label'
+_343_jcxz_near:
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+    m_puts 'JCXZ '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -2685,26 +2762,32 @@ _35x:
     __35_0123:
         cmp al, 2
         jb short __35_01
-        je _352_jmp_label_far_absolute
-        jmp _353_jmp_label_short_relative
+        je _352_jmp_far_absolute_direct
+        jmp _353_jmp_short_relative
 
     __35_01:
         cmp al, 1
-        jb short _350_call_label_near_relative
-        jmp _351_jmp_label_near_relative
+        jb short _350_call_near_relative
+        jmp _351_jmp_near_relative
 
 ; ------------------------------------------------------------
-_350_call_label_near_relative:
-    m_putsln '_350_call_label_near_relative'
+_350_call_near_relative:
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+    m_puts 'CALL '
+    m_print_near_offset_word
     jmp _xxx
 
 ; ------------------------------------------------------------
-_351_jmp_label_near_relative:
-    m_putsln '_351_jmp_label_near_relative'
+_351_jmp_near_relative:
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+    m_puts 'JMP '
+    m_print_near_offset_word
     jmp _xxx
 
 ; ------------------------------------------------------------
-_352_jmp_label_far_absolute:
+_352_jmp_far_absolute_direct:
     m_puts 'JMP '
     add si, 6 ; first print the second word
     call p_print_next_word
@@ -2717,8 +2800,11 @@ _352_jmp_label_far_absolute:
     jmp _xxx
 
 ; ------------------------------------------------------------
-_353_jmp_label_short_relative:
-    m_putsln '_353_jmp_label_short_relative'
+_353_jmp_short_relative:
+    inc si ; SI now points to the first 
+           ; octal digit of the offset
+    m_puts 'JMP short '
+    m_print_near_offset_byte
     jmp _xxx
 
 ; -------------------------------------------------------------
