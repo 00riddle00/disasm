@@ -92,16 +92,214 @@ local @@one_padding, @@zero_padding, @@padding_done
     @@padding_done:
 endm
 
+m_octal_byte_to_number macro
+    ; SI already points to the first 
+    ; octal digit of the offset byte
+    xor ax, ax
+    mov bx, 8
+
+    add al, byte ptr [data_octal+si]
+    mul bl
+    inc si
+
+    add al, byte ptr [data_octal+si]
+    mul bl
+    inc si
+
+    add al, byte ptr [data_octal+si]
+endm
+
+m_octal_word_to_number macro
+    ; SI already points to the first 
+    ; octal digit of the first offset byte (lsb)
+    inc si
+    inc si
+    inc si ; point SI to msb
+
+    xor ax, ax
+    xor cx, cx
+    mov bx, 8
+
+    add al, byte ptr [data_octal+si]
+    mul bl
+    inc si
+
+    add al, byte ptr [data_octal+si]
+    mul bl
+    inc si
+
+    add al, byte ptr [data_octal+si]
+
+    mul bx ; TODO comment
+    shr ax, 1 ; divide by 2
+
+    dec si
+    dec si
+    dec si
+    dec si
+    dec si ; point SI to lsb
+
+    mov cl, byte ptr [data_octal+si]
+    add ax, cx
+    mul bx
+    inc si
+
+    mov cl, byte ptr [data_octal+si]
+    add ax, cx
+    mul bx
+    inc si
+
+    mov cl, byte ptr [data_octal+si]
+    add ax, cx
+
+    inc si
+    inc si
+    inc si ; point SI to end of msb
+endm
+
 ; TODO description
 m_print_near_offset_byte macro
-    m_putsln '<NEAR_OFFSET_BYTE>'
-    add si, 2
+local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
+    m_putchar '$'
+
+    @@save_number:
+        cmp ax, 377o
+        jb @@label_00
+
+        ; je case:
+            m_puts '+1o'
+            jmp @@endm_m
+
+        @@label_00:
+            cmp ax, 200o
+            jb @@label_01
+
+            sub ax, 376o
+            neg ax
+            m_putchar '-'
+            jmp @@label_end
+
+        @@label_01:
+            add ax, 2
+            m_putchar '+'
+            
+        @@label_end:
+            m_number_to_octal_digit
+            jmp @@macro_end
+
+        @@endm_m:
+            m_print_nl
+            jmp _xxx
+    @@macro_end:
 endm
 
 ; TODO description
 m_print_near_offset_word macro
-    m_putsln '<NEAR_OFFSET_WORD>'
-    add si, 5
+local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
+    m_putchar '$'
+
+    @@save_number:
+        cmp ax, 100000o
+        jb @@label_01
+
+        ; jae case:
+        cmp ax, 177776o
+        jb @@label_00
+
+        neg ax
+        sub ax, 3
+        neg ax
+        m_putchar '+'
+        jmp @@label_end
+
+        @@label_00:
+            neg ax
+            sub ax, 3
+            m_putchar '-'
+            jmp @@label_end
+
+        @@label_01:
+            add ax, 3
+            m_putchar '+'
+            
+        @@label_end:
+            m_number_to_octal_digit
+            jmp @@macro_end
+
+        @@endm_m:
+            m_print_nl
+            jmp _xxx
+    @@macro_end:
+endm
+
+m_number_to_octal_digit macro
+local @@conversion, @@convert, @@converted, @@print_result, @@process_lowercase, @@process_uppercase, @@process_number, @@process_space, @@process_symbol, @@print_symbol, @@endm_m_print_near_offset_byte
+        ; number is in AX
+        ;mov ax, 18
+        xor cx, cx
+        mov bx, 8
+
+        @@conversion:
+            inc cl
+            
+            xor dx, dx                   ; isvalyti dx, nes cia bus liekana po div
+            div bx                       ; div ax/bx, ir liekana padedama dx
+            push dx                      ; padeti skaitmeni
+            
+            cmp ax, 0                    ; jei jau skaicius isdalintas
+            jz short @@converted           ; tai eiti i pabaiga
+
+            xchg ax, dx
+            mov al, cl
+
+            jmp short @@convert
+
+            ;push 99                      ; let 99 here mean 'space'
+            ;jmp short @@convert            ; kitu atveju imti kita skaitmeni
+
+        @@convert:                         ; this extra block is used to put the remainder
+            xchg ax, dx                  ; back to AX before next iteration 
+            jmp short @@conversion
+
+        @@converted:
+            ;m_puts 'Rezultatas: '
+
+        @@print_result:
+            mov ah, 2                    ; atspausdinti skaitmenis
+            pop dx
+            cmp dx, 99                   ; in case of 'space'
+            je short @@process_space
+
+            cmp dx, 10
+            jb short @@process_number
+            cmp dx, 36
+            jb short @@process_uppercase
+
+            @@process_lowercase:
+                sub dx, 35
+                add dx, 60h
+                jmp short @@print_symbol
+
+            @@process_uppercase:
+                sub dx, 9
+                add dx, 40h
+                jmp short @@print_symbol
+
+            @@process_number:
+                add dx, '0'
+                jmp short @@print_symbol
+
+            @@process_space:
+                mov dx, 20h
+                inc cl
+                jmp short @@print_symbol
+
+            @@print_symbol:
+                int 21h
+                dec cl
+                jnz @@print_result
+
+        m_puts 'o'
 endm
 
 ; TODO description
@@ -206,80 +404,81 @@ jumps
 ; --------------------------------------------------------------------------------------------
 ;                                     CASES 1                                                ;
 ; --------------------------------------------------------------------------------------------
-
     data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
+
+    db 3, 5, 0,  0, 0, 0,  2, 0, 0            ; 0???: ??      | CALL $-077775o
+    db 3, 5, 1,  0, 0, 1,  2, 0, 0            ; 0???: ??      | JMP  $-077774o
+    db 3, 5, 0,  0, 0, 2,  2, 0, 0            ; 0???: ??      | CALL $-077773o
+    db 3, 5, 1,  0, 0, 3,  2, 0, 0            ; 0???: ??      | JMP  $-077772o
+    db 3, 5, 0,  0, 0, 4,  2, 0, 0            ; 0???: ??      | CALL $-077771o
+
+    db 3, 5, 0,  3, 7, 4,  3, 7, 6            ; 0???: ??      | CALL $-000401o
+    db 3, 5, 1,  3, 7, 5,  3, 7, 6            ; 0???: ??      | JMP  $-000400o
+
+    db 3, 5, 0,  1, 7, 5,  3, 7, 7            ; 0???: ??      | CALL $-000200o
+    db 3, 5, 1,  1, 7, 6,  3, 7, 7            ; 0???: ??      | JMP  $-000177o
+    db 3, 5, 0,  1, 7, 7,  3, 7, 7            ; 0???: ??      | CALL $-000176o
+    db 3, 5, 1,  2, 0, 0,  3, 7, 7            ; 0???: ??      | JMP  $-000175o
+
+    db 3, 5, 0,  3, 7, 2,  3, 7, 7            ; 0???: ??      | CALL $-000003o
+    db 3, 5, 1,  3, 7, 3,  3, 7, 7            ; 0???: ??      | JMP  $-000002o
+    db 3, 5, 0,  3, 7, 4,  3, 7, 7            ; 0???: ??      | CALL $-000001o
+    db 3, 5, 1,  3, 7, 5,  3, 7, 7            ; 0???: ??      | JMP  $-000000o
+    db 3, 5, 0,  3, 7, 6,  3, 7, 7            ; 0???: ??      | CALL $+000001o
+    db 3, 5, 0,  3, 7, 7,  3, 7, 7            ; 0???: ??      | CALL $+000002o
+
+    ;db 0FFh
+
+    db 3, 5, 1,  0, 0, 0,  0, 0, 0            ; 0???: ??      | JMP  $+000003o
+    db 3, 5, 0,  0, 0, 1,  0, 0, 0            ; 0???: ??      | CALL $+000004o
+    db 3, 5, 0,  0, 0, 2,  0, 0, 0            ; 0???: ??      | CALL $+000005o
+
+    db 3, 5, 0,  0, 1, 7,  0, 0, 0            ; 0???: ??      | CALL $+000022o
+    db 3, 5, 1,  0, 3, 6,  0, 0, 0            ; 0???: ??      | JMP  $+000041o
+    db 3, 5, 0,  0, 4, 0,  0, 0, 0            ; 0???: ??      | CALL $+000043o
+    db 3, 5, 1,  0, 5, 2,  0, 0, 0            ; 0???: ??      | JMP  $+000055o
+    db 3, 5, 0,  1, 3, 1,  0, 0, 0            ; 0???: ??      | CALL $+000134o
+
+    db 3, 5, 0,  1, 7, 4,  0, 0, 0            ; 0???: ??      | CALL $+000177o
+    db 3, 5, 0,  1, 7, 5,  0, 0, 0            ; 0???: ??      | CALL $+000200o
+    db 3, 5, 1,  1, 7, 6,  0, 0, 0            ; 0???: ??      | JMP  $+000201o
+    db 3, 5, 0,  1, 7, 7,  0, 0, 0            ; 0???: ??      | CALL $+000202o
+    db 3, 5, 0,  2, 0, 0,  0, 0, 0            ; 0???: ??      | CALL $+000203o
+
+    db 3, 5, 0,  3, 7, 4,  1, 7, 7            ; 0???: ??      | CALL $+077777o
+    db 3, 5, 1,  3, 7, 5,  1, 7, 7            ; 0???: ??      | JMP  $+100000o
+    db 3, 5, 0,  3, 7, 6,  1, 7, 7            ; 0???: ??      | CALL $+100001o
+    db 3, 5, 1,  3, 7, 7,  1, 7, 7            ; 0???: ??      | JMP  $+100002o
+
+    ;db 0FFh
 ; --------------------------------------------------------------------------------------------
 
-    db 3, 5, 0,  0, 0, 0,  1, 0, 0            ; 0???: ??      | CALL $-077775o   
-    db 3, 5, 1,  0, 0, 1,  1, 0, 0            ; 0???: ??      | JMP  $-077774o   
-    db 3, 5, 0,  0, 0, 2,  1, 0, 0            ; 0???: ??      | CALL $-077773o   
-    db 3, 5, 1,  0, 0, 3,  1, 0, 0            ; 0???: ??      | JMP  $-077772o   
-    db 3, 5, 0,  0, 0, 4,  1, 0, 0            ; 0???: ??      | CALL $-077771o   
+    db 1, 6, 0,  2, 0, 0                      ; 0???: ??      | JO  $-176o
+    db 1, 6, 1,  2, 0, 1                      ; 0???: ??      | JNO $-175o
+    db 1, 6, 2,  3, 7, 3                      ; 0???: ??      | JB  $-003o
+    db 1, 6, 3,  3, 7, 4                      ; 0???: ??      | JAE $-002o
+    db 1, 6, 4,  3, 7, 5                      ; 0???: ??      | JE  $-001o
+    db 1, 6, 5,  3, 7, 6                      ; 0???: ??      | JNE $-000o
+    db 1, 6, 6,  3, 7, 7                      ; 0???: ??      | JBE $+001o
+    db 1, 6, 7,  0, 0, 0                      ; 0???: ??      | JA  $+002o
 
-    db 3, 5, 0,  3, 7, 4,  1, 7, 7            ; 0???: ??      | CALL $-000401o   
-    db 3, 5, 1,  3, 7, 5,  1, 7, 7            ; 0???: ??      | JMP  $-000400o   
+    db 1, 7, 0,  0, 0, 1                      ; 0???: ??      | JS  $+003o
+    db 1, 7, 1,  0, 2, 0                      ; 0???: ??      | JNS $+022o
+    db 1, 7, 2,  0, 3, 7                      ; 0???: ??      | JP  $+041o
+    db 1, 7, 3,  0, 4, 5                      ; 0???: ??      | JNP $+047o
+    db 1, 7, 4,  0, 5, 3                      ; 0???: ??      | JL  $+055o    
+    db 1, 7, 5,  1, 3, 2                      ; 0???: ??      | JGE $+134o
+    db 1, 7, 6,  1, 7, 5                      ; 0???: ??      | JLE $+177o
+    db 1, 7, 7,  1, 7, 6                      ; 0???: ??      | JG  $+200o
 
-    db 3, 5, 0,  5, 7, 5,  1, 7, 7            ; 0???: ??      | CALL $-000200o   
-    db 3, 5, 1,  5, 7, 6,  1, 7, 7            ; 0???: ??      | JMP  $-000177o   
-    db 3, 5, 0,  5, 7, 7,  1, 7, 7            ; 0???: ??      | CALL $-000176o   
-    db 3, 5, 1,  6, 0, 0,  1, 7, 7            ; 0???: ??      | JMP  $-000175o   
+    db 3, 4, 0,  1, 7, 7                      ; 0???: ??      | LOOPNE $+201o
+    db 3, 4, 1,  2, 0, 0                      ; 0???: ??      | LOOPE  $-176o
+    db 3, 4, 2,  2, 0, 1                      ; 0???: ??      | LOOP   $-175o
+    db 3, 4, 3,  3, 7, 3                      ; 0???: ??      | JCXZ   $-003o
 
-    db 3, 5, 0,  7, 7, 2,  1, 7, 7            ; 0???: ??      | CALL $-000003o   
-    db 3, 5, 1,  7, 7, 3,  1, 7, 7            ; 0???: ??      | JMP  $-000002o   
-    db 3, 5, 0,  7, 7, 4,  1, 7, 7            ; 0???: ??      | CALL $-000001o   
-    db 3, 5, 1,  7, 7, 5,  1, 7, 7            ; 0???: ??      | JMP  $+000000o   
-    db 3, 5, 0,  7, 7, 6,  1, 7, 7            ; 0???: ??      | CALL $+000001o   
-    db 3, 5, 0,  7, 7, 7,  1, 7, 7            ; 0???: ??      | CALL $+000002o   
-    db 3, 5, 1,  0, 0, 0,  0, 0, 0            ; 0???: ??      | JMP  $+000003o   
-    db 3, 5, 0,  0, 0, 1,  0, 0, 0            ; 0???: ??      | CALL $+000004o   
-    db 3, 5, 0,  0, 0, 2,  0, 0, 0            ; 0???: ??      | CALL $+000005o   
+    db 3, 5, 3,  3, 7, 4                      ; 0???: ??      | JMP SHORT $-002o
 
-    db 3, 5, 0,  0, 1, 7,  0, 0, 0            ; 0???: ??      | CALL $+000022o   
-    db 3, 5, 1,  0, 3, 6,  0, 0, 0            ; 0???: ??      | JMP  $+000041o   
-    db 3, 5, 0,  0, 4, 0,  0, 0, 0            ; 0???: ??      | CALL $+000043o   
-    db 3, 5, 1,  0, 5, 2,  0, 0, 0            ; 0???: ??      | JMP  $+000055o   
-    db 3, 5, 0,  1, 3, 1,  0, 0, 0            ; 0???: ??      | CALL $+000134o   
-
-    db 3, 5, 0,  1, 7, 4,  0, 0, 0            ; 0???: ??      | CALL $+000177o   
-    db 3, 5, 0,  1, 7, 5,  0, 0, 0            ; 0???: ??      | CALL $+000200o   
-    db 3, 5, 1,  1, 7, 6,  0, 0, 0            ; 0???: ??      | JMP  $+000201o   
-    db 3, 5, 0,  1, 7, 7,  0, 0, 0            ; 0???: ??      | CALL $+000202o   
-    db 3, 5, 0,  2, 0, 0,  0, 0, 0            ; 0???: ??      | CALL $+000203o   
-
-    db 3, 5, 0,  7, 7, 4,  0, 7, 7            ; 0???: ??      | CALL $+077777o   
-    db 3, 5, 1,  7, 7, 5,  0, 7, 7            ; 0???: ??      | JMP  $+100000o   
-    db 3, 5, 0,  7, 7, 6,  0, 7, 7            ; 0???: ??      | CALL $+100001o   
-    db 3, 5, 1,  7, 7, 7,  0, 7, 7            ; 0???: ??      | JMP  $+100002o   
-
-    db 0FFh
-; --------------------------------------------------------------------------------------------
-
-    db 1, 6, 0,  2, 0, 0                      ; 0???: ??      | JO  $-176
-    db 1, 6, 1,  2, 0, 1                      ; 0???: ??      | JNO $-175
-    db 1, 6, 2,  3, 7, 3                      ; 0???: ??      | JB  $-003
-    db 1, 6, 3,  3, 7, 4                      ; 0???: ??      | JAE $-002
-    db 1, 6, 4,  3, 7, 5                      ; 0???: ??      | JE  $-001
-    db 1, 6, 5,  3, 7, 6                      ; 0???: ??      | JNE $+000
-    db 1, 6, 6,  3, 7, 7                      ; 0???: ??      | JBE $+001
-    db 1, 6, 7,  0, 0, 0                      ; 0???: ??      | JA  $+002
-
-    db 1, 7, 0,  0, 0, 1                      ; 0???: ??      | JS  $+003
-    db 1, 7, 1,  0, 2, 0                      ; 0???: ??      | JNS $+022
-    db 1, 7, 2,  0, 3, 7                      ; 0???: ??      | JP  $+031
-    db 1, 7, 3,  0, 4, 5                      ; 0???: ??      | JNP $+043
-    db 1, 7, 4,  0, 5, 3                      ; 0???: ??      | JL  $+055
-    db 1, 7, 5,  1, 3, 2                      ; 0???: ??      | JGE $+134
-    db 1, 7, 6,  1, 7, 5                      ; 0???: ??      | JLE $+177
-    db 1, 7, 7,  1, 7, 6                      ; 0???: ??      | JG  $+200
-
-    db 3, 4, 0,  1, 7, 7                      ; 0???: ??      | LOOPNE $+201
-    db 3, 4, 1,  2, 0, 0                      ; 0???: ??      | LOOPE  $-176
-    db 3, 4, 2,  2, 0, 1                      ; 0???: ??      | LOOP   $-175
-    db 3, 4, 3,  3, 7, 3                      ; 0???: ??      | JCXZ   $-003
-
-    db 3, 5, 3,  3, 7, 4                      ; 0???: ??      | JMP SHORT $-002
-
-    db 0FFh
+    ;db 0FFh
 ; --------------------------------------------------------------------------------------------
 
     db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2   ; 0???: ??      | CALL 022064:126170 (=9A 78 56 34 12) (=JMP 1234h:5678h)
@@ -299,7 +498,7 @@ jumps
     db 3, 7, 7,  1, 2, 0,  2, 1, 1                       ; 0???: ??      | CALL [BX+SI+377211] ; (=FF 50 89)
     db 3, 7, 7,  2, 2, 0,  2, 1, 1,  0, 0, 0             ; 0???: ??      | CALL [BX+SI+000211]  ; (=FF 90 89 00)
 
-    db 3, 7, 7,  2, 2, 0,  3, 1, 1,  0, 0, 1             ; 0???: ??      | CALL [BX+SI+01311]  (=FF 90 C9 01)
+    db 3, 7, 7,  2, 2, 0,  3, 1, 1,  0, 0, 1             ; 0???: ??      | CALL [BX+SI+001311]  (=FF 90 C9 01)
 
     db 3, 7, 7,  2, 2, 0,  1, 1, 1,  2, 2, 2             ; 0???: ??      | CALL [BX+SI+222111] (=FF 90 49 92) 
 
@@ -360,6 +559,8 @@ jumps
     db 3, 7, 6,  3, 1, 0                                           ; 0???: ??      | DEC AL
     db 3, 7, 7,  3, 1, 2                                           ; 0???: ??      | DEC DX
 
+    db 3, 7, 7,  0, 6, 6,  1, 1, 1,  2, 2, 2                       ; 0???: ??      | PUSH word ptr DS:[222111]
+    db 3, 7, 7,  2, 6, 3,  1, 1, 1,  2, 2, 2                       ; 0???: ??      | PUSH word ptr [BP+DI+222111]
     db 3, 7, 7,  3, 6, 5                                           ; 0???: ??      | PUSH BP
 
     db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3                       ; 0???: ??      | TEST byte ptr [SI+377222], 333
@@ -555,26 +756,77 @@ jumps
 ; ------------------------------------------------------------
 
 ; Before call: SI must point to the first octal 
-; digit of the byte to be printed
+; digit of the byte to be printed FIXME -> wrong!
 ;
 ; After call: SI increases by 3
 proc p_print_next_byte
+
     push ax dx
     inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
+    m_octal_byte_to_number
+    m_number_to_octal_digit
 
-    inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    int 21h
+    ;push ax dx
+    ;inc si 
+    ;mov dl, byte ptr [data_octal+si]
+    ;add dl, 30h
+    ;mov ah, 02h
+    ;int 21h
 
+    ;inc si
+    ;mov dl, byte ptr [data_octal+si]
+    ;add dl, 30h
+    ;int 21h
+
+    ;inc si
+    ;mov dl, byte ptr [data_octal+si]
+    ;add dl, 30h
+    ;int 21h
+
+    pop dx ax
+    ret
+endp
+
+; Before call: SI must point to the first octal 
+; digit of the byte to be printed
+;
+; After call: SI increases by 3
+proc p_print_next_byte_sign_extended
+
+    push ax dx
+    xor ax, ax ; make AX zero
+    inc si 
+
+    cmp byte ptr [data_octal+si], 2
+    jb padding_done
+
+    one_padding:
+        ;m_puts "377"
+        mov ax, 377o
+
+    padding_done:
+
+    mov bx, 8
+    xor cx, cx
+
+    mul bx ; TODO comment
+    shr ax, 1 ; divide by 2
+
+    mov cl, byte ptr [data_octal+si]
+    add ax, cx
+    mul bx
     inc si
-    mov dl, byte ptr [data_octal+si]
-    add dl, 30h
-    int 21h
+
+    mov cl, byte ptr [data_octal+si]
+    add ax, cx
+    mul bx
+    inc si ; point SI to end of msb
+
+    mov cl, byte ptr [data_octal+si]
+    add ax, cx
+
+    m_number_to_octal_digit
+
     pop dx ax
     ret
 endp
@@ -586,35 +838,39 @@ endp
 proc p_print_next_word
     push ax dx
     inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    mov ah, 02h
-    int 21h
 
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    int 21h
+    m_octal_word_to_number
+    m_number_to_octal_digit
 
-    inc si
-    mov dl, byte ptr [data_octal+si+3]
-    add dl, 30h
-    int 21h
+    ;mov dl, byte ptr [data_octal+si+3]
+    ;add dl, 30h
+    ;mov ah, 02h
+    ;int 21h
 
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    int 21h
+    ;inc si
+    ;mov dl, byte ptr [data_octal+si+3]
+    ;add dl, 30h
+    ;int 21h
 
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    int 21h
+    ;inc si
+    ;mov dl, byte ptr [data_octal+si+3]
+    ;add dl, 30h
+    ;int 21h
 
-    inc si
-    mov dl, byte ptr [data_octal+si-3]
-    add dl, 30h
-    int 21h
+    ;inc si
+    ;mov dl, byte ptr [data_octal+si-3]
+    ;add dl, 30h
+    ;int 21h
+
+    ;inc si
+    ;mov dl, byte ptr [data_octal+si-3]
+    ;add dl, 30h
+    ;int 21h
+
+    ;inc si
+    ;mov dl, byte ptr [data_octal+si-3]
+    ;add dl, 30h
+    ;int 21h
 
     pop dx ax
     ret
@@ -746,8 +1002,9 @@ proc p_decode_rm
             ; offset is one byte (according to 'mod')
             print_offset_byte: ; FIXME actually prints two bytes!
 
-                m_print_sign_extension
-                call p_print_next_byte
+                ;m_print_sign_extension
+                ;call p_print_next_byte
+                call p_print_next_byte_sign_extended
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 3
                 ; place SI back to point at 'r/m'
@@ -884,7 +1141,9 @@ proc p_op_0sw_rm_imm
     jb imm_2_bytes ; so s = 0
 
     ; w = 1, s = 1
-    m_print_sign_extension
+    ;m_print_sign_extension
+    call p_print_next_byte_sign_extended
+    jmp endp_op_0sw_rm_imm
 
     ; w = 0, s = 0 or 1
     imm_1_byte: ; or in case of 'byte to word sign extended', print the required byte after sign padding byte.
@@ -1023,7 +1282,7 @@ undefined_2nd_octal:
     jmp short undefined
 
 undefined:
-    m_putsln 'UNDEFINED'
+    m_putsln '; UNDEFINED'
     jmp short _xxx
 
 exit_program:
@@ -1562,49 +1821,65 @@ _16x:
 ; ------------------------------------------------------------
 _160_jo_near:
     m_puts 'JO '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _161_jno_near:
     m_puts 'JNO '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _162_jb_near:
     m_puts 'JB '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _163_jae_near:
     m_puts 'JAE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _164_je_near:
     m_puts 'JE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _165_jne_near:
     m_puts 'JNE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _166_jbe_near:
     m_puts 'JBE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _167_ja_near:
     m_puts 'JA '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -1642,49 +1917,65 @@ _17x:
 ; ------------------------------------------------------------
 _170_js_near:
     m_puts 'JS '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _171_jns_near:
     m_puts 'JNS '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _172_jp_near:
     m_puts 'JP '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _173_jnp_near:
     m_puts 'JNP '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _174_jl_near:
     m_puts 'JL '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _175_jge_near:
     m_puts 'JGE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _176_jle_near:
     m_puts 'JLE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _177_jg_near:
     m_puts 'JG '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ============================================================
@@ -1924,13 +2215,13 @@ _21_46_mov_rm_segreg:
     cmp bl, 4 ; reg cannot be '1xx'
     jae undefined_byte
 
-    m_puts 'MOV '
-
     ; AL containts '1d0'
     cmp al, 6
-    je _21_6_mov_segreg_rm
+    je _216_mov_segreg_rm
 
-    _21_4_mov_rm_segreg:
+    _214_mov_rm_segreg:
+        m_puts 'MOV '
+
         mov al, 001
         m_before_decode ; it will put '001' from AL to DL,
                         ; which is what is needed.
@@ -1948,12 +2239,14 @@ _21_46_mov_rm_segreg:
         m_print_nl
         jmp _xxx
 
-    _21_6_mov_segreg_rm:
+    _216_mov_segreg_rm:
         ; BL still contains 'reg', which is '0sr'
         ; if 'd'=1, which is the case here, 0sr cannot be
         ; 001, since it cannot be written to 'CS'
         cmp bl, 1 
         je undefined_byte
+
+        m_puts 'MOV '
 
         shl bl, 1 ; times 2
         m_print_reg SR
@@ -2664,7 +2957,7 @@ _327_xlat:
 ;  _33X
 ; ------------------------------------------------------------
 _33x:
-    m_puts '<ESC code> '
+    m_puts '; <ESC code> '
 
     inc si ; 3rd octal digit of opcode ('xxx')
     inc si ; points to 'mod'
@@ -2728,7 +3021,9 @@ _340_loopne_near:
     inc si ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'LOOPNE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -2736,7 +3031,9 @@ _341_loope_near:
     inc si ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'LOOPE '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -2744,7 +3041,9 @@ _342_loop_near:
     inc si ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'LOOP '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -2752,7 +3051,9 @@ _343_jcxz_near:
     inc si ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'JCXZ '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; -------------------------------------------------------------
@@ -2819,7 +3120,9 @@ _350_call_near_relative:
     inc si ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'CALL '
+    m_octal_word_to_number
     m_print_near_offset_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -2827,7 +3130,9 @@ _351_jmp_near_relative:
     inc si ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'JMP '
+    m_octal_word_to_number
     m_print_near_offset_word
+    m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
@@ -2848,7 +3153,9 @@ _353_jmp_short_relative:
     inc si ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'JMP short '
+    m_octal_byte_to_number
     m_print_near_offset_byte
+    m_print_nl
     jmp _xxx
 
 ; -------------------------------------------------------------
