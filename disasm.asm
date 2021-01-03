@@ -31,6 +31,18 @@
 
 include macros.asm
 
+m_add_octal_to_al macro
+endm
+
+m_get_octal_to_al macro
+endm
+
+m_get_octal_to_bl macro
+endm
+
+m_get_octal_to_cl macro
+endm
+
 ; print register name
 ; registers can be byte, word, and segment registers
 ; ::param:: reg_group - address where reg names are
@@ -74,9 +86,9 @@ endm
 m_print_sign_extension macro
 local @@one_padding, @@zero_padding, @@padding_done
     ; get 1st octal digit of lsb
-    ;inc si
-    mov al, byte ptr [data_octal+si]
-    ;dec si
+    inc di
+    mov al, byte ptr [data_octal+di]
+    dec di
 
     cmp al, 2
     jb @@zero_padding
@@ -97,63 +109,63 @@ m_octal_byte_to_number macro
     xor ax, ax
     mov bx, 8
 
-    add al, byte ptr [data_octal+si]
+    add al, byte ptr [data_octal+di]
     mul bl
-    ;inc si
+    inc di
 
-    add al, byte ptr [data_octal+si]
+    add al, byte ptr [data_octal+di]
     mul bl
-    ;inc si
+    inc di
 
-    add al, byte ptr [data_octal+si]
+    add al, byte ptr [data_octal+di]
 endm
 
 m_octal_word_to_number macro
     ; SI already points to the first 
     ; octal digit of the first offset byte (lsb)
-    ;inc si
-    ;inc si
-    ;inc si ; point SI to msb
+    inc di
+    inc di
+    inc di ; point SI to msb
 
     xor ax, ax
     xor cx, cx
     mov bx, 8
 
-    add al, byte ptr [data_octal+si]
+    add al, byte ptr [data_octal+di]
     mul bl
-    ;inc si
+    inc di
 
-    add al, byte ptr [data_octal+si]
+    add al, byte ptr [data_octal+di]
     mul bl
-    ;inc si
+    inc di
 
-    add al, byte ptr [data_octal+si]
+    add al, byte ptr [data_octal+di]
 
     mul bx ; TODO comment
     shr ax, 1 ; divide by 2
 
-    ;dec si
-    ;dec si
-    ;dec si
-    ;dec si
-    ;dec si ; point SI to lsb
+    dec di
+    dec di
+    dec di
+    dec di
+    dec di ; point SI to lsb
 
-    mov cl, byte ptr [data_octal+si]
+    mov cl, byte ptr [data_octal+di]
     add ax, cx
     mul bx
-    ;inc si
+    inc di
 
-    mov cl, byte ptr [data_octal+si]
+    mov cl, byte ptr [data_octal+di]
     add ax, cx
     mul bx
-    ;inc si
+    inc di
 
-    mov cl, byte ptr [data_octal+si]
+    mov cl, byte ptr [data_octal+di]
     add ax, cx
 
-    ;inc si
-    ;inc si
-    ;inc si ; point SI to end of msb
+    inc di
+    inc di
+    inc di ; point SI to end of msb
 endm
 
 ; TODO description
@@ -339,15 +351,15 @@ endm
 m_before_decode macro
     mov dl, al
     and dl, 001b ; will be used for decode procedure
-    ;inc si ; si points to 'mod' now
+    inc di ; si points to 'mod' now
 endm
 
 ; TODO description
 m_move_index macro
     local @@loop_start, @@si_in_right_place
     ; point SI to 'r/m'
-    ;inc si
-    ;inc si
+    inc di
+    inc di
 
     cmp cl, 0
     je @@si_in_right_place ; offset was not used
@@ -359,7 +371,7 @@ m_move_index macro
     ; bytes were read as an offset or direct address
     xor ch, ch
     @@loop_start:
-        ;inc si
+        inc di
     loop @@loop_start
 
     @@si_in_right_place:
@@ -790,7 +802,7 @@ rm_01           DW rm_000_01, rm_001_01, rm_010_01, rm_011_01, rm_100_01, rm_101
     db 0, 7, 7                                 ; 0???: ??      | AAS
 
 ; ------------------------------------- GROUP 1 ----------------------------------------------
-    db 1, 0, 6                                 ; 0???: ??      | ;inc si
+    db 1, 0, 6                                 ; 0???: ??      | inc di
     db 1, 1, 3                                 ; 0???: ??      | DEC BX
     db 1, 2, 0                                 ; 0???: ??      | PUSH AX
     db 1, 3, 1                                 ; 0???: ??      | POP CX
@@ -866,7 +878,7 @@ outpt_buff      DB 257 DUP(?)           ; Output buffer
 proc p_print_next_byte
 
     push ax dx
-    ;inc si
+    inc di
     m_octal_byte_to_number
     m_number_to_octal_digit
 
@@ -877,14 +889,14 @@ endp
 ; Before call: SI must point to the first octal 
 ; digit of the byte to be printed
 ;
-; After call: SI increases by 3
+; After call: DI increases by 3
 proc p_print_next_byte_sign_extended
 
     push ax dx
     xor ax, ax ; make AX zero
-    ;inc si 
+    inc di 
 
-    cmp byte ptr [data_octal+si], 2
+    cmp byte ptr [data_octal+di], 2
     jb padding_done
 
     one_padding:
@@ -899,17 +911,17 @@ proc p_print_next_byte_sign_extended
     mul bx ; TODO comment
     shr ax, 1 ; divide by 2
 
-    mov cl, byte ptr [data_octal+si]
+    mov cl, byte ptr [data_octal+di]
     add ax, cx
     mul bx
-    ;inc si
+    inc di
 
-    mov cl, byte ptr [data_octal+si]
+    mov cl, byte ptr [data_octal+di]
     add ax, cx
     mul bx
-    ;inc si ; point SI to end of msb
+    inc di ; point DI to end of msb
 
-    mov cl, byte ptr [data_octal+si]
+    mov cl, byte ptr [data_octal+di]
     add ax, cx
 
     m_number_to_octal_digit
@@ -918,13 +930,13 @@ proc p_print_next_byte_sign_extended
     ret
 endp
 
-; Before call: SI must point to the first octal 
+; Before call: DI must point to the first octal 
 ; digit of the youngest byte
 ;
-; After call: SI increases by 6
+; After call: DI increases by 6
 proc p_print_next_word
     push ax dx
-    ;inc si
+    inc di
 
     m_octal_word_to_number
     m_number_to_octal_digit
@@ -934,16 +946,16 @@ proc p_print_next_word
 endp
 
 ; Decode 'reg' from 'mod reg r/m [offset]'
-; Before call: SI must point to 'mod' byte
+; Before call: DI must point to 'mod' byte
 ;              DL must be either 0 (=byte) or 1 (=word)
 ;
-; After call: SI is not changed.
+; After call: DI is not changed.
 proc p_decode_reg
     push ax bx dx
  
     ; get 'reg' value (3 bits, represented as an octal number)
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     ; check if it's byte or word instruction
     cmp dl, 1
@@ -964,26 +976,26 @@ proc p_decode_reg
         m_print_reg Rb
 
     reg_printed:
-    ; place SI back to point at 'mod'
-    ;dec si
+    ; place DI back to point at 'mod'
+    dec di
     pop dx bx ax
     ret
 endp
 
 ; Decode 'r/m' from 'mod reg r/m [offset]'
-; Before call: SI must point to 'mod' byte
+; Before call: DI must point to 'mod' byte
 ;              DL should be either 0 (=byte) or 1 (=word)
 ;              or else ptr directive will not be printed
 ;              (this effect is also useful for ESC codes)
 ;
-; After call: SI is not changed.
+; After call: DI is not changed.
 ;             CL will contain how many bytes (as in octal digits)
 ;                were used for offset (or direct address)
 proc p_decode_rm
     push ax bx dx
 
     ; get 'mod' value (2 bits, represented as an octal number)
-    mov al, byte ptr [data_octal+si]
+    mov al, byte ptr [data_octal+di]
 
     ; check 'mod' value
     cmp al, 3
@@ -991,14 +1003,14 @@ proc p_decode_rm
 
     ; 'r/m' is register (according to 'mod')
     _rm_is_reg:
-        ; point SI to 'reg' and call decode_reg procedure.
-        ;inc si
-        ; It will think that SI points to 'mod', and will treat
+        ; point DI to 'reg' and call decode_reg procedure.
+        inc di
+        ; It will think that DI points to 'mod', and will treat
         ; 'r/m' as 'reg', which is what is needed here.
         ; TODO comment: it will use DL
         call p_decode_reg 
-        ; point SI back to 'mod'
-        ;dec si
+        ; point DI back to 'mod'
+        dec di
 
         ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
         mov cl, 0 
@@ -1016,9 +1028,9 @@ proc p_decode_rm
             mov ch, al
 
             ; get 'r/m' value (3 bits, represented as an octal number)
-            ;inc si
-            ;inc si
-            mov al, byte ptr [data_octal+si]
+            inc di
+            inc di
+            mov al, byte ptr [data_octal+di]
 
             m_print_ptr
             m_print_sr_prefix
@@ -1051,8 +1063,8 @@ proc p_decode_rm
                 call p_print_next_word
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 6
-                ; place SI back to point at 'r/m'
-                ;sub si, 6
+                ; place DI back to point at 'r/m'
+                sub di, 6
 
                 jmp offset_printed
 
@@ -1064,23 +1076,23 @@ proc p_decode_rm
                 call p_print_next_byte_sign_extended
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 3
-                ; place SI back to point at 'r/m'
-                ;sub si, 3
+                ; place DI back to point at 'r/m'
+                sub di, 3
 
             offset_printed:
             m_puts ']'
 
-            ; place SI back to point at 'mod'
-            ;dec si
-            ;dec si
+            ; place DI back to point at 'mod'
+            dec di
+            dec di
             jmp endp_decode_rm
 
         ; offset is not used for EA (according to 'mod')
         _rm_is_mem_no_offset:
             ; get 'r/m' value (3 bits, represented as an octal number)
-            ;inc si
-            ;inc si
-            mov al, byte ptr [data_octal+si]
+            inc di
+            inc di
+            mov al, byte ptr [data_octal+di]
 
             ; check 'r/m' value for a special case - direct address
             cmp al, 6
@@ -1110,9 +1122,9 @@ proc p_decode_rm
 
             ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
             mov cl, 0 
-            ; place SI back to point at 'mod'
-            ;dec si
-            ;dec si
+            ; place DI back to point at 'mod'
+            dec di
+            dec di
             jmp endp_decode_rm
 
             ; only direct address is used for EA
@@ -1128,12 +1140,12 @@ proc p_decode_rm
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 6
 
-                ; place SI back to point at 'r/m'
-                ;sub si, 6
+                ; place DI back to point at 'r/m'
+                sub di, 6
 
-                ; place SI back to point at 'mod'
-                ;dec si
-                ;dec si
+                ; place DI back to point at 'mod'
+                dec di
+                dec di
 
     endp_decode_rm:
         pop dx bx ax
@@ -1145,15 +1157,15 @@ endp
 ; 1000 00sw mod XXX r/m [offset] lsb_immediate [msb_immediate]
 ; where each 'X' is one of 0 or 1.
 ; 
-; Before call: SI should point to the octal digit for '0sw',
+; Before call: DI should point to the octal digit for '0sw',
 ;              AL should contain the value of '0sw' as an octal digit
 ;
-; After call: SI points to the last byte read in a command
+; After call: DI points to the last byte read in a command
 proc p_op_0sw_rm_imm
     push ax bx dx
 
     ; AL so far contains 3 bits '0sw' as an octal number.
-    ;inc si ; SI must point to 'mod' before calling 
+    inc di ; DI must point to 'mod' before calling 
            ; the decode procedure
     mov dl, al
     and dl, 01b
@@ -1166,21 +1178,21 @@ proc p_op_0sw_rm_imm
     m_puts ', '
     
     ; TODO wrap this in macro/proc
-    ; point SI to the last byte read
-    ;inc si 
-    ;inc si ; SI points to r/m now
+    ; point DI to the last byte read
+    inc di 
+    inc di ; DI points to r/m now
 
     cmp cl, 0
     je si_in_right_place_L0 ; offset was not used
 
     ; offset was used
-    ; point SI to the last byte read
+    ; point DI to the last byte read
     ;
     ; cl contains information about how many 
     ; bytes (=octal digits?) were read as an offset or direct address
     xor ch, ch
     loop_L0:
-        ;inc si
+        inc di
     loop loop_L0
 
     si_in_right_place_L0:
@@ -1222,14 +1234,14 @@ endp
 ;   XXXX X0dw mod reg r/m [offset]  
 ; where each 'X' is one of 0 or 1.
 ;
-; Before call: SI should point to the octal digit for '0dw',
+; Before call: DI should point to the octal digit for '0dw',
 ;              AL should contain the value of '0dw' as an octal digit
 ;
-; After call: SI points to the last byte read in a command
+; After call: DI points to the last byte read in a command
 ; TODO make this proc apply to XXdw, not only X0dw
 proc p_op_0dw_reg_rm
     push ax bx dx
-    ;inc si ; si must point to 'mod' before calling decode procedures
+    inc di ; DI must point to 'mod' before calling decode procedures
 
     ; AL so far contains 3 bits '0dw' as an octal number.
     ; check 'd' (destination) bit
@@ -1264,23 +1276,23 @@ proc p_op_0dw_reg_rm
         m_puts ', '
         call p_decode_reg
 
-    ; move SI to the last byte read
+    ; move DI to the last byte read
     move_index:
-        ; point SI to 'r/m'
-        ;inc si
-        ;inc si
+        ; point DI to 'r/m'
+        inc di
+        inc di
 
         cmp cl, 0
         je si_in_right_place_L1 ; offset was not used
 
         ; offset was used
-        ; point SI to the last byte read
+        ; point DI to the last byte read
         ;
         ; cl contains information about how many 
         ; bytes were read as an offset or direct address
         xor ch, ch
         loop_L1:
-            ;inc si
+            inc di
         loop loop_L1
 
     si_in_right_place_L1:
@@ -2592,8 +2604,8 @@ _xxx:
 
 _xxx_after_clean_dh:
     ; get 1st octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 0FFh
     je short exit_program
@@ -2610,18 +2622,18 @@ _xxx_after_clean_dh:
     jmp short _xxx
 
 undefined_byte:
-    ;inc si
-    ;inc si
-    ;inc si
+    inc di
+    inc di
+    inc di
     jmp short undefined
 
 undefined_1st_octal:
-    ;inc si
-    ;inc si
+    inc di
+    inc di
     jmp short undefined
 
 undefined_2nd_octal:
-    ;inc si
+    inc di
     jmp short undefined
 
 undefined:
@@ -2636,12 +2648,12 @@ exit_program:
 ; ============================================================
 _0xx:
     ; get 2nd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     ; get 3rd octal digit
-    ;inc si ; SI now also points to 3rd octal
-    mov bl, byte ptr [data_octal+si]
+    inc di ; SI now also points to 3rd octal
+    mov bl, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined ; undefined_2nd_octal is not used here, since 
@@ -3026,8 +3038,8 @@ _077_add_sub_adjust:
 ; ============================================================
 _1xx:
     ; get 2nd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     je _17x
@@ -3054,8 +3066,8 @@ _1xx:
 ; ------------------------------------------------------------
 _10x_inc_reg_word:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3074,8 +3086,8 @@ _10x_inc_reg_word:
 ; ------------------------------------------------------------
 _11_dec_reg_word:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3094,8 +3106,8 @@ _11_dec_reg_word:
 ; ------------------------------------------------------------
 _12_push_reg_word:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3114,8 +3126,8 @@ _12_push_reg_word:
 ; ------------------------------------------------------------
 _13_pop_reg_word:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3134,10 +3146,10 @@ _13_pop_reg_word:
 ; ------------------------------------------------------------
 _16x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
 
     cmp al, 7
@@ -3230,10 +3242,10 @@ _167_ja_near:
 ; ------------------------------------------------------------
 _17x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
 
     cmp al, 7
@@ -3326,8 +3338,8 @@ _177_jg_near:
 ; ============================================================
 _2xx:
     ; get 2nd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     je _27x_mov_reg_imm_word
@@ -3354,8 +3366,8 @@ _2xx:
 ;  _20X
 ; ------------------------------------------------------------
 _20x:
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3368,11 +3380,11 @@ _20x:
     jmp _20_67_xchg_reg_rm
 
     __20_0123:
-        ;inc si ; point to 'mod'
-        ;inc si ; point SI to next octal digit after 'mod'
-        mov bl, byte ptr [data_octal+si]
-        ;dec si
-        ;dec si ; return SI back
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
         ; find out which operation is used
         cmp bl, 4
         jb short __20_0123_mod_0123
@@ -3449,15 +3461,15 @@ _20_45_test_reg_rm:
     mov dl, al
     and dl, 001b ; will be used for decode procedures
 
-    ;inc si ; si points to 'mod' now
+    inc di ; si points to 'mod' now
 
     call p_decode_reg
     m_puts ', '
     call p_decode_rm
 
     ; point SI to 'r/m'
-    ;inc si
-    ;inc si
+    inc di
+    inc di
 
     cmp cl, 0
     je si_in_right_place_L2 ; offset was not used
@@ -3469,7 +3481,7 @@ _20_45_test_reg_rm:
     ; bytes were read as an offset or direct address
     xor ch, ch
     loop_L2:
-        ;inc si
+        inc di
     loop loop_L2
 
     si_in_right_place_L2:
@@ -3483,15 +3495,15 @@ _20_67_xchg_reg_rm:
     mov dl, al
     and dl, 001b ; will be used for decode procedures
 
-    ;inc si ; si points to 'mod' now
+    inc di ; si points to 'mod' now
 
     call p_decode_reg
     m_puts ', '
     call p_decode_rm
 
     ; point SI to 'r/m'
-    ;inc si
-    ;inc si
+    inc di
+    inc di
 
     cmp cl, 0
     je si_in_right_place_L3 ; offset was not used
@@ -3503,7 +3515,7 @@ _20_67_xchg_reg_rm:
     ; bytes were read as an offset or direct address
     xor ch, ch
     loop_L3:
-        ;inc si
+        inc di
     loop loop_L3
 
     si_in_right_place_L3:
@@ -3515,8 +3527,8 @@ _20_67_xchg_reg_rm:
 ; ------------------------------------------------------------
 _21x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     je short __217_mod_xxx
@@ -3530,11 +3542,11 @@ _21x:
     jmp _21_46_mov_rm_segreg
 
     __217_mod_xxx:
-        ;inc si ; point to 'mod'
-        ;inc si ; point SI to next octal digit after 'mod'
-        mov bl, byte ptr [data_octal+si]
-        ;dec si
-        ;dec si ; return SI back
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
         ; find out if it's a legit opcode
         cmp bl, 6
         je _217_pop_rm
@@ -3549,11 +3561,11 @@ __21_0123_mov_reg_rm:
 ; ------------------------------------------------------------
 _21_46_mov_rm_segreg:
     ; check if 'reg' is not '1xx'
-    ;inc si ; point to 'mod'
-    ;inc si ; point to 'reg'
-    mov bl, byte ptr [data_octal+si]
-    ;dec si 
-    ;dec si ; return SI back
+    inc di ; point to 'mod'
+    inc di ; point to 'reg'
+    mov bl, byte ptr [data_octal+di]
+    dec di 
+    dec di ; return SI back
     ; find out if it's a legit opcode
     cmp bl, 4 ; reg cannot be '1xx'
     jae undefined_byte
@@ -3610,9 +3622,9 @@ _21_46_mov_rm_segreg:
 ; ------------------------------------------------------------
 _215_lea_reg_mem:
     ; check if mod is not '11'
-    ;inc si ; point to 'mod'
-    mov bl, byte ptr [data_octal+si]
-    ;dec si ; return SI back
+    inc di ; point to 'mod'
+    mov bl, byte ptr [data_octal+di]
+    dec di ; return SI back
     ; find out if it's a legit opcode
     cmp bl, 3 ; mod cannot be '11'
     je undefined_byte
@@ -3653,8 +3665,8 @@ _217_pop_rm:
 ; ------------------------------------------------------------
 _22x_xchg_reg_ax:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3680,8 +3692,8 @@ _22x_xchg_reg_ax:
 ; ------------------------------------------------------------
 _23x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3719,12 +3731,12 @@ _231_cwd:
 ; ------------------------------------------------------------
 _232_call_far_absolute_direct:
     m_puts 'CALL '
-    ;add si, 6 ; first print the second word
+    add di, 6 ; first print the second word
     call p_print_next_word
     m_puts ':'
-    ;sub si, 12 ; then print the first word
+    sub di, 12 ; then print the first word
     call p_print_next_word
-    ;add si, 6 ; move SI to the last byte read
+    add di, 6 ; move SI to the last byte read
 
     m_print_nl
     jmp _xxx
@@ -3759,8 +3771,8 @@ _237_lahf:
 ; ------------------------------------------------------------
 _24x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3850,8 +3862,8 @@ _247_cmpsw:
 ; ------------------------------------------------------------
 _25x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3927,8 +3939,8 @@ _257_scasw:
 ; ------------------------------------------------------------
 _26x_mov_reg_imm_byte:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3949,8 +3961,8 @@ _26x_mov_reg_imm_byte:
 ; ------------------------------------------------------------
 _27x_mov_reg_imm_word:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -3971,8 +3983,8 @@ _27x_mov_reg_imm_word:
 ; ============================================================
 _3xx:
     ; get 2nd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     je _37x
@@ -4000,8 +4012,8 @@ _3xx:
 ; ------------------------------------------------------------
 _30x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -4015,9 +4027,9 @@ _30x:
         jb short __30_23
 
     __30_45_xx:
-        ;inc si ; point to 'mod'
-        mov bl, byte ptr [data_octal+si]
-        ;dec si ; return SI back
+        inc di ; point to 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di ; return SI back
         ; find out if it's a legit opcode
         cmp bl, 3 ; mod cannot be '11'
         jb short __30_45
@@ -4100,8 +4112,8 @@ _30_67_mov_rm_imm:
 ; ------------------------------------------------------------
 _31x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -4159,8 +4171,8 @@ _317_iret:
 ; ------------------------------------------------------------
 _32x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -4174,11 +4186,11 @@ _32x:
     jmp _327_xlat
 
     __32_0123:
-        ;inc si ; point to 'mod'
-        ;inc si ; point SI to next octal digit after 'mod'
-        mov bl, byte ptr [data_octal+si]
-        ;dec si
-        ;dec si ; return SI back
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
 
         ; find out which operation is used
         cmp bl, 2
@@ -4205,20 +4217,20 @@ _32x:
 
     __32_45:
         ; check if next byte is part of AAM/AAD opcode
-        cmp byte ptr [data_octal+si+1], 0
+        cmp byte ptr [data_octal+di+1], 0
         jne undefined
 
-        cmp byte ptr [data_octal+si+2], 1
+        cmp byte ptr [data_octal+di+2], 1
         jne undefined
 
-        cmp byte ptr [data_octal+si+3], 2
+        cmp byte ptr [data_octal+di+3], 2
         jne undefined
 
         ; if AAM/AAD is recognized, move index to the 
         ; end of next byte, which is part of the opcode
-        ;inc si
-        ;inc si
-        ;inc si
+        inc di
+        inc di
+        inc di
 
         cmp al, 4
         je _324_aam
@@ -4302,9 +4314,9 @@ _327_xlat:
 _33x:
     m_puts '; <ESC code> '
 
-    ;inc si ; 3rd octal digit of opcode ('xxx')
-    ;inc si ; points to 'mod'
-    mov al, byte ptr [data_octal+si]
+    inc di ; 3rd octal digit of opcode ('xxx')
+    inc di ; points to 'mod'
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 3
     je _33x_3
@@ -4320,8 +4332,8 @@ _33x:
     jmp short _33x_end
 
     _33x_3:
-        ;inc si
-        ;inc si ; point to last byte read
+        inc di
+        inc di ; point to last byte read
         jmp _33x_end
 
     _33x_end:
@@ -4333,8 +4345,8 @@ _33x:
 ; ------------------------------------------------------------
 _34x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -4361,7 +4373,7 @@ _34x:
 
 ; ------------------------------------------------------------
 _340_loopne_near:
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'LOOPNE '
     m_octal_byte_to_number
@@ -4371,7 +4383,7 @@ _340_loopne_near:
 
 ; ------------------------------------------------------------
 _341_loope_near:
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'LOOPE '
     m_octal_byte_to_number
@@ -4381,7 +4393,7 @@ _341_loope_near:
 
 ; ------------------------------------------------------------
 _342_loop_near:
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'LOOP '
     m_octal_byte_to_number
@@ -4391,7 +4403,7 @@ _342_loop_near:
 
 ; ------------------------------------------------------------
 _343_jcxz_near:
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'JCXZ '
     m_octal_byte_to_number
@@ -4432,8 +4444,8 @@ _347_out_acc_port_direct_word:
 ; ------------------------------------------------------------
 _35x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -4460,7 +4472,7 @@ _35x:
 
 ; ------------------------------------------------------------
 _350_call_near_relative:
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'CALL '
     m_octal_word_to_number
@@ -4470,7 +4482,7 @@ _350_call_near_relative:
 
 ; ------------------------------------------------------------
 _351_jmp_near_relative:
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'JMP '
     m_octal_word_to_number
@@ -4481,19 +4493,19 @@ _351_jmp_near_relative:
 ; ------------------------------------------------------------
 _352_jmp_far_absolute_direct:
     m_puts 'JMP '
-    ;add si, 6 ; first print the second word
+    add di, 6 ; first print the second word
     call p_print_next_word
     m_puts ':'
-    ;sub si, 12 ; then print the first word
+    sub di, 12 ; then print the first word
     call p_print_next_word
-    ;add si, 6 ; move SI to the last byte read
+    add di, 6 ; move SI to the last byte read
 
     m_print_nl
     jmp _xxx
 
 ; ------------------------------------------------------------
 _353_jmp_short_relative:
-    ;inc si ; SI now points to the first 
+    inc di ; SI now points to the first 
            ; octal digit of the offset
     m_puts 'JMP short '
     m_octal_byte_to_number
@@ -4526,8 +4538,8 @@ _357_out_acc_port_indirect_word:
 ; ------------------------------------------------------------
 _36x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -4536,11 +4548,11 @@ _36x:
     jb short __36_012345
 
     __36_67:
-        ;inc si ; point to 'mod'
-        ;inc si ; point SI to next octal digit after 'mod'
-        mov bl, byte ptr [data_octal+si]
-        ;dec si
-        ;dec si ; return SI back
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
         ; find out which operation is used
         cmp bl, 4
         jb short __36_67_mod_0123
@@ -4688,8 +4700,8 @@ _36_67_idiv_rm:
 ; ------------------------------------------------------------
 _37x:
     ; get 3rd octal digit
-    ;inc si
-    mov al, byte ptr [data_octal+si]
+    inc di
+    mov al, byte ptr [data_octal+di]
 
     cmp al, 7
     ja undefined
@@ -4698,11 +4710,11 @@ _37x:
     jb __37_012345
 
     __37_67:
-        ;inc si ; point to 'mod'
-        ;inc si ; point SI to next octal digit after 'mod'
-        mov bl, byte ptr [data_octal+si]
-        ;dec si
-        ;dec si ; return SI back
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
         ; find out which operation is used
         cmp bl, 2
         jb short __37_67_mod_01
@@ -4802,7 +4814,7 @@ _37_67_dec_rm:
 ; -----------------------------------------------------------/
 _377_call_near_absolute_indirect:
     m_puts 'CALL '
-    ;inc si ; points to 'mod'
+    inc di ; points to 'mod'
 
     mov dl, 002 ; preparing for decode proc
                 ; si already points to 'mod'
@@ -4821,9 +4833,9 @@ _377_call_near_absolute_indirect:
 ; -----------------------------------------------------------/
 _377_call_far_absolute_indirect:
     ; check if mod is not '11'
-    ;inc si ; point to 'mod'
-    mov bl, byte ptr [data_octal+si]
-    ;dec si ; return SI back
+    inc di ; point to 'mod'
+    mov bl, byte ptr [data_octal+di]
+    dec di ; return SI back
     ; find out if it's a legit opcode
     cmp bl, 3 ; mod cannot be '11'
     je undefined_byte
@@ -4848,7 +4860,7 @@ _377_call_far_absolute_indirect:
 ; -----------------------------------------------------------/
 _377_jmp_near_absolute_indirect:
     m_puts 'JMP '
-    ;inc si ; points to 'mod'
+    inc di ; points to 'mod'
 
     mov dl, 002 ; preparing for decode proc
                 ; si already points to 'mod'
@@ -4867,9 +4879,9 @@ _377_jmp_near_absolute_indirect:
 ; -----------------------------------------------------------/
 _377_jmp_far_absolute_indirect:
     ; check if mod is not '11'
-    ;inc si ; point to 'mod'
-    mov bl, byte ptr [data_octal+si]
-    ;dec si ; return SI back
+    inc di ; point to 'mod'
+    mov bl, byte ptr [data_octal+di]
+    dec di ; return SI back
     ; find out if it's a legit opcode
     cmp bl, 3 ; mod cannot be '11'
     je undefined_byte
