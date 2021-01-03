@@ -403,6 +403,7 @@ jumps
 arg_msg 		DB "Intel 8088 Disasembler",13,10
 arg2_msg 		DB "Written in TASM, intended for files assembled with TASM as well$"
 cant_open 		DB 13,10,"Can't open",13,10,'$'		; Message for file open error
+err_msg 		DB 13,10,"Error",13,10,'$'		; Message for file write error
 file_n 			DB 40 DUP(0)				; Input File name
 output_n 		DB 40 DUP(0)				; Output file name
 in_handle 		DW 0						; File handles
@@ -1519,17 +1520,17 @@ ident_rm endp
 put_single_char proc
 	;Puts char in DL to adress in cur_arg_buf
 	;RESULT: In v_arg_1 or v_arg_2
-	PUSH 	SI
+	PUSH 	SI ;siac
 	PUSH 	BX
 
-	MOV 	SI, v_arg_index
+	MOV 	SI, v_arg_index ;siac
 	MOV 	BX, cur_arg_buff
-	MOV 	[BX + SI], DL
-	INC 	SI
-	MOV 	v_arg_index, SI
+	MOV 	[BX + SI], DL ;siac
+	INC 	SI ;siac
+	MOV 	v_arg_index, SI ;siac
 
 	POP 	BX
-	POP 	SI
+	POP 	SI ;siac
 
 	RET
 put_single_char endp
@@ -1655,7 +1656,7 @@ arg_checker proc
 			CALL 	put_single_char
 
 			CALL 	ident_rm					; Gets adressing method
-			CALL 	store_as_text				;Stores (EX: BX+SI)
+			CALL 	store_as_text				;Stores (EX: BX+SI) ;siac
 
 			MOV 	BX, a_mod
 
@@ -2414,12 +2415,12 @@ number_to_ascii proc
 		POP 	DX
 
 		MOV 	BX, needs_convert
-		MOV 	SI, counter_convert
+		MOV 	SI, counter_convert ;siac
 
-		ADD 	BX, [SI]
+		ADD 	BX, [SI] ;siac
 		MOV 	[BX], DL
 
-		INC 	word ptr [SI]
+		INC 	word ptr [SI] ;siac
 	JMP FIN_CONV
 
 	FIN:
@@ -2500,16 +2501,16 @@ start:
     mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
     mov ds, ax                     ; move AX (@data) to DS (data segment)
     ; FIXME will it work?
-    mov es, ax                     ; move AX (@data) to ES (extended data segment) 
+    ;mov es, ax                     ; move AX (@data) to ES (extended data segment) 
 
 ; ############################################################################
 
-	MOV 	SI, 0081h				; Set start of arguments
+	MOV 	SI, 0081h				; Set start of arguments ;siac
 	MOV 	BX, 0					; Count index of argument file name
 	MOV 	CX, -1					; Count amount of arguments
 
 ARG_PARSE:
-	MOV 	AL, byte ptr ES:[SI]	; Store next char of arguments
+	MOV 	AL, byte ptr ES:[SI]	; Store next char of arguments ;siac
 
 	CMP 	AL, 13					; End of arguments (newline)
 	JE 		CHECK_ERRORS			; Check if right amount of arguments
@@ -2520,16 +2521,16 @@ ARG_PARSE:
 	CMP 	AL, '/'					; Check if "/?" is trying to be written
 	JE		ERR_TEST
 
-	INC 	SI						; Store this character to appropriate array
+	INC 	SI						; Store this character to appropriate array ;siac
 	JMP 	WRITE
 
 ERR_TEST:
-	INC	 	SI
-	MOV 	AL, byte ptr ES:[SI]	; Check if next byte is '?'
+	INC	 	SI ;siac
+	MOV 	AL, byte ptr ES:[SI]	; Check if next byte is '?' ;siac
 	CMP 	AL, '?'
 	JNE		WRITE_INIT				; If no, continue with write
 ERROR:
-	MOV 	DX, OFFSET arg_msg		; Error message
+	MOV 	DX, OFFSET err_msg		; Error message
 	MOV 	AH, 09
 	INT 	21h
 
@@ -2543,14 +2544,14 @@ NO_OPEN:							; Cant open/write file
 JMP ERROR
 
 WRITE_INIT:							; Fix before write (After ERR_TEST)
-	DEC		SI
-	MOV 	AL, byte ptr ES:[SI]
-	INC 	SI
+	DEC		SI ;siac
+	MOV 	AL, byte ptr ES:[SI] ;siac
+	INC 	SI ;siac
 JMP WRITE
 
 SKIP_SPACE:							; Skips the space, shifts to next array
-	INC 	SI
-	MOV 	AL, byte ptr ES:[SI]
+	INC 	SI ;siac
+	MOV 	AL, byte ptr ES:[SI] ;siac
 	CMP 	AL, ' '					; Skip all the spaces
 	JE 		SKIP_SPACE
 	INC 	CX						; Sets which array should be used
