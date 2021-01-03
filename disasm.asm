@@ -849,6 +849,7 @@ outpt_buff      DB 257 DUP(?)           ; Output buffer
 
 ; longest command = 6 bytes * 3 octal digits = 18 bytes
 data_octal db 18 dup(?)
+opkodas_ilgis dw 00 00
 mano_opkodas db "UNDEFINED"
 
 ; *************************************************************************************
@@ -1296,16 +1297,23 @@ endp
 ; &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 analyze_byte proc
-    ;call main
-
-    ;mov ax, 66
-    ;cmp ax, 66
-    ;je finalize
 
     PUSH    AX
     PUSH    BX
     PUSH    CX
     PUSH    DX
+
+;--------------------------------
+    PUSH SI
+    call main
+    POP SI
+
+    cmp ax, 66
+    je finalize
+
+    mov word ptr [opkodas_ilgis], ax
+;--------------------------------
+
     ; Analyze the current byte, get all the needed arguments and print
 
     MOV     BX, c_opName
@@ -1329,15 +1337,7 @@ analyze_byte proc
         POP     AX
         RET
     KNOWN:
-;--------------------------------
-; their
-;--------------------------------
         MOV     BL, c_abyte
-;--------------------------------
-; mine
-;--------------------------------
-        ;mov bl, 0
-;--------------------------------
         CMP     BL, 0
 
         JE      STILL_KNOWN     ; If no adress byte then cant be extra_identify
@@ -1360,13 +1360,13 @@ analyze_byte proc
 ;--------------------------------
 ; comment
 ;--------------------------------
-        MOV     AX, offset noReg    ;Atstatom prefix
-        MOV     temp_prefix, AX
+        ;MOV     AX, offset noReg    ;Atstatom prefix
+        ;MOV     temp_prefix, AX
 
-        POP     DX
-        POP     CX
-        POP     BX
-        POP     AX
+        ;POP     DX
+        ;POP     CX
+        ;POP     BX
+        ;POP     AX
 ;--------------------------------
         RET
 analyze_byte endp
@@ -2098,7 +2098,7 @@ write_proc proc
 ;--------------------------------
 ; comment
 ;--------------------------------
-    ;Opertation code NAME print
+    ;Operation code NAME print
     MOV     DX, c_opName
     PUSH    DX                      ; SAVE ORIGINAL c_opName adress
 
@@ -2119,21 +2119,20 @@ write_proc proc
 ;--------------------------------
 ; their
 ;--------------------------------
-    MOV     c_opName, DX            ; Reset the c_opName
+    ;MOV     c_opName, DX            ; Reset the c_opName
 
-    MOV     CX, AX                  ; Write result
-    CALL    write_multiple          ; Write to file
+    ;MOV     CX, AX                  ; Write result
+    ;CALL    write_multiple          ; Write to file
 
-    POP     AX                      ; Get c_opName length
+    ;POP     AX                      ; Get c_opName length
 ;--------------------------------
 ; mine
 ;--------------------------------
-    ;mov     DX, offset mano_opkodas
+    mov     DX, offset mano_opkodas
 
-    ;mov cx, 9
-    ;CALL    write_multiple          ; Write to file
-
-    ;mov ax, 9
+    mov cx, word ptr [opkodas_ilgis]
+    CALL    write_multiple          ; Write to file
+    ret
 ;--------------------------------
     
     MOV     CX, 0
@@ -2346,6 +2345,19 @@ store_next_byte proc
     DEC     CX
     MOV     [bytes_read], CX
 
+;--------------------------------
+; mine added
+;--------------------------------
+    ; UNDEFINED 065
+    ;mov byte ptr [data_octal],   1
+    ;mov byte ptr [data_octal+1], 4
+    ;mov byte ptr [data_octal+2], 5
+
+    ; LAHF 9F
+    ;mov byte ptr [data_octal],   2
+    ;mov byte ptr [data_octal+1], 3
+    ;mov byte ptr [data_octal+2], 7
+;--------------------------------
 
     ; Store read byte in temp_bytes for printing
     MOV     BX, offset temp_bytes
@@ -2360,6 +2372,66 @@ store_next_byte proc
     INC     temp_b_index        ; Increase the temp_b_index (to add a space between them)
 
     INC     temp_ip_add         ; Increase IP
+
+;--------------------------------
+; mine added
+;--------------------------------
+    ; Store read byte in data_octal,
+    ; where my DISASM could read it
+
+;--------------------------------
+    ; Stores MOD, REG, RM in appropriate variables from adress byte
+    ; RESULT: a_mod, a_reg, a_rm
+;--------------------------------
+    ; Stores xx, yyy, zzz in appropriate variables from adress byte
+    ; RESULT: [data_octal+di] = xx, yyy, zzz
+;--------------------------------
+
+    PUSH    AX
+    PUSH    BX
+    PUSH    CX
+    PUSH    DX
+
+    PUSH    DX
+    MOV     BX, 11000000b
+    AND     DX, BX
+
+    ROR     DX, 6           ; Shift right 6 times
+
+;--------------------------------
+    ;MOV     a_mod, DX       ; Save 000000xxb
+;--------------------------------
+    MOV byte ptr [data_octal+di+0], DL
+;--------------------------------
+    POP     DX
+
+    PUSH    DX
+    MOV     BX, 00111000b
+    AND     DX, BX
+
+    ROR     DX, 3           ; Shift right 3 times
+
+;--------------------------------
+    ;MOV     a_reg, DX       ; Save 00000xxxb
+;--------------------------------
+    MOV byte ptr [data_octal+di+1], DL
+;--------------------------------
+    POP     DX
+
+    MOV     BX, 00000111b
+    AND     DX, BX
+
+;--------------------------------
+    ;MOV     a_rm, DX        ; Save 00000xxxb
+;--------------------------------
+    MOV byte ptr [data_octal+di+2], DL
+;--------------------------------
+
+    POP     DX
+    POP     CX
+    POP     BX
+    POP     AX
+;--------------------------------
 
     POP     CX
     POP     BX
@@ -2426,7 +2498,7 @@ number_to_ascii endp
 
 recognize_byte proc
 ;--------------------------------
-; their
+; comment out all
 ;--------------------------------
     ; Find appropriate byte by value in DL
     ; Takes size of the structure, multiplies it by DL to get offset
@@ -2467,19 +2539,6 @@ recognize_byte proc
 
     POP     BX
     POP     AX
-;--------------------------------
-; mine
-;--------------------------------
-    ; UNDEFINED 065
-    ;mov byte ptr [data_octal],   1
-    ;mov byte ptr [data_octal+1], 4
-    ;mov byte ptr [data_octal+2], 5
-
-    ; LAHF 9F
-    ;mov byte ptr [data_octal],   2
-    ;mov byte ptr [data_octal+1], 3
-    ;mov byte ptr [data_octal+2], 7
-;--------------------------------
     RET
 recognize_byte endp
 
@@ -2626,7 +2685,7 @@ PARSE:                              ; The whole algorithm
     JLE     EXIT                    ; nothing left in file, quit
 
     CALL    store_next_byte         ; Get the next byte for opc
-    CALL    recognize_byte          ; Recognize the next opc
+    ;CALL    recognize_byte          ; Recognize the next opc
     CALL    analyze_byte            ; Do work with recognized opc
 
     ;m_puts 'done'
