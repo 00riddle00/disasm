@@ -188,7 +188,7 @@ local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
 
         @@endm_m:
             m_print_nl
-            jmp _xxx
+            ret ; jmp _xxx
     @@macro_end:
 endm
 
@@ -227,7 +227,7 @@ local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
 
         @@endm_m:
             m_print_nl
-            jmp _xxx
+            ret ; jmp _xxx
     @@macro_end:
 endm
 
@@ -849,6 +849,7 @@ outpt_buff      DB 257 DUP(?)           ; Output buffer
 
 ; longest command = 6 bytes * 3 octal digits = 18 bytes
 data_octal db 18 dup(?)
+mano_opkodas db "UNDEFINED"
 
 ; *************************************************************************************
 
@@ -1295,6 +1296,12 @@ endp
 ; &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 analyze_byte proc
+    ;call main
+
+    ;mov ax, 66
+    ;cmp ax, 66
+    ;je finalize
+
     PUSH    AX
     PUSH    BX
     PUSH    CX
@@ -1322,8 +1329,17 @@ analyze_byte proc
         POP     AX
         RET
     KNOWN:
+;--------------------------------
+; their
+;--------------------------------
         MOV     BL, c_abyte
+;--------------------------------
+; mine
+;--------------------------------
+        ;mov bl, 0
+;--------------------------------
         CMP     BL, 0
+
         JE      STILL_KNOWN     ; If no adress byte then cant be extra_identify
 
         CALL    analyze_adress_byte     ;Analyze the adress byte
@@ -1341,6 +1357,9 @@ analyze_byte proc
     FINALIZE:
         CALL    write_proc
 
+;--------------------------------
+; comment
+;--------------------------------
         MOV     AX, offset noReg    ;Atstatom prefix
         MOV     temp_prefix, AX
 
@@ -1348,6 +1367,7 @@ analyze_byte proc
         POP     CX
         POP     BX
         POP     AX
+;--------------------------------
         RET
 analyze_byte endp
 
@@ -2075,6 +2095,9 @@ write_proc proc
     CALL    clear_temp_bytes
     ;BYTE PRINT END
 
+;--------------------------------
+; comment
+;--------------------------------
     ;Opertation code NAME print
     MOV     DX, c_opName
     PUSH    DX                      ; SAVE ORIGINAL c_opName adress
@@ -2093,13 +2116,26 @@ write_proc proc
     POP     DX
     PUSH    AX                      ; Save the length of c_opName
 
+;--------------------------------
+; their
+;--------------------------------
     MOV     c_opName, DX            ; Reset the c_opName
 
     MOV     CX, AX                  ; Write result
     CALL    write_multiple          ; Write to file
 
     POP     AX                      ; Get c_opName length
+;--------------------------------
+; mine
+;--------------------------------
+    ;mov     DX, offset mano_opkodas
 
+    ;mov cx, 9
+    ;CALL    write_multiple          ; Write to file
+
+    ;mov ax, 9
+;--------------------------------
+    
     MOV     CX, 0
     CMP     AL, 10                  ; If opName is larger than 10 spaces
     JGE     WRITE_SPACES            ; No spaces needed
@@ -2113,9 +2149,13 @@ write_proc proc
     CALL    write_multiple          ; Write " " to file
     ;Opertation code NAME print END
 
+;--------------------------------
+; comment
+;--------------------------------
     MOV     CX, offset opcUnk
     CMP     CX, c_opName
     JNE     CHECKS                  ; If not unknown, needs further arguments
+;--------------------------------
     JMP     QUIT_WRITING            ; Else, quit write
 
     CHECKS:
@@ -2385,6 +2425,9 @@ number_to_ascii proc
 number_to_ascii endp
 
 recognize_byte proc
+;--------------------------------
+; their
+;--------------------------------
     ; Find appropriate byte by value in DL
     ; Takes size of the structure, multiplies it by DL to get offset
     ; Offsets to correct location, gets the bytes
@@ -2424,7 +2467,19 @@ recognize_byte proc
 
     POP     BX
     POP     AX
+;--------------------------------
+; mine
+;--------------------------------
+    ; UNDEFINED 065
+    ;mov byte ptr [data_octal],   1
+    ;mov byte ptr [data_octal+1], 4
+    ;mov byte ptr [data_octal+2], 5
 
+    ; LAHF 9F
+    ;mov byte ptr [data_octal],   2
+    ;mov byte ptr [data_octal+1], 3
+    ;mov byte ptr [data_octal+2], 7
+;--------------------------------
     RET
 recognize_byte endp
 
@@ -2452,6 +2507,7 @@ check_carry endp
 start:
     mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
     mov ds, ax                     ; move AX (@data) to DS (data segment)
+    MOV     DI, 0FFFFh
     ; FIXME will it work?
     ;mov es, ax                     ; move AX (@data) to ES (extended data segment) 
 
@@ -2563,7 +2619,7 @@ CONTINUE:
     MOV     DX, 0
 
 PARSE:                              ; The whole algorithm
-    xor di, di
+    ;xor di, di
     CALL    check_read              ; Check if new input has to be read
     MOV     CX, [bytes_read]
     CMP     CX, 0                   ; Check if any bytes left in file
@@ -2573,9 +2629,13 @@ PARSE:                              ; The whole algorithm
     CALL    recognize_byte          ; Recognize the next opc
     CALL    analyze_byte            ; Do work with recognized opc
 
+    ;m_puts 'done'
+    ;m_exit0
+
 JMP PARSE
 
 EXIT:
+    m_puts 'finito'
     MOV     AX, 0
 TERMINATE:
     MOV     AH, 4Ch
@@ -2583,16 +2643,14 @@ TERMINATE:
 
 ; ############################################################################
 
-    ;xor ax, ax
-    ;xor si, si
-    ;mov si, 0FFFFh
-
+main proc
 _xxx:
     xor dh, dh
 
-_xxx_after_clean_dh:
+_after_clean_dh_xxx:
     ; get 1st octal digit
     inc di
+    xor ax, ax
     mov al, byte ptr [data_octal+di]
 
     cmp al, 0FFh
@@ -2607,7 +2665,7 @@ _xxx_after_clean_dh:
     je _1xx
     jmp _2xx
 
-    jmp short _xxx
+    ;jmp short _xxx
 
 undefined_byte:
     inc di
@@ -2626,7 +2684,8 @@ undefined_2nd_octal:
 
 undefined:
     m_putsln '; UNDEFINED'
-    jmp short _xxx
+    ;jmp short _xxx
+    ret
 
 exit_program:
     m_exit0
@@ -2716,21 +2775,21 @@ _00x:
 __00_0123_add_reg_rm:
     m_puts 'ADD '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _004_add_acc_imm_byte:
     m_puts 'ADD AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _005_add_acc_imm_word:
     m_puts 'ADD AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _01X
@@ -2748,21 +2807,21 @@ _01x:
 __01_0123_or_reg_rm:
     m_puts 'OR '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _014_or_acc_imm_byte:
     m_puts 'OR AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _015_or_acc_imm_word:
     m_puts 'OR AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _02X
@@ -2780,21 +2839,21 @@ _02x:
 __02_0123_adc_reg_rm:
     m_puts 'ADC '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _024_adc_acc_imm_byte:
     m_puts 'ADC AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _025_adc_acc_imm_word:
     m_puts 'ADC AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _03X
@@ -2812,21 +2871,21 @@ _03x:
 __03_0123_sbb_reg_rm:
     m_puts 'SBB '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _034_sbb_acc_imm_byte:
     m_puts 'SBB AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _035_sbb_acc_imm_word:
     m_puts 'SBB AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _04X
@@ -2844,21 +2903,21 @@ _04x:
 __04_0123_and_reg_rm:
     m_puts 'AND '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _044_and_acc_imm_byte:
     m_puts 'AND AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _045_and_acc_imm_word:
     m_puts 'AND AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _05X
@@ -2876,21 +2935,21 @@ _05x:
 __05_0123_sub_reg_rm:
     m_puts 'SUB '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _054_sub_acc_imm_byte:
     m_puts 'SUB AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _055_sub_acc_imm_word:
     m_puts 'SUB AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _06X
@@ -2908,21 +2967,21 @@ _06x:
 __06_0123_xor_reg_rm:
     m_puts 'XOR '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _064_xor_acc_imm_byte:
     m_puts 'XOR AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _065_xor_acc_imm_word:
     m_puts 'XOR AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _07X
@@ -2940,21 +2999,21 @@ _07x:
 __07_0123_cmp_reg_rm:
     m_puts 'CMP '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _074_cmp_acc_imm_byte:
     m_puts 'CMP AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _075_cmp_acc_imm_word:
     m_puts 'CMP AX, '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _0X6
@@ -2972,7 +3031,7 @@ _0x6_push_seg:
     m_print_reg SR16
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; TODO
 _0x6_seg_change_prefix:
@@ -2983,7 +3042,7 @@ _0x6_seg_change_prefix:
     sub al, 3
     mov dh, al
 
-    jmp _xxx_after_clean_dh
+    jmp _after_clean_dh_xxx
 
 ; ------------------------------------------------------------
 ;  _0X7
@@ -2999,27 +3058,27 @@ _0x7_pop_seg:
     m_print_reg SR16
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _047_add_sub_adjust:
     m_putsln 'DAA'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _057_add_sub_adjust:
     m_putsln 'DAS'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _067_add_sub_adjust:
     m_putsln 'AAA'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _077_add_sub_adjust:
     m_putsln 'AAS'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ============================================================
 ;  _1XX
@@ -3067,7 +3126,7 @@ _10x_inc_reg_word:
     m_print_reg Rw
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _11X
@@ -3087,7 +3146,7 @@ _11_dec_reg_word:
     m_print_reg Rw
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _12X
@@ -3107,7 +3166,7 @@ _12_push_reg_word:
     m_print_reg Rw
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _13X
@@ -3127,7 +3186,7 @@ _13_pop_reg_word:
     m_print_reg Rw
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _16X
@@ -3167,7 +3226,7 @@ _160_jo_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _161_jno_near:
@@ -3175,7 +3234,7 @@ _161_jno_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _162_jb_near:
@@ -3183,7 +3242,7 @@ _162_jb_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _163_jae_near:
@@ -3191,7 +3250,7 @@ _163_jae_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _164_je_near:
@@ -3199,7 +3258,7 @@ _164_je_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _165_jne_near:
@@ -3207,7 +3266,7 @@ _165_jne_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _166_jbe_near:
@@ -3215,7 +3274,7 @@ _166_jbe_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _167_ja_near:
@@ -3223,7 +3282,7 @@ _167_ja_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _17X
@@ -3263,7 +3322,7 @@ _170_js_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _171_jns_near:
@@ -3271,7 +3330,7 @@ _171_jns_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _172_jp_near:
@@ -3279,7 +3338,7 @@ _172_jp_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _173_jnp_near:
@@ -3287,7 +3346,7 @@ _173_jnp_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _174_jl_near:
@@ -3295,7 +3354,7 @@ _174_jl_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _175_jge_near:
@@ -3303,7 +3362,7 @@ _175_jge_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _176_jle_near:
@@ -3311,7 +3370,7 @@ _176_jle_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _177_jg_near:
@@ -3319,7 +3378,7 @@ _177_jg_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ============================================================
 ;  _2XX
@@ -3398,49 +3457,49 @@ _20x:
 _20_0123_add_rm_imm:
     m_puts 'ADD '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_or_rm_imm:
     m_puts 'OR '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_adc_rm_imm:
     m_puts 'ADC '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_sbb_rm_imm:
     m_puts 'SBB '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_and_rm_imm:
     m_puts 'AND '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_sub_rm_imm:
     m_puts 'SUB '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_xor_rm_imm:
     m_puts 'XOR '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_cmp_rm_imm:
     m_puts 'CMP '
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_45_test_reg_rm:
@@ -3474,7 +3533,7 @@ _20_45_test_reg_rm:
 
     si_in_right_place_L2:
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_67_xchg_reg_rm:
@@ -3508,7 +3567,7 @@ _20_67_xchg_reg_rm:
 
     si_in_right_place_L3:
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _21X
@@ -3544,7 +3603,7 @@ _21x:
 __21_0123_mov_reg_rm:
     m_puts 'MOV '
     call p_op_0dw_reg_rm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _21_46_mov_rm_segreg:
@@ -3580,7 +3639,7 @@ _21_46_mov_rm_segreg:
         m_print_reg SR16
 
         m_print_nl
-        jmp _xxx
+        ret ; jmp _xxx
 
     _216_mov_segreg_rm:
         ; BL still contains 'reg', which is '0sr'
@@ -3605,7 +3664,7 @@ _21_46_mov_rm_segreg:
         m_move_index
 
         m_print_nl
-        jmp _xxx
+        ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _215_lea_reg_mem:
@@ -3632,7 +3691,7 @@ _215_lea_reg_mem:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _217_pop_rm:
@@ -3646,7 +3705,7 @@ _217_pop_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _22X
@@ -3669,11 +3728,11 @@ _22x_xchg_reg_ax:
     m_print_reg Rw
 
     m_putsln ', AX'
-    jmp _xxx
+    ret ; jmp _xxx
 
     _22x_nop:
         m_putsln 'NOP'
-        jmp _xxx
+        ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _23X
@@ -3709,12 +3768,12 @@ _23x:
 ; -------------------------------------------------------------
 _230_cbw:
     m_putsln 'CBW'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _231_cwd:
     m_putsln 'CWD'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _232_call_far_absolute_direct:
@@ -3727,32 +3786,32 @@ _232_call_far_absolute_direct:
     add di, 6 ; move SI to the last byte read
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _233_wait:
     m_putsln 'WAIT'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _234_pushf:
     m_putsln 'PUSHF'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _235_popf:
     m_putsln 'POPF'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _236_sahf:
     m_putsln 'SAHF'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _237_lahf:
     m_putsln 'LAHF'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _24X
@@ -3793,7 +3852,7 @@ _240_mov_acc_mem_byte:
 
     call p_print_next_word
     m_putsln ']'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _241_mov_acc_mem_word:
@@ -3803,7 +3862,7 @@ _241_mov_acc_mem_word:
 
     call p_print_next_word
     m_putsln ']'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _242_mov_mem_acc_byte:
@@ -3813,7 +3872,7 @@ _242_mov_mem_acc_byte:
 
     call p_print_next_word
     m_putsln '], AL'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _243_mov_mem_acc_word:
@@ -3823,27 +3882,27 @@ _243_mov_mem_acc_word:
 
     call p_print_next_word
     m_putsln '], AX'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _244_movsb:
     m_putsln 'MOVSB'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _245_movsw:
     m_putsln 'MOVSW'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _246_cmpsb:
     m_putsln 'CMPSB'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _247_cmpsw:
     m_putsln 'CMPSW'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _25X
@@ -3882,7 +3941,7 @@ _250_test_acc_imm_byte:
     call p_print_next_byte
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _251_test_acc_imm_word:
@@ -3890,37 +3949,37 @@ _251_test_acc_imm_word:
     call p_print_next_word
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _252_stosb:
     m_putsln 'STOSB'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _253_stosw:
     m_putsln 'STOSW'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _254_lodsb:
     m_putsln 'LODSB'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _255_lodsw:
     m_putsln 'LODSW'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _256_scasb:
     m_putsln 'SCASB'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _257_scasw:
     m_putsln 'SCASW'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _26X
@@ -3942,7 +4001,7 @@ _26x_mov_reg_imm_byte:
     call p_print_next_byte
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _27X
@@ -3964,7 +4023,7 @@ _27x_mov_reg_imm_word:
     call p_print_next_word
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ============================================================
 ;  _3XX
@@ -4038,12 +4097,12 @@ _302_ret_imm:
     m_puts 'RET '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _303_ret:
     m_putsln 'RET'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _304_les_reg_mem:
@@ -4060,7 +4119,7 @@ _304_les_reg_mem:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _305_lds_reg_mem:
@@ -4077,7 +4136,7 @@ _305_lds_reg_mem:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _30_67_mov_rm_imm:
@@ -4093,7 +4152,7 @@ _30_67_mov_rm_imm:
     ; of format '0sw', which is exactly what is needed here.
     ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _31X
@@ -4125,34 +4184,34 @@ _312_retf_imm:
     m_puts 'RETF '
     call p_print_next_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _313_retf:
     m_putsln 'RETF'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _314_int3:
     m_putsln 'INT 3'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _315_int_number:
     m_puts 'INT '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _316_into:
     m_putsln 'INTO'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _317_iret:
     m_putsln 'IRET'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _32X
@@ -4274,27 +4333,27 @@ _32_0123_fin:
     times_is_cl:
         m_puts 'CL'
         m_print_nl
-        jmp _xxx
+        ret ; jmp _xxx
 
     times_is_1:
         m_puts '1'
         m_print_nl
-        jmp _xxx
+        ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _324_aam:
     m_putsln 'AAM'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _325_aad:
     m_putsln 'AAD'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _327_xlat:
     m_putsln 'XLAT'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _33X
@@ -4326,7 +4385,7 @@ _33x:
 
     _33x_end:
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _34X
@@ -4367,7 +4426,7 @@ _340_loopne_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _341_loope_near:
@@ -4377,7 +4436,7 @@ _341_loope_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _342_loop_near:
@@ -4387,7 +4446,7 @@ _342_loop_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _343_jcxz_near:
@@ -4397,35 +4456,35 @@ _343_jcxz_near:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _344_in_acc_port_direct_byte:
     m_puts 'IN AL, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _345_in_acc_port_direct_word:
     m_puts 'IN AX, '
     call p_print_next_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _346_out_acc_port_direct_byte:
     m_puts 'OUT ' 
     call p_print_next_byte
     m_putsln ', AL'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _347_out_acc_port_direct_word:
     m_puts 'OUT ' 
     call p_print_next_byte
     m_putsln ', AX'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _35X
@@ -4466,7 +4525,7 @@ _350_call_near_relative:
     m_octal_word_to_number
     m_print_near_offset_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _351_jmp_near_relative:
@@ -4476,7 +4535,7 @@ _351_jmp_near_relative:
     m_octal_word_to_number
     m_print_near_offset_word
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _352_jmp_far_absolute_direct:
@@ -4489,7 +4548,7 @@ _352_jmp_far_absolute_direct:
     add di, 6 ; move SI to the last byte read
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _353_jmp_short_relative:
@@ -4499,27 +4558,27 @@ _353_jmp_short_relative:
     m_octal_byte_to_number
     m_print_near_offset_byte
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _354_in_acc_port_indirect_byte:
     m_putsln 'IN AL, DX'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _355_in_acc_port_indirect_word:
     m_putsln 'IN AX, DX'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _356_out_acc_port_indirect_byte:
     m_putsln 'OUT DX, AL'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _357_out_acc_port_indirect_word:
     m_putsln 'OUT DX, AX'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _36X
@@ -4580,27 +4639,27 @@ _36x:
 ; -------------------------------------------------------------
 _360_lock:
     m_putsln 'LOCK'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _362_repne:
     m_putsln 'REPNE'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_3_rep:
     m_putsln 'REP'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_4_hlt:
     m_putsln 'HLT'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_5_cmc:
     m_putsln 'CMC'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_test_rm_imm:
@@ -4615,7 +4674,7 @@ _36_67_test_rm_imm:
     ; of format '0sw', which is exactly what is needed here.
     ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
     call p_op_0sw_rm_imm
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_not_rm:
@@ -4626,7 +4685,7 @@ _36_67_not_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_neg_rm:
@@ -4637,7 +4696,7 @@ _36_67_neg_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_mul_rm:
@@ -4648,7 +4707,7 @@ _36_67_mul_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_imul_rm:
@@ -4659,7 +4718,7 @@ _36_67_imul_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_div_rm:
@@ -4670,7 +4729,7 @@ _36_67_div_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_idiv_rm:
@@ -4681,7 +4740,7 @@ _36_67_idiv_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _37X
@@ -4744,32 +4803,32 @@ _37x:
 ; -------------------------------------------------------------
 _370_clc:
     m_putsln 'CLC'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _371_stc:
     m_putsln 'STC'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _372_cli:
     m_putsln 'CLI'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _37_3_sti:
     m_putsln 'STI'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _37_4_cld:
     m_putsln 'CLD'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _37_5_std:
     m_putsln 'STD'
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _37_67_inc_rm:
@@ -4783,7 +4842,7 @@ _37_67_inc_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _37_67_dec_rm:
@@ -4797,7 +4856,7 @@ _37_67_dec_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_call_near_absolute_indirect:
@@ -4816,7 +4875,7 @@ _377_call_near_absolute_indirect:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_call_far_absolute_indirect:
@@ -4843,7 +4902,7 @@ _377_call_far_absolute_indirect:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_jmp_near_absolute_indirect:
@@ -4862,7 +4921,7 @@ _377_jmp_near_absolute_indirect:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_jmp_far_absolute_indirect:
@@ -4889,7 +4948,7 @@ _377_jmp_far_absolute_indirect:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _377_push_rm:
@@ -4903,8 +4962,9 @@ _377_push_rm:
     m_move_index
 
     m_print_nl
-    jmp _xxx
+    ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
+endp main
 
 end start
