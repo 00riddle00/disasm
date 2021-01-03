@@ -310,7 +310,7 @@ local @@sr_prefix_default, @@sr_prefix_done
 
     dec bl
     shl bl, 1 ; times 2
-    m_print_reg SR
+    m_print_reg SR16
     m_puts ':'
     jmp @@sr_prefix_done
 
@@ -329,7 +329,7 @@ local @@sr_prefix_done
 
     dec bl
     shl bl, 1 ; times 2
-    m_print_reg SR
+    m_print_reg SR16
     m_puts ':'
 
 @@sr_prefix_done:
@@ -392,7 +392,7 @@ jumps
     Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
 
     ; Segment registers
-    SR dw 'ES', 'CS', 'SS', 'DS'  
+    SR16 dw 'ES', 'CS', 'SS', 'DS'  
 
     ; Registers used as base in EA formation
     EAb dw 'BX', 'BX', 'BP', 'BP', 'SI', 'DI', 'BP', 'BX'
@@ -400,8 +400,8 @@ jumps
     ; Registers used as index in EA formation
     EAi dw 'SI', 'DI', 'SI', 'DI'
 
-arg_msg 		DB "Ainoras Zukauskas Programu sistemos 4 grupe 2 pogrupis.",13,10
-arg2_msg 		DB "Programa kuri vercia masininy koda i assemblery.$"
+arg_msg 		DB "Intel 8088 Disasembler",13,10
+arg2_msg 		DB "Written in TASM, intended for files assembled with TASM as well$"
 cant_open 		DB 13,10,"Can't open",13,10,'$'		; Message for file open error
 file_n 			DB 40 DUP(0)				; Input File name
 output_n 		DB 40 DUP(0)				; Output file name
@@ -3016,7 +3016,7 @@ _0x6_push_seg:
 
     mov bl, al 
     shl bl, 1 ; times 2
-    m_print_reg SR
+    m_print_reg SR16
 
     m_print_nl
     jmp _xxx
@@ -3043,7 +3043,7 @@ _0x7_pop_seg:
 
     mov bl, al 
     shl bl, 1 ; times 2
-    m_print_reg SR
+    m_print_reg SR16
 
     m_print_nl
     jmp _xxx
@@ -3624,7 +3624,7 @@ _21_46_mov_rm_segreg:
 
         ; BL still contains 'reg', which is '0sr'
         shl bl, 1 ; times 2
-        m_print_reg SR
+        m_print_reg SR16
 
         m_print_nl
         jmp _xxx
@@ -3639,7 +3639,7 @@ _21_46_mov_rm_segreg:
         m_puts 'MOV '
 
         shl bl, 1 ; times 2
-        m_print_reg SR
+        m_print_reg SR16
 
         m_puts ', '
 
