@@ -2298,10 +2298,6 @@ store_next_byte proc
     MOV     BX, temp_index          ; Set bx value to temp_index
     MOV     DH, 0                   ; Set DH to 0
     MOV     DL, [input_buff + BX]   ; Get from input buffer
-    ; PUSH from DL (or directly from input buffer?) to stack
-    PUSH 7o
-    PUSH 3o
-    PUSH 2o
 
     INC     BX
     MOV     [temp_index], BX        ; Increase temp_index
