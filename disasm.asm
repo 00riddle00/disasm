@@ -29,7 +29,7 @@
 ;  MACROS
 ; ============================================================
 
-include macros.asm
+include macros2.asm
 
 ; print register name
 ; registers can be byte, word, and segment registers
@@ -40,10 +40,19 @@ m_print_reg macro reg_group
    push ax bx dx
    add bx, offset reg_group
    mov dl, byte ptr [bx+1]
-   mov ah, 02h
-   int 21h
+
+   mov cx, 1
+   call write_multiple
+
+   ;mov ah, 02h
+   ;int 21h
+
    mov dl, byte ptr [bx]
-   int 21h
+   mov cx, 1
+   call write_multiple
+
+   ;int 21h
+
    pop dx bx ax
 endm
 
@@ -61,10 +70,12 @@ local @@word_ptr, @@endm_print_ptr
     je @@word_ptr
 
     ; byte_ptr
+    ;mov si, A
     m_puts 'byte ptr '
     jmp @@endm_print_ptr
 
     @@word_ptr:
+    ;mov si, A
     m_puts 'word ptr '
 
 @@endm_print_ptr:
@@ -82,10 +93,12 @@ local @@one_padding, @@zero_padding, @@padding_done
     jb @@zero_padding
 
     @@one_padding:
+        ;mov si, A
         m_puts "377"
         jmp @@padding_done
 
     @@zero_padding:
+        ;mov si, A
         m_puts "000"
 
     @@padding_done:
@@ -166,6 +179,7 @@ local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
         jb @@label_00
 
         ; je case:
+            ;mov si, A
             m_puts '+1o'
             jmp @@endm_m
 
@@ -298,6 +312,7 @@ local @@conversion, @@convert, @@converted, @@print_result, @@process_lowercase,
                 dec cl
                 jnz @@print_result
 
+        ;mov si, A
         m_puts 'o'
 endm
 
@@ -311,10 +326,12 @@ local @@sr_prefix_default, @@sr_prefix_done
     dec bl
     shl bl, 1 ; times 2
     m_print_reg SR16
+    ;mov si, A
     m_puts ':'
     jmp @@sr_prefix_done
 
     @@sr_prefix_default:
+        ;mov si, A
         m_puts 'DS:'
 
 @@sr_prefix_done:
@@ -330,6 +347,7 @@ local @@sr_prefix_done
     dec bl
     shl bl, 1 ; times 2
     m_print_reg SR16
+    ;mov si, A
     m_puts ':'
 
 @@sr_prefix_done:
@@ -385,6 +403,12 @@ jumps
 ; *************************************************************************************
 
 .DATA
+
+    ; longest command = 6 bytes * 3 octal digits = 18 bytes
+    data_octal db 18 dup(?)
+    opkodas_ilgis dw 0000
+    mano_opkodas db "UNDEFINED"
+
     ; Byte-sized registers
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
 
@@ -847,11 +871,6 @@ rm_01           DW rm_000_01, rm_001_01, rm_010_01, rm_011_01, rm_100_01, rm_101
 input_buff      DB 257 DUP(?)           ; Input buffer
 outpt_buff      DB 257 DUP(?)           ; Output buffer
 
-; longest command = 6 bytes * 3 octal digits = 18 bytes
-data_octal db 18 dup(?)
-opkodas_ilgis dw 00 00
-mano_opkodas db "UNDEFINED"
-
 ; *************************************************************************************
 
 ; ============================================================
@@ -1027,12 +1046,14 @@ proc p_decode_rm
 
             m_print_ptr
             m_print_sr_prefix
+            ;mov si, A
             m_puts '['
 
             mov bl, al 
             shl bl, 1 ; times 2
             ; print register (used as a base) according to 'r/m' value
             m_print_reg EAb
+            ;mov si, A
             m_puts '+'
 
             ; check 'r/m' value again
@@ -1043,6 +1064,7 @@ proc p_decode_rm
             add_index_L0:
                 ; print register (used as an index) according to 'r/m' value
                 m_print_reg EAi
+                ;mov si, A
                 m_puts '+'
 
             ; if jumped to this label, index register is not used for EA
@@ -1073,6 +1095,7 @@ proc p_decode_rm
                 sub di, 3
 
             offset_printed:
+            ;mov si, A
             m_puts ']'
 
             ; place DI back to point at 'mod'
@@ -1092,6 +1115,7 @@ proc p_decode_rm
             je _rm_is_mem_no_offset_direct_address ; so only direct address is used for EA
 
             m_print_ptr
+            ;mov si, A
             m_puts '['
 
             mov bl, al 
@@ -1106,11 +1130,13 @@ proc p_decode_rm
             ; index register is also used for EA
             add_index_L1:
                 ; print register (used as an index) according to 'r/m' value
+                ;mov si, A
                 m_puts '+'
                 m_print_reg EAi
 
             ; if jumped to this label, index register is not used for EA
             no_index_L1:
+            ;mov si, A
             m_puts ']'
 
             ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
@@ -1124,10 +1150,12 @@ proc p_decode_rm
             _rm_is_mem_no_offset_direct_address:
                 m_print_ptr
                 m_print_sr_prefix_default
+                ;mov si, A
                 m_puts '['
 
                 ; print direct address (two bytes)
                 call p_print_next_word
+                ;mov si, A
                 m_puts ']'
 
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
@@ -1168,6 +1196,7 @@ proc p_op_0sw_rm_imm
     ; after the procedure, CL contains how many bytes
     ; the offset took (if any)
 
+    ;mov si, A
     m_puts ', '
     
     ; TODO wrap this in macro/proc
@@ -1252,6 +1281,7 @@ proc p_op_0dw_reg_rm
         mov dl, al
         ; decode which register is used in place of 'reg'
         call p_decode_reg
+        ;mov si, A
         m_puts ', '
         ; decode what should be used in place of 'r/m'
         call p_decode_rm
@@ -1266,6 +1296,7 @@ proc p_op_0dw_reg_rm
         ; which is expected by decode procedures
         mov dl, al
         call p_decode_rm
+        ;mov si, A
         m_puts ', '
         call p_decode_reg
 
@@ -1308,10 +1339,10 @@ analyze_byte proc
     call main
     POP SI
 
-    cmp ax, 66
-    je finalize
+    ;cmp ax, 66
+    ;je finalize
 
-    mov word ptr [opkodas_ilgis], ax
+    ;mov word ptr [opkodas_ilgis], ax
 ;--------------------------------
 
     ; Analyze the current byte, get all the needed arguments and print
@@ -2099,22 +2130,22 @@ write_proc proc
 ; comment
 ;--------------------------------
     ;Operation code NAME print
-    MOV     DX, c_opName
-    PUSH    DX                      ; SAVE ORIGINAL c_opName adress
+    ;MOV     DX, c_opName
+    ;PUSH    DX                      ; SAVE ORIGINAL c_opName adress
 
-    MOV     AX, 0                   ; Register for counting opName length
-    NAMELOOP:
-        INC     AX                  ; No "$" found yet
+    ;MOV     AX, 0                   ; Register for counting opName length
+    ;NAMELOOP:
+        ;INC     AX                  ; No "$" found yet
 
-        MOV     BX, c_opName
-        ADD     BX, AX              ; Offset name adress by AX
+        ;MOV     BX, c_opName
+        ;ADD     BX, AX              ; Offset name adress by AX
 
-        MOV     CL, [BX]            ; Check if next char is "$"
-        CMP     CL, "$"
-    JNE     NAMELOOP                ; If not, loop
+        ;MOV     CL, [BX]            ; Check if next char is "$"
+        ;CMP     CL, "$"
+    ;JNE     NAMELOOP                ; If not, loop
 
-    POP     DX
-    PUSH    AX                      ; Save the length of c_opName
+    ;POP     DX
+    ;PUSH    AX                      ; Save the length of c_opName
 
 ;--------------------------------
 ; their
@@ -2128,11 +2159,11 @@ write_proc proc
 ;--------------------------------
 ; mine
 ;--------------------------------
-    mov     DX, offset mano_opkodas
+    ;mov     DX, offset mano_opkodas
 
-    mov cx, word ptr [opkodas_ilgis]
-    CALL    write_multiple          ; Write to file
-    ret
+    ;mov cx, word ptr [opkodas_ilgis]
+    ;CALL    write_multiple          ; Write to file
+    ;ret
 ;--------------------------------
     
     MOV     CX, 0
@@ -2401,7 +2432,7 @@ store_next_byte proc
 ;--------------------------------
     ;MOV     a_mod, DX       ; Save 000000xxb
 ;--------------------------------
-    MOV byte ptr [data_octal+di+0], DL
+    MOV byte ptr [data_octal+di+1], DL ; nes DI yra 0FFFFh
 ;--------------------------------
     POP     DX
 
@@ -2414,7 +2445,7 @@ store_next_byte proc
 ;--------------------------------
     ;MOV     a_reg, DX       ; Save 00000xxxb
 ;--------------------------------
-    MOV byte ptr [data_octal+di+1], DL
+    MOV byte ptr [data_octal+di+2], DL
 ;--------------------------------
     POP     DX
 
@@ -2424,7 +2455,7 @@ store_next_byte proc
 ;--------------------------------
     ;MOV     a_rm, DX        ; Save 00000xxxb
 ;--------------------------------
-    MOV byte ptr [data_octal+di+2], DL
+    MOV byte ptr [data_octal+di+3], DL
 ;--------------------------------
 
     POP     DX
@@ -2742,6 +2773,7 @@ undefined_2nd_octal:
     jmp short undefined
 
 undefined:
+    ;mov si, A
     m_putsln '; UNDEFINED'
     ;jmp short _xxx
     ret
@@ -2832,12 +2864,14 @@ _00x:
 
 ; ------------------------------------------------------------
 __00_0123_add_reg_rm:
+    ;mov si, A
     m_puts 'ADD '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _004_add_acc_imm_byte:
+    ;mov si, A
     m_puts 'ADD AL, '
     call p_print_next_byte
     m_print_nl
@@ -2845,6 +2879,7 @@ _004_add_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _005_add_acc_imm_word:
+    ;mov si, A
     m_puts 'ADD AX, '
     call p_print_next_word
     m_print_nl
@@ -2864,12 +2899,14 @@ _01x:
 
 ; ------------------------------------------------------------
 __01_0123_or_reg_rm:
+    ;mov si, A
     m_puts 'OR '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _014_or_acc_imm_byte:
+    ;mov si, A
     m_puts 'OR AL, '
     call p_print_next_byte
     m_print_nl
@@ -2877,6 +2914,7 @@ _014_or_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _015_or_acc_imm_word:
+    ;mov si, A
     m_puts 'OR AX, '
     call p_print_next_word
     m_print_nl
@@ -2896,12 +2934,14 @@ _02x:
     
 ; ------------------------------------------------------------
 __02_0123_adc_reg_rm:
+    ;mov si, A
     m_puts 'ADC '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _024_adc_acc_imm_byte:
+    ;mov si, A
     m_puts 'ADC AL, '
     call p_print_next_byte
     m_print_nl
@@ -2909,6 +2949,7 @@ _024_adc_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _025_adc_acc_imm_word:
+    ;mov si, A
     m_puts 'ADC AX, '
     call p_print_next_word
     m_print_nl
@@ -2928,12 +2969,14 @@ _03x:
 
 ; ------------------------------------------------------------
 __03_0123_sbb_reg_rm:
+    ;mov si, A
     m_puts 'SBB '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _034_sbb_acc_imm_byte:
+    ;mov si, A
     m_puts 'SBB AL, '
     call p_print_next_byte
     m_print_nl
@@ -2941,6 +2984,7 @@ _034_sbb_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _035_sbb_acc_imm_word:
+    ;mov si, A
     m_puts 'SBB AX, '
     call p_print_next_word
     m_print_nl
@@ -2960,12 +3004,14 @@ _04x:
 
 ; ------------------------------------------------------------
 __04_0123_and_reg_rm:
+    ;mov si, A
     m_puts 'AND '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _044_and_acc_imm_byte:
+    ;mov si, A
     m_puts 'AND AL, '
     call p_print_next_byte
     m_print_nl
@@ -2973,6 +3019,7 @@ _044_and_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _045_and_acc_imm_word:
+    ;mov si, A
     m_puts 'AND AX, '
     call p_print_next_word
     m_print_nl
@@ -2992,12 +3039,14 @@ _05x:
 
 ; ------------------------------------------------------------
 __05_0123_sub_reg_rm:
+    ;mov si, A
     m_puts 'SUB '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _054_sub_acc_imm_byte:
+    ;mov si, A
     m_puts 'SUB AL, '
     call p_print_next_byte
     m_print_nl
@@ -3005,6 +3054,7 @@ _054_sub_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _055_sub_acc_imm_word:
+    ;mov si, A
     m_puts 'SUB AX, '
     call p_print_next_word
     m_print_nl
@@ -3024,12 +3074,14 @@ _06x:
 
 ; ------------------------------------------------------------
 __06_0123_xor_reg_rm:
+    ;mov si, A
     m_puts 'XOR '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _064_xor_acc_imm_byte:
+    ;mov si, A
     m_puts 'XOR AL, '
     call p_print_next_byte
     m_print_nl
@@ -3037,6 +3089,7 @@ _064_xor_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _065_xor_acc_imm_word:
+    ;mov si, A
     m_puts 'XOR AX, '
     call p_print_next_word
     m_print_nl
@@ -3056,12 +3109,14 @@ _07x:
 
 ; ------------------------------------------------------------
 __07_0123_cmp_reg_rm:
+    ;mov si, A
     m_puts 'CMP '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _074_cmp_acc_imm_byte:
+    ;mov si, A
     m_puts 'CMP AL, '
     call p_print_next_byte
     m_print_nl
@@ -3069,6 +3124,7 @@ _074_cmp_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _075_cmp_acc_imm_word:
+    ;mov si, A
     m_puts 'CMP AX, '
     call p_print_next_word
     m_print_nl
@@ -3083,6 +3139,7 @@ _0x6_push_seg:
     ;
     ; SI already points to the last octal digit read
 
+    ;mov si, A
     m_puts 'PUSH '
 
     mov bl, al 
@@ -3110,6 +3167,7 @@ _0x7_pop_seg:
     ; 2nd octal digit is already in AL
     ; it is one of {0,1,2,3}
 
+    ;mov si, A
     m_puts 'POP '
 
     mov bl, al 
@@ -3121,21 +3179,25 @@ _0x7_pop_seg:
 
 ; -------------------------------------------------------------
 _047_add_sub_adjust:
+    ;mov si, A
     m_putsln 'DAA'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _057_add_sub_adjust:
+    ;mov si, A
     m_putsln 'DAS'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _067_add_sub_adjust:
+    ;mov si, A
     m_putsln 'AAA'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _077_add_sub_adjust:
+    ;mov si, A
     m_putsln 'AAS'
     ret ; jmp _xxx
 
@@ -3178,6 +3240,7 @@ _10x_inc_reg_word:
     cmp al, 7
     ja undefined
 
+    ;mov si, A
     m_puts 'INC '
 
     mov bl, al
@@ -3198,6 +3261,7 @@ _11_dec_reg_word:
     cmp al, 7
     ja undefined
 
+    ;mov si, A
     m_puts 'DEC '
 
     mov bl, al
@@ -3218,6 +3282,7 @@ _12_push_reg_word:
     cmp al, 7
     ja undefined
 
+    ;mov si, A
     m_puts 'PUSH '
 
     mov bl, al
@@ -3238,6 +3303,7 @@ _13_pop_reg_word:
     cmp al, 7
     ja undefined
 
+    ;mov si, A
     m_puts 'POP '
 
     mov bl, al
@@ -3281,6 +3347,7 @@ _16x:
 
 ; ------------------------------------------------------------
 _160_jo_near:
+    ;mov si, A
     m_puts 'JO '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3289,6 +3356,7 @@ _160_jo_near:
 
 ; ------------------------------------------------------------
 _161_jno_near:
+    ;mov si, A
     m_puts 'JNO '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3297,6 +3365,7 @@ _161_jno_near:
 
 ; ------------------------------------------------------------
 _162_jb_near:
+    ;mov si, A
     m_puts 'JB '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3305,6 +3374,7 @@ _162_jb_near:
 
 ; ------------------------------------------------------------
 _163_jae_near:
+    ;mov si, A
     m_puts 'JAE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3313,6 +3383,7 @@ _163_jae_near:
 
 ; ------------------------------------------------------------
 _164_je_near:
+    ;mov si, A
     m_puts 'JE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3321,6 +3392,7 @@ _164_je_near:
 
 ; ------------------------------------------------------------
 _165_jne_near:
+    ;mov si, A
     m_puts 'JNE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3329,6 +3401,7 @@ _165_jne_near:
 
 ; ------------------------------------------------------------
 _166_jbe_near:
+    ;mov si, A
     m_puts 'JBE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3337,6 +3410,7 @@ _166_jbe_near:
 
 ; ------------------------------------------------------------
 _167_ja_near:
+    ;mov si, A
     m_puts 'JA '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3377,6 +3451,7 @@ _17x:
 
 ; ------------------------------------------------------------
 _170_js_near:
+    ;mov si, A
     m_puts 'JS '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3385,6 +3460,7 @@ _170_js_near:
 
 ; ------------------------------------------------------------
 _171_jns_near:
+    ;mov si, A
     m_puts 'JNS '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3393,6 +3469,7 @@ _171_jns_near:
 
 ; ------------------------------------------------------------
 _172_jp_near:
+    ;mov si, A
     m_puts 'JP '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3401,6 +3478,7 @@ _172_jp_near:
 
 ; ------------------------------------------------------------
 _173_jnp_near:
+    ;mov si, A
     m_puts 'JNP '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3409,6 +3487,7 @@ _173_jnp_near:
 
 ; ------------------------------------------------------------
 _174_jl_near:
+    ;mov si, A
     m_puts 'JL '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3417,6 +3496,7 @@ _174_jl_near:
 
 ; ------------------------------------------------------------
 _175_jge_near:
+    ;mov si, A
     m_puts 'JGE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3425,6 +3505,7 @@ _175_jge_near:
 
 ; ------------------------------------------------------------
 _176_jle_near:
+    ;mov si, A
     m_puts 'JLE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3433,6 +3514,7 @@ _176_jle_near:
 
 ; ------------------------------------------------------------
 _177_jg_near:
+    ;mov si, A
     m_puts 'JG '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -3514,54 +3596,63 @@ _20x:
 
 ; ------------------------------------------------------------
 _20_0123_add_rm_imm:
+    ;mov si, A
     m_puts 'ADD '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_or_rm_imm:
+    ;mov si, A
     m_puts 'OR '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_adc_rm_imm:
+    ;mov si, A
     m_puts 'ADC '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_sbb_rm_imm:
+    ;mov si, A
     m_puts 'SBB '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_and_rm_imm:
+    ;mov si, A
     m_puts 'AND '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_sub_rm_imm:
+    ;mov si, A
     m_puts 'SUB '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_xor_rm_imm:
+    ;mov si, A
     m_puts 'XOR '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_0123_cmp_rm_imm:
+    ;mov si, A
     m_puts 'CMP '
     call p_op_0sw_rm_imm
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _20_45_test_reg_rm:
+    ;mov si, A
     m_puts 'TEST '
     ; AL contains '10w'
     mov dl, al
@@ -3570,6 +3661,7 @@ _20_45_test_reg_rm:
     inc di ; si points to 'mod' now
 
     call p_decode_reg
+    ;mov si, A
     m_puts ', '
     call p_decode_rm
 
@@ -3596,6 +3688,7 @@ _20_45_test_reg_rm:
 
 ; ------------------------------------------------------------
 _20_67_xchg_reg_rm:
+    ;mov si, A
     m_puts 'XCHG '
     ; AL contains '11w'
     mov dl, al
@@ -3604,6 +3697,7 @@ _20_67_xchg_reg_rm:
     inc di ; si points to 'mod' now
 
     call p_decode_reg
+    ;mov si, A
     m_puts ', '
     call p_decode_rm
 
@@ -3660,6 +3754,7 @@ _21x:
 
 ; ------------------------------------------------------------
 __21_0123_mov_reg_rm:
+    ;mov si, A
     m_puts 'MOV '
     call p_op_0dw_reg_rm
     ret ; jmp _xxx
@@ -3681,6 +3776,7 @@ _21_46_mov_rm_segreg:
     je _216_mov_segreg_rm
 
     _214_mov_rm_segreg:
+        ;mov si, A
         m_puts 'MOV '
 
         mov al, 001
@@ -3691,6 +3787,7 @@ _21_46_mov_rm_segreg:
         call p_decode_rm
         m_move_index
 
+        ;mov si, A
         m_puts ', '
 
         ; BL still contains 'reg', which is '0sr'
@@ -3707,11 +3804,13 @@ _21_46_mov_rm_segreg:
         cmp bl, 1 
         je undefined_byte
 
+        mov si, 4
         m_puts 'MOV '
 
         shl bl, 1 ; times 2
         m_print_reg SR16
 
+        mov si, 2
         m_puts ', '
 
         mov al, 001
@@ -3735,6 +3834,7 @@ _215_lea_reg_mem:
     cmp bl, 3 ; mod cannot be '11'
     je undefined_byte
 
+    ;mov si, A
     m_puts 'LEA '
 
     ; AL contains '101'
@@ -3744,6 +3844,7 @@ _215_lea_reg_mem:
     m_before_decode ; it will put '001' in DL,
                     ; which is what is needed.
     call p_decode_reg
+    ;mov si, A
     m_puts ', d' ; 'd' is for 'dword', since the next 
                  ; operand  must be memory ('word ptr ...')
     call p_decode_rm
@@ -3754,6 +3855,7 @@ _215_lea_reg_mem:
 
 ; ------------------------------------------------------------
 _217_pop_rm:
+    ;mov si, A
     m_puts 'POP '
     ; AL contains '111'
     m_before_decode ; it will put '001' in DL,
@@ -3780,16 +3882,19 @@ _22x_xchg_reg_ax:
     cmp al, 0
     je short _22x_nop
 
+    ;mov si, A
     m_puts 'XCHG '
 
     mov bl, al
     shl bl, 1; times 2. bl = 4
     m_print_reg Rw
 
+    ;mov si, A
     m_putsln ', AX'
     ret ; jmp _xxx
 
     _22x_nop:
+        ;mov si, A
         m_putsln 'NOP'
         ret ; jmp _xxx
 
@@ -3826,19 +3931,23 @@ _23x:
 
 ; -------------------------------------------------------------
 _230_cbw:
+    ;mov si, A
     m_putsln 'CBW'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _231_cwd:
+    ;mov si, A
     m_putsln 'CWD'
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _232_call_far_absolute_direct:
+    ;mov si, A
     m_puts 'CALL '
     add di, 6 ; first print the second word
     call p_print_next_word
+    ;mov si, A
     m_puts ':'
     sub di, 12 ; then print the first word
     call p_print_next_word
@@ -3849,26 +3958,31 @@ _232_call_far_absolute_direct:
 
 ; -------------------------------------------------------------
 _233_wait:
+    ;mov si, A
     m_putsln 'WAIT'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _234_pushf:
+    ;mov si, A
     m_putsln 'PUSHF'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _235_popf:
+    ;mov si, A
     m_putsln 'POPF'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _236_sahf:
+    ;mov si, A
     m_putsln 'SAHF'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _237_lahf:
+    ;mov si, A
     m_putsln 'LAHF'
     ret ; jmp _xxx
 
@@ -3905,61 +4019,77 @@ _24x:
 
 ; -------------------------------------------------------------
 _240_mov_acc_mem_byte:
+    ;mov si, A
     m_puts 'MOV AL, byte ptr '
     m_print_sr_prefix_default
+    ;mov si, A
     m_puts '['
 
     call p_print_next_word
+    ;mov si, A
     m_putsln ']'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _241_mov_acc_mem_word:
+    ;mov si, A
     m_puts 'MOV AX, word ptr '
     m_print_sr_prefix_default
+    ;mov si, A
     m_puts '['
 
     call p_print_next_word
+    ;mov si, A
     m_putsln ']'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _242_mov_mem_acc_byte:
+    ;mov si, A
     m_puts 'MOV byte ptr '
     m_print_sr_prefix_default
+    ;mov si, A
     m_puts '['
 
     call p_print_next_word
+    ;mov si, A
     m_putsln '], AL'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _243_mov_mem_acc_word:
+    ;mov si, A
     m_puts 'MOV word ptr '
     m_print_sr_prefix_default
+    ;mov si, A
     m_puts '['
 
     call p_print_next_word
+    ;mov si, A
     m_putsln '], AX'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _244_movsb:
+    ;mov si, A
     m_putsln 'MOVSB'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _245_movsw:
+    ;mov si, A
     m_putsln 'MOVSW'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _246_cmpsb:
+    ;mov si, A
     m_putsln 'CMPSB'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _247_cmpsw:
+    ;mov si, A
     m_putsln 'CMPSW'
     ret ; jmp _xxx
 
@@ -3996,6 +4126,7 @@ _25x:
 
 ; -------------------------------------------------------------
 _250_test_acc_imm_byte:
+    ;mov si, A
     m_puts 'TEST AL, '
     call p_print_next_byte
 
@@ -4004,6 +4135,7 @@ _250_test_acc_imm_byte:
 
 ; -------------------------------------------------------------
 _251_test_acc_imm_word:
+    ;mov si, A
     m_puts 'TEST AX, '
     call p_print_next_word
 
@@ -4012,31 +4144,37 @@ _251_test_acc_imm_word:
 
 ; ------------------------------------------------------------
 _252_stosb:
+    ;mov si, A
     m_putsln 'STOSB'
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _253_stosw:
+    ;mov si, A
     m_putsln 'STOSW'
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _254_lodsb:
+    ;mov si, A
     m_putsln 'LODSB'
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _255_lodsw:
+    ;mov si, A
     m_putsln 'LODSW'
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _256_scasb:
+    ;mov si, A
     m_putsln 'SCASB'
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _257_scasw:
+    ;mov si, A
     m_putsln 'SCASW'
     ret ; jmp _xxx
 
@@ -4051,11 +4189,13 @@ _26x_mov_reg_imm_byte:
     cmp al, 7
     ja undefined
 
+    ;mov si, A
     m_puts 'MOV '
 
     mov bl, al
     shl bl, 1 ; times 2
     m_print_reg Rb
+    ;mov si, A
     m_puts ', '
     call p_print_next_byte
 
@@ -4073,11 +4213,13 @@ _27x_mov_reg_imm_word:
     cmp al, 7
     ja undefined
 
+    ;mov si, A
     m_puts 'MOV '
 
     mov bl, al
     shl bl, 1; times 2. bl = 4
     m_print_reg Rw
+    ;mov si, A
     m_puts ', '
     call p_print_next_word
 
@@ -4153,6 +4295,7 @@ _30x:
 
 ; -------------------------------------------------------------
 _302_ret_imm:
+    ;mov si, A
     m_puts 'RET '
     call p_print_next_word
     m_print_nl
@@ -4160,11 +4303,13 @@ _302_ret_imm:
 
 ; -------------------------------------------------------------
 _303_ret:
+    ;mov si, A
     m_putsln 'RET'
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
 _304_les_reg_mem:
+    ;mov si, A
     m_puts 'LES '
     ; AL contains '100'
     MOV AL, 001 ; tell the decode procedures that
@@ -4172,6 +4317,7 @@ _304_les_reg_mem:
     m_before_decode ; it will put '001' in DL,
                     ; which is what is needed.
     call p_decode_reg
+    ;mov si, A
     m_puts ', d' ; 'd' is for 'dword', since the next 
                  ; operand  must be memory ('word ptr ...')
     call p_decode_rm
@@ -4182,6 +4328,7 @@ _304_les_reg_mem:
 
 ; ------------------------------------------------------------
 _305_lds_reg_mem:
+    ;mov si, A
     m_puts 'LDS '
     ; AL contains '101'
     MOV AL, 001 ; tell the decode procedures that
@@ -4189,6 +4336,7 @@ _305_lds_reg_mem:
     m_before_decode ; it will put '001' in DL,
                     ; which is what is needed.
     call p_decode_reg
+    ;mov si, A
     m_puts ', d' ; 'd' is for 'dword', since the next 
                  ; operand  must be memory ('word ptr ...')
     call p_decode_rm
@@ -4200,6 +4348,7 @@ _305_lds_reg_mem:
 ; ------------------------------------------------------------
 _30_67_mov_rm_imm:
     ; TODO check for other code than '000' between mod and r/m !
+    ;mov si, A
     m_puts 'MOV '
     ; AL so far contains 3 bits '11w' as an octal number.
 
@@ -4240,6 +4389,7 @@ _31x:
 
 ; -------------------------------------------------------------
 _312_retf_imm:
+    ;mov si, A
     m_puts 'RETF '
     call p_print_next_word
     m_print_nl
@@ -4247,16 +4397,19 @@ _312_retf_imm:
 
 ; -------------------------------------------------------------
 _313_retf:
+    ;mov si, A
     m_putsln 'RETF'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _314_int3:
+    ;mov si, A
     m_putsln 'INT 3'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _315_int_number:
+    ;mov si, A
     m_puts 'INT '
     call p_print_next_byte
     m_print_nl
@@ -4264,11 +4417,13 @@ _315_int_number:
 
 ; -------------------------------------------------------------
 _316_into:
+    ;mov si, A
     m_putsln 'INTO'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _317_iret:
+    ;mov si, A
     m_putsln 'IRET'
     ret ; jmp _xxx
 
@@ -4344,36 +4499,43 @@ _32x:
 
 ; -------------------------------------------------------------
 _32_0123_rol_times:
+    ;mov si, A
     m_puts 'ROL '
     jmp _32_0123_fin
 
 ; -------------------------------------------------------------
 _32_0123_ror_times:
+    ;mov si, A
     m_puts 'ROR '
     jmp _32_0123_fin
 
 ; -------------------------------------------------------------
 _32_0123_rcl_rm_times:
+    ;mov si, A
     m_puts 'RCL '
     jmp _32_0123_fin
 
 ; -------------------------------------------------------------
 _32_0123_rcr_times:
+    ;mov si, A
     m_puts 'RCR '
     jmp _32_0123_fin
 
 ; -------------------------------------------------------------
 _32_0123_shl_times:
+    ;mov si, A
     m_puts 'SHL '
     jmp _32_0123_fin
 
 ; -------------------------------------------------------------
 _32_0123_shr_rm_times:
+    ;mov si, A
     m_puts 'SHR '
     jmp _32_0123_fin
 
 ; -------------------------------------------------------------
 _32_0123_sar_rm_times:
+    ;mov si, A
     m_puts 'SAR '
     jmp _32_0123_fin
 
@@ -4383,6 +4545,7 @@ _32_0123_fin:
     call p_decode_rm
     m_move_index
 
+    ;mov si, A
     m_puts ', '
 
     ; AL still contains '0vw'
@@ -4390,27 +4553,32 @@ _32_0123_fin:
     jb short times_is_1
 
     times_is_cl:
+        ;mov si, A
         m_puts 'CL'
         m_print_nl
         ret ; jmp _xxx
 
     times_is_1:
+        ;mov si, A
         m_puts '1'
         m_print_nl
         ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _324_aam:
+    ;mov si, A
     m_putsln 'AAM'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _325_aad:
+    ;mov si, A
     m_putsln 'AAD'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _327_xlat:
+    ;mov si, A
     m_putsln 'XLAT'
     ret ; jmp _xxx
 
@@ -4418,6 +4586,7 @@ _327_xlat:
 ;  _33X
 ; ------------------------------------------------------------
 _33x:
+    ;mov si, A
     m_puts '; <ESC code> '
 
     inc di ; 3rd octal digit of opcode ('xxx')
@@ -4481,6 +4650,7 @@ _34x:
 _340_loopne_near:
     inc di ; SI now points to the first 
            ; octal digit of the offset
+    ;mov si, A
     m_puts 'LOOPNE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -4491,6 +4661,7 @@ _340_loopne_near:
 _341_loope_near:
     inc di ; SI now points to the first 
            ; octal digit of the offset
+    ;mov si, A
     m_puts 'LOOPE '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -4501,6 +4672,7 @@ _341_loope_near:
 _342_loop_near:
     inc di ; SI now points to the first 
            ; octal digit of the offset
+    ;mov si, A
     m_puts 'LOOP '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -4511,6 +4683,7 @@ _342_loop_near:
 _343_jcxz_near:
     inc di ; SI now points to the first 
            ; octal digit of the offset
+    ;mov si, A
     m_puts 'JCXZ '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -4519,6 +4692,7 @@ _343_jcxz_near:
 
 ; -------------------------------------------------------------
 _344_in_acc_port_direct_byte:
+    ;mov si, A
     m_puts 'IN AL, '
     call p_print_next_byte
     m_print_nl
@@ -4526,6 +4700,7 @@ _344_in_acc_port_direct_byte:
 
 ; -------------------------------------------------------------
 _345_in_acc_port_direct_word:
+    ;mov si, A
     m_puts 'IN AX, '
     call p_print_next_byte
     m_print_nl
@@ -4533,15 +4708,19 @@ _345_in_acc_port_direct_word:
 
 ; -------------------------------------------------------------
 _346_out_acc_port_direct_byte:
+    ;mov si, A
     m_puts 'OUT ' 
     call p_print_next_byte
+    ;mov si, A
     m_putsln ', AL'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _347_out_acc_port_direct_word:
+    ;mov si, A
     m_puts 'OUT ' 
     call p_print_next_byte
+    ;mov si, A
     m_putsln ', AX'
     ret ; jmp _xxx
 
@@ -4580,6 +4759,7 @@ _35x:
 _350_call_near_relative:
     inc di ; SI now points to the first 
            ; octal digit of the offset
+    ;mov si, A
     m_puts 'CALL '
     m_octal_word_to_number
     m_print_near_offset_word
@@ -4590,6 +4770,7 @@ _350_call_near_relative:
 _351_jmp_near_relative:
     inc di ; SI now points to the first 
            ; octal digit of the offset
+    ;mov si, A
     m_puts 'JMP '
     m_octal_word_to_number
     m_print_near_offset_word
@@ -4598,9 +4779,11 @@ _351_jmp_near_relative:
 
 ; ------------------------------------------------------------
 _352_jmp_far_absolute_direct:
+    ;mov si, A
     m_puts 'JMP '
     add di, 6 ; first print the second word
     call p_print_next_word
+    ;mov si, A
     m_puts ':'
     sub di, 12 ; then print the first word
     call p_print_next_word
@@ -4613,6 +4796,7 @@ _352_jmp_far_absolute_direct:
 _353_jmp_short_relative:
     inc di ; SI now points to the first 
            ; octal digit of the offset
+    ;mov si, A
     m_puts 'JMP short '
     m_octal_byte_to_number
     m_print_near_offset_byte
@@ -4621,21 +4805,25 @@ _353_jmp_short_relative:
 
 ; -------------------------------------------------------------
 _354_in_acc_port_indirect_byte:
+    ;mov si, A
     m_putsln 'IN AL, DX'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _355_in_acc_port_indirect_word:
+    ;mov si, A
     m_putsln 'IN AX, DX'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _356_out_acc_port_indirect_byte:
+    ;mov si, A
     m_putsln 'OUT DX, AL'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _357_out_acc_port_indirect_word:
+    ;mov si, A
     m_putsln 'OUT DX, AX'
     ret ; jmp _xxx
 
@@ -4697,31 +4885,37 @@ _36x:
 
 ; -------------------------------------------------------------
 _360_lock:
+    ;mov si, A
     m_putsln 'LOCK'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _362_repne:
+    ;mov si, A
     m_putsln 'REPNE'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_3_rep:
+    ;mov si, A
     m_putsln 'REP'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_4_hlt:
+    ;mov si, A
     m_putsln 'HLT'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_5_cmc:
+    ;mov si, A
     m_putsln 'CMC'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _36_67_test_rm_imm:
+    ;mov si, A
     m_puts 'TEST '
     ; AL so far contains 3 bits '11w' as an octal number.
 
@@ -4737,6 +4931,7 @@ _36_67_test_rm_imm:
 
 ; -------------------------------------------------------------
 _36_67_not_rm:
+    ;mov si, A
     m_puts 'NOT '
     ; AL contains '11w'
     m_before_decode
@@ -4748,6 +4943,7 @@ _36_67_not_rm:
 
 ; -------------------------------------------------------------
 _36_67_neg_rm:
+    ;mov si, A
     m_puts 'NEG '
     ; AL contains '11w'
     m_before_decode
@@ -4759,6 +4955,7 @@ _36_67_neg_rm:
 
 ; -------------------------------------------------------------
 _36_67_mul_rm:
+    ;mov si, A
     m_puts 'MUL '
     ; AL contains '11w'
     m_before_decode
@@ -4770,6 +4967,7 @@ _36_67_mul_rm:
 
 ; -------------------------------------------------------------
 _36_67_imul_rm:
+    ;mov si, A
     m_puts 'IMUL '
     ; AL contains '11w'
     m_before_decode
@@ -4781,6 +4979,7 @@ _36_67_imul_rm:
 
 ; -------------------------------------------------------------
 _36_67_div_rm:
+    ;mov si, A
     m_puts 'DIV '
     ; AL contains '11w'
     m_before_decode
@@ -4792,6 +4991,7 @@ _36_67_div_rm:
 
 ; -------------------------------------------------------------
 _36_67_idiv_rm:
+    ;mov si, A
     m_puts 'IDIV '
     ; AL contains '11w'
     m_before_decode
@@ -4861,36 +5061,43 @@ _37x:
 
 ; -------------------------------------------------------------
 _370_clc:
+    ;mov si, A
     m_putsln 'CLC'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _371_stc:
+    ;mov si, A
     m_putsln 'STC'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _372_cli:
+    ;mov si, A
     m_putsln 'CLI'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _37_3_sti:
+    ;mov si, A
     m_putsln 'STI'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _37_4_cld:
+    ;mov si, A
     m_putsln 'CLD'
     ret ; jmp _xxx
 
 ; -------------------------------------------------------------
 _37_5_std:
+    ;mov si, A
     m_putsln 'STD'
     ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
 _37_67_inc_rm:
+    ;mov si, A
     m_puts 'INC '
     ; AL contains '11w'
     m_before_decode ; it will put '00w' in DL,
@@ -4905,6 +5112,7 @@ _37_67_inc_rm:
 
 ; -----------------------------------------------------------/
 _37_67_dec_rm:
+    ;mov si, A
     m_puts 'DEC '
     ; AL contains '11w'
     m_before_decode ; it will put '00w' in DL,
@@ -4919,6 +5127,7 @@ _37_67_dec_rm:
 
 ; -----------------------------------------------------------/
 _377_call_near_absolute_indirect:
+    ;mov si, A
     m_puts 'CALL '
     inc di ; points to 'mod'
 
@@ -4946,6 +5155,7 @@ _377_call_far_absolute_indirect:
     cmp bl, 3 ; mod cannot be '11'
     je undefined_byte
 
+    ;mov si, A
     m_puts 'CALL '
 
     ; AL contains '101'
@@ -4955,6 +5165,7 @@ _377_call_far_absolute_indirect:
     m_before_decode ; it will put '001' in DL,
                     ; which is what is needed.
 
+    ;mov si, A
     m_puts 'd' ; 'd' is for 'dword', since the next 
                  ; operand must be memory ('word ptr ...')
     call p_decode_rm
@@ -4965,6 +5176,7 @@ _377_call_far_absolute_indirect:
 
 ; -----------------------------------------------------------/
 _377_jmp_near_absolute_indirect:
+    ;mov si, A
     m_puts 'JMP '
     inc di ; points to 'mod'
 
@@ -4992,6 +5204,7 @@ _377_jmp_far_absolute_indirect:
     cmp bl, 3 ; mod cannot be '11'
     je undefined_byte
 
+    ;mov si, A
     m_puts 'JMP '
 
     ; AL contains '101'
@@ -5001,6 +5214,7 @@ _377_jmp_far_absolute_indirect:
     m_before_decode ; it will put '001' in DL,
                     ; which is what is needed.
 
+    ;mov si, A
     m_puts 'd' ; 'd' is for 'dword', since the next 
                  ; operand must be memory ('word ptr ...')
     call p_decode_rm
@@ -5011,6 +5225,7 @@ _377_jmp_far_absolute_indirect:
 
 ; -----------------------------------------------------------/
 _377_push_rm:
+    ;mov si, A
     m_puts 'PUSH '
     ; AL contains '111'
     m_before_decode ; it will put '001' in DL,
