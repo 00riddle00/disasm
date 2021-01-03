@@ -870,23 +870,6 @@ proc p_print_next_byte
     m_octal_byte_to_number
     m_number_to_octal_digit
 
-    ;push ax dx
-    ;;inc si 
-    ;mov dl, byte ptr [data_octal+si]
-    ;add dl, 30h
-    ;mov ah, 02h
-    ;int 21h
-
-    ;;inc si
-    ;mov dl, byte ptr [data_octal+si]
-    ;add dl, 30h
-    ;int 21h
-
-    ;;inc si
-    ;mov dl, byte ptr [data_octal+si]
-    ;add dl, 30h
-    ;int 21h
-
     pop dx ax
     ret
 endp
@@ -945,36 +928,6 @@ proc p_print_next_word
 
     m_octal_word_to_number
     m_number_to_octal_digit
-
-    ;mov dl, byte ptr [data_octal+si+3]
-    ;add dl, 30h
-    ;mov ah, 02h
-    ;int 21h
-
-    ;;inc si
-    ;mov dl, byte ptr [data_octal+si+3]
-    ;add dl, 30h
-    ;int 21h
-
-    ;;inc si
-    ;mov dl, byte ptr [data_octal+si+3]
-    ;add dl, 30h
-    ;int 21h
-
-    ;;inc si
-    ;mov dl, byte ptr [data_octal+si-3]
-    ;add dl, 30h
-    ;int 21h
-
-    ;;inc si
-    ;mov dl, byte ptr [data_octal+si-3]
-    ;add dl, 30h
-    ;int 21h
-
-    ;;inc si
-    ;mov dl, byte ptr [data_octal+si-3]
-    ;add dl, 30h
-    ;int 21h
 
     pop dx ax
     ret
