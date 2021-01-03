@@ -4208,10 +4208,10 @@ _32x:
         cmp byte ptr [data_octal+si+1], 0
         jne undefined
 
-        mov byte ptr [data_octal+si+2], 1
+        cmp byte ptr [data_octal+si+2], 1
         jne undefined
 
-        mov byte ptr [data_octal+si+3], 2
+        cmp byte ptr [data_octal+si+3], 2
         jne undefined
 
         ; if AAM/AAD is recognized, move index to the 
