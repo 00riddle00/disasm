@@ -31,18 +31,6 @@
 
 include macros.asm
 
-m_add_octal_to_al macro
-endm
-
-m_get_octal_to_al macro
-endm
-
-m_get_octal_to_bl macro
-endm
-
-m_get_octal_to_cl macro
-endm
-
 ; print register name
 ; registers can be byte, word, and segment registers
 ; ::param:: reg_group - address where reg names are
@@ -514,7 +502,7 @@ rm_01           DW rm_000_01, rm_001_01, rm_010_01, rm_011_01, rm_100_01, rm_101
 ; --------------------------------------------------------------------------------------------
 ;                                     CASES 1                                                ;
 ; --------------------------------------------------------------------------------------------
-    data_octal db 8, 8, 8                     ; 0???: ??      | UNDEFINED
+    data_octal1 db 8, 8, 8                     ; 0???: ??      | UNDEFINED
 
     db 3, 5, 0,  0, 0, 0,  2, 0, 0            ; 0???: ??      | CALL $-077775o
     db 3, 5, 1,  0, 0, 1,  2, 0, 0            ; 0???: ??      | JMP  $-077774o
@@ -858,6 +846,9 @@ rm_01           DW rm_000_01, rm_001_01, rm_010_01, rm_011_01, rm_100_01, rm_101
 .DATA?
 input_buff      DB 257 DUP(?)           ; Input buffer
 outpt_buff      DB 257 DUP(?)           ; Output buffer
+
+; longest command = 6 bytes * 3 octal digits = 18 bytes
+data_octal db 18 dup(?)
 
 ; *************************************************************************************
 
@@ -2576,6 +2567,7 @@ CONTINUE:
     MOV     DX, 0
 
 PARSE:                              ; The whole algorithm
+    xor di, di
     CALL    check_read              ; Check if new input has to be read
     MOV     CX, [bytes_read]
     CMP     CX, 0                   ; Check if any bytes left in file
