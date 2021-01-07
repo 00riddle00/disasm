@@ -336,7 +336,7 @@ endm m_number_to_octal_digit
 ; TODO description
 m_print_sr_prefix_default macro
 local @@sr_prefix_default, @@sr_prefix_done
-    mov bl, dh
+    mov bl, byte ptr [prefix]
     cmp bl, 0
     je @@sr_prefix_default
 
@@ -356,7 +356,7 @@ endm m_print_sr_prefix_default
 ; TODO description
 m_print_sr_prefix macro
 local @@sr_prefix_done
-    mov bl, dh
+    mov bl, byte ptr [prefix]
     cmp bl, 0
     je @@sr_prefix_done
 
@@ -437,6 +437,7 @@ jumps
     char_to_write   db 0
     chars_written   dw 0
     spaces          db 30 dup (" ")
+    prefix          db 0
 
     arg_msg         db "Intel 8088 Disasembler",13,10
     arg2_msg        db "Written in TASM, intended for files assembled with TASM as well$"
@@ -1747,9 +1748,6 @@ endp check_carry
 
 disasm proc
 _xxx:
-    xor dh, dh
-
-_after_clean_dh_xxx:
     ; get 1st octal digit
     xor ax, ax
     mov al, byte ptr [data_octal+di]
@@ -2150,10 +2148,11 @@ _0x6_seg_change_prefix:
     ;
     ; SI already points to the last octal digit read
     sub al, 3
-    mov dh, al
+    mov byte ptr [prefix], al
 
     inc di
-    jmp _after_clean_dh_xxx
+    call store_next_byte
+    jmp _xxx
 
 ; ------------------------------------------------------------
 ;  _0X7
