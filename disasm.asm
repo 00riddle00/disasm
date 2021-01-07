@@ -77,6 +77,8 @@ m_print_reg macro reg_group
    int 21h
 
    pop dx ax
+
+   add [chars_written], 2
  
    pop dx cx bx ax
 endm m_print_reg
@@ -315,6 +317,7 @@ local @@conversion, @@convert, @@converted, @@print_result, @@process_lowercase,
                 mov ah, 40h
                 mov bx, out_handle
                 mov cx, 1
+                inc [chars_written]
                 mov byte ptr [char_to_write], dl
                 mov dx, offset char_to_write
                 int 21h
@@ -428,6 +431,8 @@ jumps
     EAi dw 'SI', 'DI', 'SI', 'DI'
 
     char_to_write   db 0
+    chars_written   dw 0
+    spaces          db 30 dup (" ")
 
     arg_msg         db "Intel 8088 Disasembler",13,10
     arg2_msg        db "Written in TASM, intended for files assembled with TASM as well$"
@@ -1061,7 +1066,7 @@ proc p_decode_rm
 
             ; check 'r/m' value again
             cmp al, 4
-            jae short no_index_L1; so index register is not used for EA
+            jae no_index_L1; so index register is not used for EA
 
             ; index register is also used for EA
             add_index_L1:
@@ -1302,6 +1307,17 @@ write_proc proc
     push    bx
     push    cx
     push    dx
+
+    mov si, 30
+    sub si, [chars_written]
+    mov bx, si
+    m_printf_only spaces
+    mov byte ptr [spaces+bx], '$'
+    m_print spaces
+    mov byte ptr [spaces+bx], ' '
+
+    mov si, 2
+    m_putsf '; '
 
     ; ip counter print
     mov     ip_arr_index, 0
@@ -1642,7 +1658,7 @@ undefined_2nd_octal:
     jmp short undefined
 
 undefined:
-    mov si, 10
+    mov si, 11
     m_putsf '; UNDEFINED'
     ;jmp short _xxx
     ret
@@ -4140,6 +4156,7 @@ CONTINUE:
 
 PARSE:                              ; The whole algorithm
     xor di, di
+    mov [chars_written], 0
     CALL    check_read              ; Check if new input has to be read
     MOV     CX, [bytes_read]
     CMP     CX, 0                   ; Check if any bytes left in file
@@ -4149,9 +4166,6 @@ PARSE:                              ; The whole algorithm
 
     mov si, 0
     call disasm
-
-    mov si, 6
-    m_putsf '    ; '
 
     call write_proc
 JMP PARSE

@@ -138,6 +138,10 @@ m_putspace macro
     m_putchar 20h
 endm
 
+m_putdollar macro
+    m_putchar 24h
+endm
+
 ; ---------------------
 ;  write to FILE
 ; ---------------------
@@ -149,6 +153,20 @@ m_printf macro string
     mov ah, 40h
     mov bx, out_handle
     mov cx, si
+    add [chars_written], si
+    mov dx, offset string
+    int 21h
+    xor si, si
+    pop dx cx bx ax
+endm
+
+; print string
+m_printf_only macro string               
+    push ax bx cx dx
+    mov ah, 40h
+    mov bx, out_handle
+    mov cx, si
+    add [chars_written], si
     mov dx, offset string
     int 21h
     xor si, si
@@ -190,6 +208,7 @@ local @@start, @@data
 @@data db string            ; in the code segment
 @@start:                    ; so skip over it
       mov bx, out_handle
+      add [chars_written], si
       mov ax, cs
       mov ds, ax            ; set DS to code segment
       mov ah, 40h
