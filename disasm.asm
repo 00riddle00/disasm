@@ -411,23 +411,18 @@ jumps
 
     ; Byte-sized registers
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
-    ;Rb db 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
 
     ; Word-sized registers
     Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
-    ;Rw db 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
 
     ; Segment registers
     SR16 dw 'ES', 'CS', 'SS', 'DS'  
-    ;SR16 db 'ES', 'CS', 'SS', 'DS'  
 
     ; Registers used as base in EA formation
     EAb dw 'BX', 'BX', 'BP', 'BP', 'SI', 'DI', 'BP', 'BX'
-    ;EAb db 'BX', 'BX', 'BP', 'BP', 'SI', 'DI', 'BP', 'BX'
 
     ; Registers used as index in EA formation
     EAi dw 'SI', 'DI', 'SI', 'DI'
-    ;EAi db 'SI', 'DI', 'SI', 'DI'
 
 arg_msg         DB "Intel 8088 Disasembler",13,10
 arg2_msg        DB "Written in TASM, intended for files assembled with TASM as well$"
@@ -442,18 +437,8 @@ bytes_read      DW 0                        ; Bytes read on input
 
 ;WRITING SYMBOLS
 new_line        DB 13,10
-point           DB ","
 doublepoint     DB ":"
 space           DB 9 DUP(" ")
-left_brack      DB "["
-right_brack     DB "]"
-byte_ptr        DB "byte ptr "
-word_ptr        DB "word ptr "
-invalid_msg     DB "(Arg invalid) "
-far_msg         DB "far "
-add_sym         DB "+"
-sub_sym         DB "-"
-;WRITING SYMBOLS END
 
 ;Analyzed byte
 c_opName        DW 0    ; Operation code names adress
@@ -1337,85 +1322,19 @@ analyze_byte proc
     PUSH    CX
     PUSH    DX
 
-;--------------------------------
     PUSH SI
     call main
     POP SI
     ;m_puts '     ;'
     call write_proc
-    ;m_exit0
 
     POP     DX
     POP     CX
     POP     BX
     POP     AX
 
-    ret
-
-
-
-    ;cmp ax, 66
-    ;je finalize
-
-    ;mov word ptr [opkodas_ilgis], ax
-;--------------------------------
-
-    ; Analyze the current byte, get all the needed arguments and print
-
-    MOV     BX, c_opName
-
-    MOV     CX, offset opcPrefix        ;If operation code is prefix, store
-    CMP     BX, CX
-    JE      PREFIX_STORE
-
-    MOV     CX, offset opcUnk           ;If operation code is unknown, write
-    CMP     BX, CX
-    JNE     KNOWN
-    JMP FINALIZE
-
-    PREFIX_STORE:
-        MOV     AX, c_reg_val
-        MOV     temp_prefix, AX
-
-        POP     DX
-        POP     CX
-        POP     BX
-        POP     AX
-        RET
-    KNOWN:
-        MOV     BL, c_abyte
-        CMP     BL, 0
-
-        JE      STILL_KNOWN     ; If no adress byte then cant be extra_identify
-
-        CALL    analyze_adress_byte     ;Analyze the adress byte
-        CALL    extra_identify          ;Set extra identity
-
-        MOV     BX, c_opName            ;Check if not unknwon (again)
-        MOV     CX, offset opcUnk
-        CMP     BX, CX
-        JNE     STILL_KNOWN             ; Get arguments
-    JMP FINALIZE
-
-    STILL_KNOWN:
-        CALL    get_args
-
-    FINALIZE:
-        CALL    write_proc
-
-;--------------------------------
-; comment
-;--------------------------------
-        ;MOV     AX, offset noReg    ;Atstatom prefix
-        ;MOV     temp_prefix, AX
-
-        ;POP     DX
-        ;POP     CX
-        ;POP     BX
-        ;POP     AX
-;--------------------------------
-        RET
-analyze_byte endp
+    RET
+endp
 
 get_args proc
     PUSH    AX
