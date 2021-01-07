@@ -309,9 +309,9 @@ local @@conversion, @@convert, @@converted, @@print_result, @@process_lowercase,
 
             @@print_symbol:
 ; --------------------------------------------------------
-                int 21h ; writes to STDOUT
+                int 21h ; write to STDOUT
 ; --------------------------------------------------------
-                push ax bx cx dx
+                push ax bx cx dx    ; write to FILE
                 mov ah, 40h
                 mov bx, out_handle
                 mov cx, 1
@@ -468,7 +468,7 @@ jumps
 ; --------------------------------------------------------------------------------------------
 ;                                     CASES 1                                                ;
 ; --------------------------------------------------------------------------------------------
-    data_testing db 8, 8, 8                   ; 0???: ??      | UNDEFINED
+    data_testing db 3, 2, 6                   ; 0???: ??      | UNDEFINED
 
     db 3, 5, 0,  0, 0, 0,  2, 0, 0            ; 0???: ??      | CALL $-077775o
     db 3, 5, 1,  0, 0, 1,  2, 0, 0            ; 0???: ??      | JMP  $-077774o
@@ -1254,6 +1254,7 @@ proc p_op_0dw_reg_rm
     ret
 endp p_op_0dw_reg_rm
 
+; TODO use this for hex printing instead of octal
 convert_number proc
     ; Convert given bytes as a number in hex
     ; CL is how many bytes the number has
@@ -1312,7 +1313,7 @@ write_proc proc
     mov     cl, 4                       ; Convert 4 bytes
     mov     ax, ip_index                ; The value that needs convertsion
 
-    call    number_to_ascii             ; Convert value
+    call    ip_number_to_ascii          ; Convert value
 
     mov     ax, temp_ip_add
     add     ip_index, ax                ; Add accumulated ip value
@@ -1436,7 +1437,7 @@ store_next_byte proc
 
     ror     dx, 6           ; Shift right 6 times
 
-    mov byte ptr [data_octal+di+1], dl ; nes DI yra 0FFFFh ??
+    mov byte ptr [data_octal+di], dl
 
     pop     dx
 
@@ -1446,13 +1447,13 @@ store_next_byte proc
 
     ror     dx, 3           ; shift right 3 times
 
-    mov byte ptr [data_octal+di+2], dl
+    mov byte ptr [data_octal+di+1], dl
     pop     dx
 
     mov     bx, 00000111b
     and     dx, bx
 
-    mov byte ptr [data_octal+di+3], dl
+    mov byte ptr [data_octal+di+2], dl 
 
     pop     dx
     pop     cx
@@ -1465,6 +1466,15 @@ store_next_byte proc
 
     ret
 endp store_next_byte
+
+store_next_word proc
+    call store_next_byte
+    add di, 3
+    call store_next_byte
+    sub di, 3
+
+    ret
+endp store_next_word
 
 number_to_ascii proc
     ; Convert read byte to ascii and store in temp_bytes
@@ -1522,6 +1532,62 @@ number_to_ascii proc
         ret
 endp number_to_ascii
 
+ip_number_to_ascii proc
+    ; Convert read byte to ascii and store in temp_bytes
+    ; CL is number of chars
+    ; AX is adress to value
+    ; BX is adress to buffer of writing
+    ; RESULT: [BX] <- ASCII number
+
+    push    ax
+    push    bx
+    push    cx
+    push    dx
+
+    mov     ch, cl
+
+    conv_01:
+        cmp     cl, 0
+        je      fin_conv_01
+        dec     cl
+
+        mov     bx, 16
+        mov     dx, 0
+        div     bx
+
+        mov     bx, offset hex
+        add     bx, dx
+        mov     dl, [bx]
+        mov     dh, 0
+
+        push    dx
+    jmp conv_01
+
+    fin_conv_01:
+        cmp     ch, 0
+        je      fin_01
+        dec     ch
+
+        pop     dx
+
+        mov     bx, needs_convert
+        mov     si, counter_convert 
+
+        add     bx, [si] 
+        mov     [bx], dl
+
+        inc     word ptr [si] 
+    jmp fin_conv_01
+
+    fin_01:
+        pop     dx
+        pop     cx
+        pop     bx
+        pop     ax
+
+        ret
+endp ip_number_to_ascii
+
 check_carry proc
     jc      stop_program            ; If carry flag is set, stop
     ret                             ; Else ret
@@ -1545,7 +1611,6 @@ _xxx:
 
 _after_clean_dh_xxx:
     ; get 1st octal digit
-    inc di
     xor ax, ax
     mov al, byte ptr [data_octal+di]
 
@@ -1947,6 +2012,7 @@ _0x6_seg_change_prefix:
     sub al, 3
     mov dh, al
 
+    inc di
     jmp _after_clean_dh_xxx
 
 ; ------------------------------------------------------------
@@ -3497,8 +3563,11 @@ _350_call_near_relative:
            ; octal digit of the offset
     mov si, 5
     m_putsf 'CALL '
+    call store_next_word
+
     m_octal_word_to_number
     m_print_near_offset_word
+
     ret ; jmp _xxx
 
 ; ------------------------------------------------------------
@@ -3881,7 +3950,7 @@ _377_call_far_absolute_indirect:
     m_putsf 'CALL '
 
     ; AL contains '101'
-    MOV AL, 001 ; tell the decode procedures that
+    MOV al, 001 ; tell the decode procedures that
                 ; the operand will be a word
 
     m_before_decode ; it will put '001' in DL,
@@ -3961,7 +4030,7 @@ endp disasm
 start:
     mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
     mov ds, ax                     ; move AX (@data) to DS (data segment)
-    MOV     DI, 0FFFFh
+    ;MOV     DI, 0FFFFh
     ; FIXME will it work?
     ;mov es, ax                     ; move AX (@data) to ES (extended data segment) 
 
@@ -4071,7 +4140,7 @@ CONTINUE:
     MOV     DX, 0
 
 PARSE:                              ; The whole algorithm
-    ;xor di, di
+    xor di, di
     CALL    check_read              ; Check if new input has to be read
     MOV     CX, [bytes_read]
     CMP     CX, 0                   ; Check if any bytes left in file
