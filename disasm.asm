@@ -2594,12 +2594,13 @@ __21_0123_mov_reg_rm:
 ; ------------------------------------------------------------
 _21_46_mov_rm_segreg:
     ; check if 'reg' is not '1xx'
+    inc di ; must point to first octal of next byte
     call store_next_byte
-    inc di ; point to 'mod'
     inc di ; point to 'reg'
     mov bl, byte ptr [data_octal+di]
-    dec di 
-    dec di ; return SI back
+
+    dec di ; DI points to 'mod'
+    dec di ; DI points to the third octal of the first byte
     ; find out if it's a legit opcode
     cmp bl, 4 ; reg cannot be '1xx'
     jae undefined_byte
