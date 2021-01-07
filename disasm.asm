@@ -436,18 +436,23 @@ jumps
 
     ; Byte-sized registers
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
+    ;Rb db 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
 
     ; Word-sized registers
     Rw dw 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
+    ;Rw db 'AX', 'CX', 'DX', 'BX', 'SP', 'BP', 'SI', 'DI'
 
     ; Segment registers
     SR16 dw 'ES', 'CS', 'SS', 'DS'  
+    ;SR16 db 'ES', 'CS', 'SS', 'DS'  
 
     ; Registers used as base in EA formation
     EAb dw 'BX', 'BX', 'BP', 'BP', 'SI', 'DI', 'BP', 'BX'
+    ;EAb db 'BX', 'BX', 'BP', 'BP', 'SI', 'DI', 'BP', 'BX'
 
     ; Registers used as index in EA formation
     EAi dw 'SI', 'DI', 'SI', 'DI'
+    ;EAi db 'SI', 'DI', 'SI', 'DI'
 
 arg_msg         DB "Intel 8088 Disasembler",13,10
 arg2_msg        DB "Written in TASM, intended for files assembled with TASM as well$"
@@ -1365,7 +1370,16 @@ analyze_byte proc
     POP SI
     ;m_puts '     ;'
     call write_proc
-    m_exit0
+    ;m_exit0
+
+    POP     DX
+    POP     CX
+    POP     BX
+    POP     AX
+
+    ret
+
+
 
     ;cmp ax, 66
     ;je finalize
@@ -2759,13 +2773,12 @@ PARSE:                              ; The whole algorithm
     ;CALL    recognize_byte          ; Recognize the next opc
     CALL    analyze_byte            ; Do work with recognized opc
 
-    m_puts 'done'
-    m_exit0
+    ;m_puts 'done'
+    ;m_exit0
 
 JMP PARSE
 
 EXIT:
-    m_puts 'finito'
     MOV     AX, 0
 TERMINATE:
     MOV     AH, 4Ch
@@ -4023,7 +4036,7 @@ _236_sahf:
 
 ; -------------------------------------------------------------
 _237_lahf:
-    ;mov si, A
+    mov si, 4
     m_putsln 'LAHF'
     ret ; jmp _xxx
 
