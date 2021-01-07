@@ -4287,6 +4287,7 @@ continue:
 
 parse:                              ; The whole algorithm
     xor di, di
+    mov byte ptr [prefix], 0
     mov [chars_written], 0
     call    check_read              ; Check if new input has to be read
     mov     cx, [bytes_read]
