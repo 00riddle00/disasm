@@ -2806,6 +2806,9 @@ _231_cwd:
 
 ; ------------------------------------------------------------
 _232_call_far_absolute_direct:
+    inc di ; must point to first octal digit of next byte
+    call store_next_double_word
+
     mov si, 5
     m_putsf 'CALL '
     add di, 6 ; first print the second word
