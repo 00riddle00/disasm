@@ -397,10 +397,7 @@ jumps
 ;  DATA
 ; ============================================================
 
-; *************************************************************************************
-
-.DATA
-
+.data
     ; longest command = 6 bytes * 3 octal digits = 18 bytes
     data_octal db 18 dup(?)
 
@@ -419,48 +416,46 @@ jumps
     ; Registers used as index in EA formation
     EAi dw 'SI', 'DI', 'SI', 'DI'
 
-    arg_msg         DB "Intel 8088 Disasembler",13,10
-    arg2_msg        DB "Written in TASM, intended for files assembled with TASM as well$"
-    cant_open       DB 13,10,"Can't open",13,10,'$'     ; Message for file open error
-    err_msg         DB 13,10,"Error",13,10,'$'      ; Message for file write error
-    file_n          DB 40 DUP(0)                ; Input File name
-    output_n        DB 40 DUP(0)                ; Output file name
-    in_handle       DW 0                        ; File handles
-    out_handle      DW 0
-    temp_index      DW 0                        ; Temporary index for input file
-    bytes_read      DW 0                        ; Bytes read on input
+    arg_msg         db "Intel 8088 Disasembler",13,10
+    arg2_msg        db "Written in TASM, intended for files assembled with TASM as well$"
+    cant_open       db 13,10,"Can't open",13,10,'$'     ; Message for file open error
+    err_msg         db 13,10,"Error",13,10,'$'      ; Message for file write error
+    file_n          db 40 dup(0)                ; Input File name
+    output_n        db 40 dup(0)                ; Output file name
+    in_handle       dw 0                        ; File handles
+    out_handle      dw 0
+    temp_index      dw 0                        ; Temporary index for input file
+    bytes_read      dw 0                        ; Bytes read on input
 
-    ;WRITING SYMBOLS
-    v_arg_1         DB 40 DUP("$")      ; First argument string
-    v_arg_2         DB 40 DUP("$")      ; Second argument string
+    ; writing symbols
+    v_arg_1         db 40 dup("$")      ; First argument string
+    v_arg_2         db 40 dup("$")      ; Second argument string
 
-    v_arg_index     DW 0                ; Argument index (For both v_arg_1 and v_arg_2)
-    cur_arg_buff    DW 0                ; Adress of the current argument buffer = offset (v_arg_1 or v_arg_2)
+    v_arg_index     dw 0                ; Argument index (For both v_arg_1 and v_arg_2)
+    cur_arg_buff    dw 0                ; Adress of the current argument buffer = offset (v_arg_1 or v_arg_2)
 
-    temp_bytes      DB 25 DUP(" "), '$' ; The read bytes for current command
-                    DB '$'              ; This line is for debugging "temp_bytes" (see m_printf macro and its usage)
-    temp_b_index    DW 0                ; The index of temp_bytes buffer
+    temp_bytes      db 25 dup(" "), '$' ; The read bytes for current command
+                    db '$'              ; This line is for debugging "temp_bytes" (see m_printf macro and its usage)
+    temp_b_index    dw 0                ; The index of temp_bytes buffer
 
-    ip_index        DW 100h             ; The current IP value
-    ip_value        DB 4 DUP("$")       ; The current IP value in ASCII
-                    DB '$'              ; This line is for debugging "ip_value" (see m_printf macro and its usage)
-    ip_arr_index    DW 0                ; The index of ip_value buffer
-    temp_ip_add     DW 0                ; The number of bytes currently read (For IP adding)
+    ip_index        dw 100h             ; The current IP value
+    ip_value        db 4 dup("$")       ; The current IP value in ASCII
+                    db '$'              ; This line is for debugging "ip_value" (see m_printf macro and its usage)
+    ip_arr_index    dw 0                ; The index of ip_value buffer
+    temp_ip_add     dw 0                ; The number of bytes currently read (For IP adding)
 
-    needs_convert   DW 0
-    counter_convert DW 0
+    needs_convert   dw 0
+    counter_convert dw 0
 
     ; Analyze byte
-    hex             DB "0123456789ABCDEF"   ; Hex base
-
-; *************************************************************************************
+    hex             db "0123456789ABCDEF"   ; Hex base
 
 ; ==================================== TESTING ===============================================
 
 ; --------------------------------------------------------------------------------------------
 ;                                     CASES 1                                                ;
 ; --------------------------------------------------------------------------------------------
-    data_octal1 db 8, 8, 8                     ; 0???: ??      | UNDEFINED
+    data_testing db 8, 8, 8                   ; 0???: ??      | UNDEFINED
 
     db 3, 5, 0,  0, 0, 0,  2, 0, 0            ; 0???: ??      | CALL $-077775o
     db 3, 5, 1,  0, 0, 1,  2, 0, 0            ; 0???: ??      | JMP  $-077774o
@@ -801,9 +796,9 @@ jumps
     db 0FFh
 ; ============================================================================================
 
-.DATA?
-input_buff      DB 257 DUP(?)           ; Input buffer
-outpt_buff      DB 257 DUP(?)           ; Output buffer
+.data?
+input_buff      db 257 dup(?)           ; input buffer
+outpt_buff      db 257 dup(?)           ; output buffer
 
 ; *************************************************************************************
 
@@ -1250,65 +1245,65 @@ convert_number proc
     ; Convert given bytes as a number in hex
     ; CL is how many bytes the number has
     ; AX is number to be converted
-    MOV     BX, cur_arg_buff
-    MOV     DX, offset v_arg_index
-    MOV     needs_convert, BX
-    MOV     counter_convert, DX
-    CALL    number_to_ascii
-    RET
+    mov     bx, cur_arg_buff
+    mov     dx, offset v_arg_index
+    mov     needs_convert, bx
+    mov     counter_convert, dx
+    call    number_to_ascii
+    ret
 convert_number endp
 
 clear_temp_bytes proc
-    ;Clear the read bytes buffer
-    PUSH    AX
-    PUSH    BX
-    PUSH    CX
-    PUSH    DX
+    ; Clear the read bytes buffer
+    push    ax
+    push    bx
+    push    cX
+    push    dX
 
-    MOV     CX, 0
-    MOV     temp_b_index, CX
-    MOV     DX, " "
-    MOV     BX, offset temp_bytes
+    mov     cx, 0
+    mov     temp_b_index, cx
+    mov     dx, " "
+    mov     bx, offset temp_bytes
 
-    CLEAR_LOOP:
-        MOV     [BX], DX
-        ADD     BX, 1
-        CMP     CX, 24
-        JE      EXIT_CLEAR
-        INC     CX
-        JMP CLEAR_LOOP
+    clear_loop:
+        mov     [bx], dX
+        add     bx, 1
+        cmp     cx, 24
+        je      exit_cleaR
+        inc     cx
+        jmp clear_loop
 
-    EXIT_CLEAR:
-        POP     DX
-        POP     CX
-        POP     BX
-        POP     AX
+    exit_clear:
+        pop     dx
+        pop     cx
+        pop     bx
+        pop     aX
 
-        RET
+        ret
 clear_temp_bytes endp
 
 write_proc proc
     ; Writes analyzed command and resets all buffers for further work
-    PUSH    AX
-    PUSH    BX
-    PUSH    CX
-    PUSH    DX
+    push    ax
+    push    bx
+    push    cx
+    push    dx
 
-    ; IP COUNTER PRINT
-    MOV     ip_arr_index, 0
+    ; ip counter print
+    mov     ip_arr_index, 0
 
-    MOV     BX, offset ip_value
-    MOV     AX, offset ip_arr_index
-    MOV     needs_convert, BX           ; The converted value buffer (Adress)
-    MOV     counter_convert, AX         ; The index for output buffer (Adress)
-    MOV     CL, 4                       ; Convert 4 bytes
-    MOV     AX, ip_index                ; The value that needs convertsion
+    mov     bx, offset ip_value
+    mov     ax, offset ip_arr_index
+    mov     needs_convert, bx           ; The converted value buffer (Adress)
+    mov     counter_convert, ax         ; The index for output buffer (Adress)
+    mov     cl, 4                       ; Convert 4 bytes
+    mov     ax, ip_index                ; The value that needs convertsion
 
-    CALL    number_to_ascii             ; Convert value
+    call    number_to_ascii             ; Convert value
 
-    MOV     AX, temp_ip_add
-    ADD     ip_index, AX                ; Add accumulated ip value
-    MOV     temp_ip_add, 0              ; Zero out the acuumulation
+    mov     ax, temp_ip_add
+    add     ip_index, ax                ; Add accumulated ip value
+    mov     temp_ip_add, 0              ; Zero out the acuumulation
 
     mov si, 4
     m_printf ip_value                   ; Write 4 bytes (of IP) to file
@@ -1317,24 +1312,23 @@ write_proc proc
 
     mov si, 4
     m_putsf '    '
-    ;IP COUNTER PRINT END
+    ; ip counter print end
 
-    ;BYTE PRINT
-    MOV     si, 25                  ; Write result
+    ;byte print
+    mov     si, 25                  ; Write result
     m_printf temp_bytes
 
-    CALL    clear_temp_bytes
-    ;BYTE PRINT END
+    call    clear_temp_bytes
+    ; byte print end
 
     m_printf_nl
 
-    POP     DX
-    POP     CX
-    POP     BX
-    POP     AX
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
 
-    RET
-
+    ret
 
 check_read proc
     ; Check if input needs to be replenished
@@ -1531,147 +1525,7 @@ check_carry proc
         INT     21h
 check_carry endp
 
-; -----------------------------------------------------------/
-
-start:
-    mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
-    mov ds, ax                     ; move AX (@data) to DS (data segment)
-    MOV     DI, 0FFFFh
-    ; FIXME will it work?
-    ;mov es, ax                     ; move AX (@data) to ES (extended data segment) 
-
-    MOV     SI, 0081h               ; Set start of arguments ;siac
-    MOV     BX, 0                   ; Count index of argument file name
-    MOV     CX, -1                  ; Count amount of arguments
-
-ARG_PARSE:
-    MOV     AL, byte ptr ES:[SI]    ; Store next char of arguments ;siac
-
-    CMP     AL, 13                  ; End of arguments (newline)
-    JE      CHECK_ERRORS            ; Check if right amount of arguments
-
-    CMP     AL, ' '                 ; End of this argument, skip space
-    JE      SKIP_SPACE
-
-    CMP     AL, '/'                 ; Check if "/?" is trying to be written
-    JE      ERR_TEST
-
-    add si, 1 ;siac                 ; Store this character to appropriate array
-    JMP     WRITE
-
-ERR_TEST:
-    add si, 1 ;siac
-    MOV     AL, byte ptr ES:[SI]    ; Check if next byte is '?' ;siac
-    CMP     AL, '?'
-    JNE     WRITE_INIT              ; If no, continue with write
-ERROR:
-    MOV     DX, OFFSET err_msg      ; Error message
-    MOV     AH, 09
-    INT     21h
-
-    MOV     AX, 4C00H
-    INT     21h
-
-NO_OPEN:                            ; Cant open/write file
-    MOV     DX, offset cant_open
-    MOV     AH, 09
-    INT     21h
-JMP ERROR
-
-WRITE_INIT:                         ; Fix before write (After ERR_TEST)
-    sub si, 1 ;siac
-    MOV     AL, byte ptr ES:[SI] ;siac
-    add si, 1 ;siac
-JMP WRITE
-
-SKIP_SPACE:                         ; Skips the space, shifts to next array
-    add si, 1 ;siac
-    MOV     AL, byte ptr ES:[SI] ;siac
-    CMP     AL, ' '                 ; Skip all the spaces
-    JE      SKIP_SPACE
-    INC     CX                      ; Sets which array should be used
-    MOV     BX, 0                   ; Index of new array is 0
-JMP ARG_PARSE
-
-CHECK_ERRORS:                       ; Only continue if there are 3 arguments
-    CMP     CX, 1
-    JE      CONTINUE
-
-    CMP     CX, 2                   ; In case there is a space before newline
-    JE      CONTINUE
-JMP ERROR
-
-WRITE:                              ; Write to appropriate parameter
-    CMP     CX, 0
-    JE      FIRST_PARAM
-
-    CMP     CX, 1
-    JE      SECOND_PARAM
-JMP ERROR                           ; If there are more arguments, error
-
-FIRST_PARAM:
-    MOV     [file_n+BX], AL         ; First param
-    INC     BX
-JMP ARG_PARSE
-
-SECOND_PARAM:
-    MOV     [output_n+BX], AL           ; Second param
-    INC     BX
-JMP ARG_PARSE
-
-CONTINUE:
-    INT 3h                          ; Debug
-    CLC                             ; Clear carry
-
-    MOV     DX, OFFSET file_n       ; Atidaryti  input faila
-    MOV     AX, 3D00h
-    INT     21h
-
-    CALL    check_carry             ; Check if successful
-
-    MOV     in_handle, AX               ; Store handle
-
-    MOV     CX, 0
-    MOV     DX, OFFSET output_n     ; Open output file
-    MOV     AX, 3C00h
-    INT     21h
-
-    CALL    check_carry             ; check if success
-
-    MOV     out_handle, AX      ; save handle
-
-    MOV     AX, 0
-    MOV     BX, 0
-    MOV     CX, 0
-    MOV     DX, 0
-
-PARSE:                              ; The whole algorithm
-    ;xor di, di
-    CALL    check_read              ; Check if new input has to be read
-    MOV     CX, [bytes_read]
-    CMP     CX, 0                   ; Check if any bytes left in file
-    JLE     EXIT                    ; nothing left in file, quit
-
-    CALL    store_next_byte         ; Get the next byte for opc
-
-    mov si, 0
-    call main
-
-    mov si, 5
-    m_putsf '    ;'
-
-    call write_proc
-JMP PARSE
-
-EXIT:
-    MOV     AX, 0
-TERMINATE:
-    MOV     AH, 4Ch
-    INT     21h
-
-; ############################################################################
-
-main proc
+disasm proc
 _xxx:
     xor dh, dh
 
@@ -4088,6 +3942,142 @@ _377_push_rm:
     ret ; jmp _xxx
 
 ; -----------------------------------------------------------/
-endp main
+endp disasm
+
+start:
+    mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
+    mov ds, ax                     ; move AX (@data) to DS (data segment)
+    MOV     DI, 0FFFFh
+    ; FIXME will it work?
+    ;mov es, ax                     ; move AX (@data) to ES (extended data segment) 
+
+    MOV     SI, 0081h               ; Set start of arguments ;siac
+    MOV     BX, 0                   ; Count index of argument file name
+    MOV     CX, -1                  ; Count amount of arguments
+
+ARG_PARSE:
+    MOV     AL, byte ptr ES:[SI]    ; Store next char of arguments ;siac
+
+    CMP     AL, 13                  ; End of arguments (newline)
+    JE      CHECK_ERRORS            ; Check if right amount of arguments
+
+    CMP     AL, ' '                 ; End of this argument, skip space
+    JE      SKIP_SPACE
+
+    CMP     AL, '/'                 ; Check if "/?" is trying to be written
+    JE      ERR_TEST
+
+    add si, 1 ;siac                 ; Store this character to appropriate array
+    JMP     WRITE
+
+ERR_TEST:
+    add si, 1 ;siac
+    MOV     AL, byte ptr ES:[SI]    ; Check if next byte is '?' ;siac
+    CMP     AL, '?'
+    JNE     WRITE_INIT              ; If no, continue with write
+ERROR:
+    MOV     DX, OFFSET err_msg      ; Error message
+    MOV     AH, 09
+    INT     21h
+
+    MOV     AX, 4C00H
+    INT     21h
+
+NO_OPEN:                            ; Cant open/write file
+    MOV     DX, offset cant_open
+    MOV     AH, 09
+    INT     21h
+JMP ERROR
+
+WRITE_INIT:                         ; Fix before write (After ERR_TEST)
+    sub si, 1 ;siac
+    MOV     AL, byte ptr ES:[SI] ;siac
+    add si, 1 ;siac
+JMP WRITE
+
+SKIP_SPACE:                         ; Skips the space, shifts to next array
+    add si, 1 ;siac
+    MOV     AL, byte ptr ES:[SI] ;siac
+    CMP     AL, ' '                 ; Skip all the spaces
+    JE      SKIP_SPACE
+    INC     CX                      ; Sets which array should be used
+    MOV     BX, 0                   ; Index of new array is 0
+JMP ARG_PARSE
+
+CHECK_ERRORS:                       ; Only continue if there are 3 arguments
+    CMP     CX, 1
+    JE      CONTINUE
+
+    CMP     CX, 2                   ; In case there is a space before newline
+    JE      CONTINUE
+JMP ERROR
+
+WRITE:                              ; Write to appropriate parameter
+    CMP     CX, 0
+    JE      FIRST_PARAM
+
+    CMP     CX, 1
+    JE      SECOND_PARAM
+JMP ERROR                           ; If there are more arguments, error
+
+FIRST_PARAM:
+    MOV     [file_n+BX], AL         ; First param
+    INC     BX
+JMP ARG_PARSE
+
+SECOND_PARAM:
+    MOV     [output_n+BX], AL           ; Second param
+    INC     BX
+JMP ARG_PARSE
+
+CONTINUE:
+    INT 3h                          ; Debug
+    CLC                             ; Clear carry
+
+    MOV     DX, OFFSET file_n       ; Atidaryti  input faila
+    MOV     AX, 3D00h
+    INT     21h
+
+    CALL    check_carry             ; Check if successful
+
+    MOV     in_handle, AX               ; Store handle
+
+    MOV     CX, 0
+    MOV     DX, OFFSET output_n     ; Open output file
+    MOV     AX, 3C00h
+    INT     21h
+
+    CALL    check_carry             ; check if success
+
+    MOV     out_handle, AX      ; save handle
+
+    MOV     AX, 0
+    MOV     BX, 0
+    MOV     CX, 0
+    MOV     DX, 0
+
+PARSE:                              ; The whole algorithm
+    ;xor di, di
+    CALL    check_read              ; Check if new input has to be read
+    MOV     CX, [bytes_read]
+    CMP     CX, 0                   ; Check if any bytes left in file
+    JLE     EXIT                    ; nothing left in file, quit
+
+    CALL    store_next_byte         ; Get the next byte for opc
+
+    mov si, 0
+    call disasm
+
+    mov si, 5
+    m_putsf '    ;'
+
+    call write_proc
+JMP PARSE
+
+exit:
+    mov     ax, 0
+terminate:
+    mov     ah, 4Ch
+    int     21h
 
 end start
