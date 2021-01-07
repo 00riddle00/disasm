@@ -1,3 +1,4 @@
+; ============================================================
 ;  DESCRIPTION
 ; ============================================================
 ; Subject: Computer Architecture
@@ -13,10 +14,10 @@
 ;    output file after the program's execution should look
 ;    like this:
 ;         ...
-;         0100: B409    | MOV AH, 09
-;         0102: BADE01  | MOV DX, 01DE
-;         0105: CD21    | INT 21
-;         01F9: 65      | UNDEFINED
+;         MOV AH, 09h     ; 0100: B409  
+;         MOV DX, 01DEh   ; 0102: BADE01
+;         INT 21h         ; 0105: CD21
+;         ; UNDEFINED     ; 01F9: 65
 ;         ...
 ;         ...
 ;    i.e. on every line there should be Hex address of the 
@@ -29,7 +30,6 @@
 ;  MACROS
 ; ============================================================
 
-;include macros.asm
 include macros2.asm
 
 ; print register name
@@ -104,29 +104,6 @@ local @@word_ptr, @@endm_print_ptr
     m_puts 'word ptr '
 
 @@endm_print_ptr:
-endm
-
-; TODO description
-m_print_sign_extension macro
-local @@one_padding, @@zero_padding, @@padding_done
-    ; get 1st octal digit of lsb
-    inc di
-    mov al, byte ptr [data_octal+di]
-    dec di
-
-    cmp al, 2
-    jb @@zero_padding
-
-    @@one_padding:
-        ;mov si, A
-        m_puts "377"
-        jmp @@padding_done
-
-    @@zero_padding:
-        ;mov si, A
-        m_puts "000"
-
-    @@padding_done:
 endm
 
 m_octal_byte_to_number macro
@@ -431,8 +408,6 @@ jumps
 
     ; longest command = 6 bytes * 3 octal digits = 18 bytes
     data_octal db 18 dup(?)
-    opkodas_ilgis dw 0000
-    mano_opkodas db "UNDEFINED"
 
     ; Byte-sized registers
     Rb dw 'AL', 'CL', 'DL', 'BL', 'AH', 'CH', 'DH', 'BH'
@@ -1116,7 +1091,6 @@ proc p_decode_rm
             ; offset is one byte (according to 'mod')
             print_offset_byte: ; FIXME actually prints two bytes!
 
-                ;m_print_sign_extension
                 ;call p_print_next_byte
                 call p_print_next_byte_sign_extended
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
@@ -1262,7 +1236,6 @@ proc p_op_0sw_rm_imm
     jb imm_2_bytes ; so s = 0
 
     ; w = 1, s = 1
-    ;m_print_sign_extension
     call p_print_next_byte_sign_extended
     jmp endp_op_0sw_rm_imm
 
@@ -2168,193 +2141,6 @@ write_proc proc
     CALL    clear_temp_bytes
     ;BYTE PRINT END
 
-    QUIT_WRITING_2:
-        MOV     CX, 2                   ; Write result
-        MOV     DX, offset new_line
-        CALL    write_multiple          ; Write to file
-
-        POP     DX
-        POP     CX
-        POP     BX
-        POP     AX
-
-    ret
-
-;--------------------------------
-; comment
-;--------------------------------
-    ;Operation code NAME print
-    ;MOV     DX, c_opName
-    ;PUSH    DX                      ; SAVE ORIGINAL c_opName adress
-
-    ;MOV     AX, 0                   ; Register for counting opName length
-    ;NAMELOOP:
-        ;INC     AX                  ; No "$" found yet
-
-        ;MOV     BX, c_opName
-        ;ADD     BX, AX              ; Offset name adress by AX
-
-        ;MOV     CL, [BX]            ; Check if next char is "$"
-        ;CMP     CL, "$"
-    ;JNE     NAMELOOP                ; If not, loop
-
-    ;POP     DX
-    ;PUSH    AX                      ; Save the length of c_opName
-
-;--------------------------------
-; their
-;--------------------------------
-    ;MOV     c_opName, DX            ; Reset the c_opName
-
-    ;MOV     CX, AX                  ; Write result
-    ;CALL    write_multiple          ; Write to file
-
-    ;POP     AX                      ; Get c_opName length
-;--------------------------------
-; mine
-;--------------------------------
-    mov     DX, offset mano_opkodas
-
-    mov cx, word ptr [opkodas_ilgis]
-    CALL    write_multiple          ; Write to file
-    ret
-;--------------------------------
-    
-    MOV     CX, 0
-    CMP     AL, 10                  ; If opName is larger than 10 spaces
-    JGE     WRITE_SPACES            ; No spaces needed
-
-    MOV     CL, 10                  ; Else
-    SUB     CL, AL                  ; Print spaces: 10 - len
-    MOV     CH, 0
-
-    WRITE_SPACES:
-    MOV     DX, offset space
-    CALL    write_multiple          ; Write " " to file
-    ;Opertation code NAME print END
-
-;--------------------------------
-; comment
-;--------------------------------
-    MOV     CX, offset opcUnk
-    CMP     CX, c_opName
-    JNE     CHECKS                  ; If not unknown, needs further arguments
-;--------------------------------
-    JMP     QUIT_WRITING            ; Else, quit write
-
-    CHECKS:
-    ;CHECK FOR ADRESS
-    MOV     AL, c_arg_2
-    CMP     AL, arg_srb
-    JNE     CHECK_RM_IMM_CASE
-
-    MOV     DX, offset v_arg_2
-    CALL    write_arg
-    MOV     DX, offset v_arg_1
-    CALL    write_arg
-    JMP     QUIT_WRITING
-    ;CHECK FOR ADRESS END
-
-    ;CHECK RM IMM CASE
-    CHECK_RM_IMM_CASE:
-        MOV     AX, c_reg_val           ; Get register value
-        CMP     AX, needs_far           ; ONLY true when FF
-        JE      NEED_FAR
-    CHECK_RM_IMM_CASE_2:
-        MOV     AX, a_mod               ; If mod is 3, it is not memory
-        CMP     AX, 3
-        JE      WRITE_NORMAL
-
-        MOV     AL, c_arg_1             ; If not memory, normal write
-        CMP     AL, arg_rm
-        JNE     WRITE_NORMAL
-
-        MOV     AL, c_arg_2             ; If immediate, need byte ptr
-        CMP     AL, arg_imm
-        JE      WORD_OR_BYTE
-
-        MOV     AL, c_arg_2             ; If only memory, need to override
-        CMP     AL, arg_none
-        JE      WORD_OR_BYTE
-
-        JMP     WRITE_NORMAL            ; If none of these, normal write
-
-        ONLY_BYTE:
-            MOV     CX, 9                   ; Write "byte ptr "
-            MOV     DX, offset byte_ptr
-            CALL    write_multiple          ; Write to file
-            JMP     WRITE_NORMAL
-
-        WORD_OR_BYTE:
-            MOV     AL, c_width         ; If size is byte, byte ptr
-            CMP     AL, w_byte
-            JE      ONLY_BYTE
-
-            MOV     CX, 9                   ; Write "word ptr "
-            MOV     DX, offset word_ptr
-            CALL    write_multiple          ; Write to file
-            JMP     WRITE_NORMAL
-    ;CHECK RM IMM CASE END
-
-    ;CHECK FAR CASE
-    NEED_FAR:
-        MOV     AX, a_reg
-        CMP     AX, 3                       ; Far call 011
-        JE      IS_FAR
-
-        MOV     AX, a_reg
-        CMP     AX, 5                       ; Far jmp 101
-        JE      IS_FAR
-
-        MOV     AX, a_reg
-        CMP     AX, 2                       ; Inner indirect call 010 (no ptr needed)
-        JE      WRITE_NORMAL
-
-        MOV     AX, a_reg
-        CMP     AX, 4                       ; Inner indirect jmp 100
-        JE      WRITE_NORMAL
-
-        JMP     CHECK_RM_IMM_CASE_2         ; Else, check for ptr
-    INVALID:
-        MOV     CX, 14
-        MOV     DX, offset invalid_msg
-        CALL    write_multiple
-        JMP     WRITE_NORMAL
-
-    IS_FAR:
-        MOV     AX, a_mod                   ; Cannot have reg in far call/jump
-        CMP     AX, 3
-        JE      INVALID
-
-        MOV     CX, 4
-        MOV     DX, offset far_msg
-        CALL    write_multiple
-    ;CHECK FAR CASE END
-
-    WRITE_NORMAL:
-        MOV     DX, offset v_arg_1          ; If no arguments exists, dont write
-        MOV     BX, DX
-        MOV     CL, byte ptr [BX]
-        CMP     CL, "$"
-        JE      QUIT_WRITING
-
-        CALL    write_arg                   ; W
-
-        MOV     DX, offset v_arg_2          ; If 2nd argument doesnt exist, dont write
-        MOV     BX, DX
-        MOV     CL, byte ptr [BX]
-        CMP     CL, "$"
-        JE      QUIT_WRITING
-
-        MOV     DX, offset point
-        CALL    write_single
-
-        MOV     DX, offset space
-        CALL    write_single
-
-        MOV     DX, offset v_arg_2
-        CALL    write_arg
-
     QUIT_WRITING:
         MOV     CX, 2                   ; Write result
         MOV     DX, offset new_line
@@ -2365,8 +2151,8 @@ write_proc proc
         POP     BX
         POP     AX
 
-        RET
-write_proc endp
+    RET
+
 
 check_read proc
     ; Check if input needs to be replenished
@@ -2430,20 +2216,6 @@ store_next_byte proc
     DEC     CX
     MOV     [bytes_read], CX
 
-;--------------------------------
-; mine added
-;--------------------------------
-    ; UNDEFINED 065
-    ;mov byte ptr [data_octal],   1
-    ;mov byte ptr [data_octal+1], 4
-    ;mov byte ptr [data_octal+2], 5
-
-    ; LAHF 9F
-    ;mov byte ptr [data_octal],   2
-    ;mov byte ptr [data_octal+1], 3
-    ;mov byte ptr [data_octal+2], 7
-;--------------------------------
-
     ; Store read byte in temp_bytes for printing
     MOV     BX, offset temp_bytes
     MOV     AX, offset temp_b_index
@@ -2458,20 +2230,11 @@ store_next_byte proc
 
     INC     temp_ip_add         ; Increase IP
 
-;--------------------------------
-; mine added
-;--------------------------------
     ; Store read byte in data_octal,
     ; where my DISASM could read it
 
-;--------------------------------
-    ; Stores MOD, REG, RM in appropriate variables from adress byte
-    ; RESULT: a_mod, a_reg, a_rm
-;--------------------------------
     ; Stores xx, yyy, zzz in appropriate variables from adress byte
     ; RESULT: [data_octal+di] = xx, yyy, zzz
-;--------------------------------
-
     PUSH    AX
     PUSH    BX
     PUSH    CX
@@ -2483,11 +2246,8 @@ store_next_byte proc
 
     ROR     DX, 6           ; Shift right 6 times
 
-;--------------------------------
-    ;MOV     a_mod, DX       ; Save 000000xxb
-;--------------------------------
     MOV byte ptr [data_octal+di+1], DL ; nes DI yra 0FFFFh
-;--------------------------------
+
     POP     DX
 
     PUSH    DX
@@ -2496,27 +2256,18 @@ store_next_byte proc
 
     ROR     DX, 3           ; Shift right 3 times
 
-;--------------------------------
-    ;MOV     a_reg, DX       ; Save 00000xxxb
-;--------------------------------
     MOV byte ptr [data_octal+di+2], DL
-;--------------------------------
     POP     DX
 
     MOV     BX, 00000111b
     AND     DX, BX
 
-;--------------------------------
-    ;MOV     a_rm, DX        ; Save 00000xxxb
-;--------------------------------
     MOV byte ptr [data_octal+di+3], DL
-;--------------------------------
 
     POP     DX
     POP     CX
     POP     BX
     POP     AX
-;--------------------------------
 
     POP     CX
     POP     BX
@@ -2580,52 +2331,6 @@ number_to_ascii proc
 
         RET
 number_to_ascii endp
-
-recognize_byte proc
-;--------------------------------
-; comment out all
-;--------------------------------
-    ; Find appropriate byte by value in DL
-    ; Takes size of the structure, multiplies it by DL to get offset
-    ; Offsets to correct location, gets the bytes
-    PUSH    AX
-    PUSH    BX
-
-    MOV     AL, size opcInfo            ; Gets the syze in bytes of the opcInfo struct
-    MUL     DL                          ; Multiplies that by stored byte
-
-    MOV     BX, offset [opcInfoStart]   ; Offsets to start of the array
-    INC     BX                          ; Skip the first byte
-    ADD     BX, AX
-
-    MOV     AX, [BX].s_opName           ; All the storing
-    MOV     [c_opName], AX
-
-    MOV     AL, [BX].s_abyte
-    MOV     [c_abyte], AL
-
-    MOV     AL, [BX].s_width
-    MOV     [c_width], AL
-
-    MOV     AL, [BX].s_is_reg
-    MOV     [c_is_reg], AL
-
-    MOV     AX, [BX].s_reg_val
-    MOV     [c_reg_val], AX
-
-    MOV     AL, [BX].s_arg_1
-    MOV     [c_arg_1], AL
-
-    MOV     AL, [BX].s_arg_2
-    MOV     [c_arg_2], AL
-
-    MOV     AL, [BX].s_is_sr
-    MOV     [c_is_sr], AL
-
-    POP     BX
-    POP     AX
-    RET
-recognize_byte endp
 
 check_carry proc
     JC      STOP_PROGRAM            ; If carry flag is set, stop
@@ -2770,7 +2475,6 @@ PARSE:                              ; The whole algorithm
     JLE     EXIT                    ; nothing left in file, quit
 
     CALL    store_next_byte         ; Get the next byte for opc
-    ;CALL    recognize_byte          ; Recognize the next opc
     CALL    analyze_byte            ; Do work with recognized opc
 
     ;m_puts 'done'
