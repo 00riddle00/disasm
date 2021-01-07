@@ -215,7 +215,7 @@ endm
 
 m_putfdigit macro digit
    mov si, 1
-   m_putsf digit
+   m_putsf digit ; dollar sign is not written to STDOUT (for debugging), but it is written to file.
 endm
 
 m_putfspace macro

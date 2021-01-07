@@ -14,10 +14,10 @@
 ;    output file after the program's execution should look
 ;    like this:
 ;         ...
-;         MOV AH, 09h     ; 0100: B409  
-;         MOV DX, 01DEh   ; 0102: BADE01
-;         INT 21h         ; 0105: CD21
-;         ; UNDEFINED     ; 01F9: 65
+;         MOV AH, 09h     ; 0100: B4 09  
+;         MOV DX, 01DEh   ; 0102: BA DE 01
+;         INT 21h         ; 0105: CD 21
+;         ; UNDEFINED     ; 0107: 65
 ;         ...
 ;         ...
 ;    i.e. on every line there should be Hex address of the 
@@ -1322,14 +1322,12 @@ write_proc proc
     mov si, 4
     m_printf ip_value                   ; Write 4 bytes (of IP) to file
 
-    m_putfchar ':'
-
-    mov si, 4
-    m_putsf '    '
+    mov si, 2
+    m_putsf ': '
     ; ip counter print end
 
     ;byte print
-    mov     si, 25                  ; Write result
+    mov     si, 17                  ; Write result
     m_printf temp_bytes
 
     call    clear_temp_bytes
@@ -4152,8 +4150,8 @@ PARSE:                              ; The whole algorithm
     mov si, 0
     call disasm
 
-    mov si, 5
-    m_putsf '    ;'
+    mov si, 6
+    m_putsf '    ; '
 
     call write_proc
 JMP PARSE
