@@ -1289,16 +1289,6 @@ clear_temp_bytes proc
         RET
 clear_temp_bytes endp
 
-write_multiple proc
-    ; CX is bytes to write
-    ; DX is adress of buffer
-    ; RESULT: updated output file
-    MOV     BX, out_handle
-    MOV     AX, 4000h               ; Write
-    INT     21h
-    RET
-write_multiple endp
-
 write_proc proc
     ; Writes analyzed command and resets all buffers for further work
     PUSH    AX
@@ -1322,9 +1312,8 @@ write_proc proc
     ADD     ip_index, AX                ; Add accumulated ip value
     MOV     temp_ip_add, 0              ; Zero out the acuumulation
 
-    MOV     CX, 4                   ; Write 4 bytes (of IP)
-    MOV     DX, offset ip_value     ; Adress of IP ascii buffer
-    CALL    write_multiple          ; Write to file
+    mov si, 4
+    m_printf ip_value                   ; Write 4 bytes (of IP) to file
 
 ; -------------------------------------------------------
     ;m_putfchar ':'
@@ -1339,28 +1328,23 @@ write_proc proc
     INT     21h
 ; -------------------------------------------------------
 
-    MOV     CX, 6
-    MOV     DX, offset space
-    CALL    write_multiple          ; Write to file
+    mov si, 4
+    m_putsf '    '
     ;IP COUNTER PRINT END
 
     ;BYTE PRINT
-    MOV     CX, 25                  ; Write result
-    MOV     DX, offset temp_bytes
-    CALL    write_multiple          ; Write to file
+    MOV     si, 25                  ; Write result
+    m_printf temp_bytes
 
     CALL    clear_temp_bytes
     ;BYTE PRINT END
 
-    QUIT_WRITING:
-        MOV     CX, 2                   ; Write result
-        MOV     DX, offset new_line
-        CALL    write_multiple          ; Write to file
+    m_printf_nl
 
-        POP     DX
-        POP     CX
-        POP     BX
-        POP     AX
+    POP     DX
+    POP     CX
+    POP     BX
+    POP     AX
 
     RET
 
