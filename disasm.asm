@@ -29,6 +29,7 @@
 ;  MACROS
 ; ============================================================
 
+;include macros.asm
 include macros2.asm
 
 ; print register name
@@ -37,23 +38,47 @@ include macros2.asm
 ; Also, BX must contain the offset from reg_group where
 ; the required register is.
 m_print_reg macro reg_group
-   push ax bx dx
+   push ax bx cx dx
    add bx, offset reg_group
+   mov dx, bx
+   inc dx
+
+   mov ah, 40h
+   push bx
+   mov bx, out_handle
+   mov cx, 1
+   int 21h
+   pop bx
+
+   ; PUTCHAR to STDOUT
+   push ax dx
+   xor dx, dx
+
+   mov ah, 2
    mov dl, byte ptr [bx+1]
+   int 21h
 
-   mov cx, 1
-   call write_multiple
+   pop dx ax
+   ; END
 
-   ;mov ah, 02h
-   ;int 21h
+   dec dx
+   mov ah, 40h
+   push bx
+   mov bx, out_handle
+   int 21h
+   pop bx
 
+   ; PUTCHAR to STDOUT
+   push ax dx
+   xor dx, dx
+
+   mov ah, 2
    mov dl, byte ptr [bx]
-   mov cx, 1
-   call write_multiple
+   int 21h
 
-   ;int 21h
-
-   pop dx bx ax
+   pop dx ax
+ 
+   pop dx cx bx ax
 endm
 
 ; print asm pointer directive
@@ -1338,6 +1363,9 @@ analyze_byte proc
     PUSH SI
     call main
     POP SI
+    ;m_puts '     ;'
+    call write_proc
+    m_exit0
 
     ;cmp ax, 66
     ;je finalize
@@ -2126,6 +2154,18 @@ write_proc proc
     CALL    clear_temp_bytes
     ;BYTE PRINT END
 
+    QUIT_WRITING_2:
+        MOV     CX, 2                   ; Write result
+        MOV     DX, offset new_line
+        CALL    write_multiple          ; Write to file
+
+        POP     DX
+        POP     CX
+        POP     BX
+        POP     AX
+
+    ret
+
 ;--------------------------------
 ; comment
 ;--------------------------------
@@ -2159,11 +2199,11 @@ write_proc proc
 ;--------------------------------
 ; mine
 ;--------------------------------
-    ;mov     DX, offset mano_opkodas
+    mov     DX, offset mano_opkodas
 
-    ;mov cx, word ptr [opkodas_ilgis]
-    ;CALL    write_multiple          ; Write to file
-    ;ret
+    mov cx, word ptr [opkodas_ilgis]
+    CALL    write_multiple          ; Write to file
+    ret
 ;--------------------------------
     
     MOV     CX, 0
@@ -2719,8 +2759,8 @@ PARSE:                              ; The whole algorithm
     ;CALL    recognize_byte          ; Recognize the next opc
     CALL    analyze_byte            ; Do work with recognized opc
 
-    ;m_puts 'done'
-    ;m_exit0
+    m_puts 'done'
+    m_exit0
 
 JMP PARSE
 
@@ -3762,6 +3802,7 @@ __21_0123_mov_reg_rm:
 ; ------------------------------------------------------------
 _21_46_mov_rm_segreg:
     ; check if 'reg' is not '1xx'
+    call store_next_byte
     inc di ; point to 'mod'
     inc di ; point to 'reg'
     mov bl, byte ptr [data_octal+di]
@@ -3880,7 +3921,7 @@ _22x_xchg_reg_ax:
     ja undefined
 
     cmp al, 0
-    je short _22x_nop
+    je _22x_nop
 
     ;mov si, A
     m_puts 'XCHG '
