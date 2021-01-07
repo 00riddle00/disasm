@@ -442,10 +442,12 @@ jumps
     cur_arg_buff    DW 0                ; Adress of the current argument buffer = offset (v_arg_1 or v_arg_2)
 
     temp_bytes      DB 25 DUP(" "), '$' ; The read bytes for current command
+                    DB '$'              ; This line is for debugging "temp_bytes" (see m_printf macro and its usage)
     temp_b_index    DW 0                ; The index of temp_bytes buffer
 
     ip_index        DW 100h             ; The current IP value
     ip_value        DB 4 DUP("$")       ; The current IP value in ASCII
+                    DB '$'              ; This line is for debugging "ip_value" (see m_printf macro and its usage)
     ip_arr_index    DW 0                ; The index of ip_value buffer
     temp_ip_add     DW 0                ; The number of bytes currently read (For IP adding)
 
@@ -1316,16 +1318,16 @@ write_proc proc
     m_printf ip_value                   ; Write 4 bytes (of IP) to file
 
 ; -------------------------------------------------------
-    ;m_putfchar ':'
+    m_putfchar ':'
 ; -------------------------------------------------------
-    MOV     DX, offset doublepoint  ; Write ":"
+    ;MOV     DX, offset doublepoint  ; Write ":"
 
-    ; DX is buffer for symbol writing
-    ; RESULT: updated output file
-    MOV     CX, 1                   ; Write result
-    MOV     BX, out_handle
-    MOV     AX, 4000h               ; Write
-    INT     21h
+     ;;DX is buffer for symbol writing
+     ;;RESULT: updated output file
+    ;MOV     CX, 1                   ; Write result
+    ;MOV     BX, out_handle
+    ;MOV     AX, 4000h               ; Write
+    ;INT     21h
 ; -------------------------------------------------------
 
     mov si, 4

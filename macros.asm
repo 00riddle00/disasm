@@ -67,7 +67,7 @@ endm
 ;  write to STDOUT
 ; ---------------------
 
-; print string
+; print '$' terminated string
 m_print macro string               
     push ax dx
     mov ah, 09                      
@@ -144,6 +144,7 @@ endm
 
 ; print string
 m_printf macro string               
+    m_print string     ; <-- USED FOR DEBUGGING. Make sure that string is '$' terminated for debugging!
     push ax bx cx dx
     mov ah, 40h
     mov bx, out_handle
@@ -157,6 +158,7 @@ endm
 ; print newline
 m_printf_nl macro
 local @@start, @@data
+      m_print_nl      ; <-- USED FOR DEBUGGING
       push ax bx cx dx
       push ds
       jmp short @@start     ; string is being stored
@@ -181,7 +183,7 @@ endm
 
 m_putsf macro string
 local @@start, @@data
-      m_puts string ; used for testing
+      m_puts string   ; <-- USED FOR DEBUGGING
       push ax bx cx dx
       push ds
       jmp short @@start     ; string is being stored
@@ -207,22 +209,13 @@ endm
 
 ; print char
 m_putfchar macro char
-   push ax cx dx
-   mov dl, char
-   mov ah, 40h
-   mov bx, out_handle
-   mov cx, 1
-   int 21h
-   pop dx cx ax
+   mov si, 1
+   m_putsf char
 endm
 
 m_putfdigit macro digit
-   push ax dx
-   mov dl, digit               
-   add dl, '0'                 
-   mov ah, 02                  
-   int 21h
-   pop dx ax
+   mov si, 1
+   m_putsf digit
 endm
 
 m_putfspace macro
