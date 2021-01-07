@@ -560,8 +560,8 @@ jumps
     ;db 0FFh
 ; --------------------------------------------------------------------------------------------
 
-    db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2   ; 0???: ??      | CALL 022064:126170 (=9A 78 56 34 12) (=JMP 1234h:5678h)
-    db 3, 5, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2   ; 0???: ??      | JMP 022064:126170  (=EA 78 56 34 12) (=JMP 1234h:5678h)
+    db 2, 3, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2   ; 0???: ??      | CALL 11064o:53170o (=9A 78 56 34 12) (=CALL 1234h:5678h)
+    db 3, 5, 2,  1, 7, 0,  1, 2, 6,  0, 6, 4,  0, 2, 2   ; 0???: ??      | JMP  11064o:53170o (=EA 78 56 34 12) (=JMP 1234h:5678h)
 
     db 0, 4, 6,  3, 7, 7,  1, 2, 0,  1, 1, 1             ; 0???: ??      | CALL ES:[BX+SI+000111] (=26 FF 50 49)
     db 3, 7, 7,  0, 2, 6,  1, 1, 1,  2, 2, 2             ; 0???: ??      | CALL DS:[222111] (=FF 16 49 92)
@@ -905,7 +905,7 @@ endp p_print_next_byte_sign_extended
 ; After call: DI increases by 6
 proc p_print_next_word
     push ax dx
-    inc di
+    ;inc di
 
     m_octal_word_to_number
     m_number_to_octal_digit
@@ -1499,6 +1499,15 @@ store_next_word proc
 
     ret
 endp store_next_word
+
+store_next_double_word proc
+    call store_next_word
+    add di, 6
+    call store_next_word
+    sub di, 6
+
+    ret
+endp store_next_double_word
 
 number_to_ascii proc
     ; Convert read byte to ascii and store in temp_bytes
@@ -2801,8 +2810,8 @@ _232_call_far_absolute_direct:
     m_putsf 'CALL '
     add di, 6 ; first print the second word
     call p_print_next_word
-    m_putfchar '+'
-    sub di, 12 ; then print the first word
+    m_putfchar ':'
+    sub di, 11 ; then print the first word
     call p_print_next_word
     add di, 6 ; move SI to the last byte read
 
@@ -3609,15 +3618,17 @@ _351_jmp_near_relative:
 
 ; ------------------------------------------------------------
 _352_jmp_far_absolute_direct:
+    inc di ; must point to first octal digit of next byte
+    call store_next_double_word
+
     mov si, 4
     m_putsf 'JMP '
     add di, 6 ; first print the second word
     call p_print_next_word
     m_putfchar ':'
-    sub di, 12 ; then print the first word
+    sub di, 11 ; then print the first word
     call p_print_next_word
     add di, 6 ; move SI to the last byte read
-
     ret 
 
 ; ------------------------------------------------------------
