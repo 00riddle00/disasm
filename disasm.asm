@@ -308,7 +308,18 @@ local @@conversion, @@convert, @@converted, @@print_result, @@process_lowercase,
                 jmp short @@print_symbol
 
             @@print_symbol:
+; --------------------------------------------------------
+                int 21h ; writes to STDOUT
+; --------------------------------------------------------
+                push ax bx cx dx
+                mov ah, 40h
+                mov bx, out_handle
+                mov cx, 1
+                mov byte ptr [char_to_write], dl
+                mov dx, offset char_to_write
                 int 21h
+                pop dx cx bx ax
+; --------------------------------------------------------
                 dec cl
                 jnz @@print_result
 
@@ -415,6 +426,8 @@ jumps
 
     ; Registers used as index in EA formation
     EAi dw 'SI', 'DI', 'SI', 'DI'
+
+    char_to_write   db 0
 
     arg_msg         db "Intel 8088 Disasembler",13,10
     arg2_msg        db "Written in TASM, intended for files assembled with TASM as well$"
