@@ -863,7 +863,7 @@ proc p_print_next_byte_sign_extended
 
     push ax dx
     xor ax, ax ; make AX zero
-    inc di 
+    ;inc di 
 
     cmp byte ptr [data_octal+di], 2
     jb padding_done
@@ -962,6 +962,7 @@ endp p_decode_reg
 ;                were used for offset (or direct address)
 proc p_decode_rm
     push ax bx dx
+    call store_next_byte
 
     ; get 'mod' value (2 bits, represented as an octal number)
     mov al, byte ptr [data_octal+di]
@@ -1029,6 +1030,8 @@ proc p_decode_rm
 
             ; offset is two bytes (according to 'mod')
             print_offset_word:
+                inc di
+                call store_next_word
                 call p_print_next_word
                 ; save in CL how many additional bytes (in octal) were read after 'r/m' byte
                 mov cl, 6
@@ -1039,6 +1042,8 @@ proc p_decode_rm
 
             ; offset is one byte (according to 'mod')
             print_offset_byte: ; FIXME actually prints two bytes!
+                inc di
+                call store_next_byte
 
                 ;call p_print_next_byte
                 call p_print_next_byte_sign_extended
@@ -1102,6 +1107,7 @@ proc p_decode_rm
                 m_putfchar '['
 
                 ; print direct address (two bytes)
+                call store_next_word
                 call p_print_next_word
                 m_putfchar ']'
 
@@ -1369,6 +1375,22 @@ write_proc proc
     ret
 endp write_proc
 
+check_read_show proc
+    ; Check if input needs to be replenished
+    ; RESULT: nothing or replenished input_buff
+    push    ax
+    mov     ax, [bytes_read]
+    cmp     ax, 0
+    jle     read_show
+    pop     ax
+    ret
+
+    read_show:
+        call    read_input_show
+        pop     ax
+        ret
+endp check_read_show
+
 check_read proc
     ; Check if input needs to be replenished
     ; RESULT: nothing or replenished input_buff
@@ -1384,6 +1406,33 @@ check_read proc
         pop     ax
         ret
 endp check_read 
+
+read_input_show proc
+    ; Updates bytes_read with new value. Does not change registers
+    push    ax
+    push    bx
+    push    cx
+    push    dx
+
+    mov     bx, in_handle
+    mov     cx, C_BUFFSIZE                 ; Read 255 bytes
+    mov     dx, offset input_buff
+    mov     ax, 3F00h
+    int     21h
+
+    mov     [bytes_read], ax
+    mov     ax, 0
+    mov     [temp_index], ax
+
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
+
+    call    check_carry             ; Check if successful
+
+    ret
+endp read_input_show
 
 read_input proc
     ; Updates bytes_read with new value. Does not change registers
@@ -1411,6 +1460,64 @@ read_input proc
 
     ret
 endp read_input 
+
+show_next_byte proc
+    ; Reads and stores next byte in DL
+    push    ax
+    push    bx
+    push    cx
+
+    call    check_read_show         ; Check if input needs repleneshing has to be read
+
+    mov     bx, temp_index          ; Set bx value to temp_index
+    mov     dh, 0                   ; Set DH to 0
+    mov     dl, [input_buff + bx]   ; Get from input buffer
+
+    ; Store read byte in data_octal,
+    ; where my DISASM could read it
+
+    ; Stores xx, yyy, zzz in appropriate variables from adress byte
+    ; RESULT: [data_octal+di] = xx, yyy, zzz
+    push    ax
+    push    bx
+    push    cx
+    push    dx
+
+    push    dx
+    mov     bx, 11000000b
+    and     dx, bx
+
+    ror     dx, 6           ; Shift right 6 times
+
+    mov byte ptr [data_octal+di], dl
+
+    pop     dx
+
+    push    dx
+    mov     bx, 00111000b
+    and     dx, bx
+
+    ror     dx, 3           ; shift right 3 times
+
+    mov byte ptr [data_octal+di+1], dl
+    pop     dx
+
+    mov     bx, 00000111b
+    and     dx, bx
+
+    mov byte ptr [data_octal+di+2], dl 
+
+    pop     dx
+    pop     cx
+    pop     bx
+    pop     ax
+
+    pop     cx
+    pop     bx
+    pop     ax
+
+    ret
+endp show_next_byte
 
 store_next_byte proc
     ; Reads and stores next byte in DL
@@ -3852,6 +3959,7 @@ _37x:
 
     __37_67:
         inc di ; point to 'mod'
+        call show_next_byte
         inc di ; point SI to next octal digit after 'mod'
         mov bl, byte ptr [data_octal+di]
         dec di
