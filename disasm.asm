@@ -79,7 +79,7 @@ m_print_reg macro reg_group
    pop dx ax
  
    pop dx cx bx ax
-endm m_print
+endm m_print_reg
 
 ; print asm pointer directive
 ; ::param:: DL can be 0 (=byte), 1 (=word),
@@ -104,7 +104,7 @@ local @@word_ptr, @@endm_print_ptr
     m_putsf 'word ptr '
 
 @@endm_print_ptr:
-endm
+endm m_print_ptr
 
 m_octal_byte_to_number macro
     ; SI already points to the first 
@@ -121,7 +121,7 @@ m_octal_byte_to_number macro
     inc di
 
     add al, byte ptr [data_octal+di]
-endm
+endm m_octal_byte_to_number
 
 m_octal_word_to_number macro
     ; SI already points to the first 
@@ -169,7 +169,7 @@ m_octal_word_to_number macro
     inc di
     inc di
     inc di ; point SI to end of msb
-endm
+endm m_octal_word_to_number
 
 ; TODO description
 m_print_near_offset_byte macro
@@ -205,7 +205,7 @@ local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
         @@endm_m:
             ret ; jmp _xxx
     @@macro_end:
-endm
+endm m_print_near_offset_byte
 
 ; TODO description
 m_print_near_offset_word macro
@@ -243,7 +243,7 @@ local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
         @@endm_m:
             ret ; jmp _xxx
     @@macro_end:
-endm
+endm m_print_near_offset_word
 
 m_number_to_octal_digit macro
 local @@conversion, @@convert, @@converted, @@print_result, @@process_lowercase, @@process_uppercase, @@process_number, @@process_space, @@process_symbol, @@print_symbol, @@endm_m_print_near_offset_byte
@@ -313,7 +313,7 @@ local @@conversion, @@convert, @@converted, @@print_result, @@process_lowercase,
                 jnz @@print_result
 
         m_putfchar 'o'
-endm
+endm m_number_to_octal_digit
 
 ; TODO description
 m_print_sr_prefix_default macro
@@ -333,7 +333,7 @@ local @@sr_prefix_default, @@sr_prefix_done
         m_putsf 'DS:'
 
 @@sr_prefix_done:
-endm
+endm m_print_sr_prefix_default
 
 ; TODO description
 m_print_sr_prefix macro
@@ -348,14 +348,14 @@ local @@sr_prefix_done
     m_putfchar ':'
 
 @@sr_prefix_done:
-endm
+endm m_print_sr_prefix
 
 ; TODO description, this is one of the vaguest points!
 m_before_decode macro
     mov dl, al
     and dl, 001b ; will be used for decode procedure
     inc di ; si points to 'mod' now
-endm
+endm m_before_decode
 
 ; TODO description
 m_move_index macro
@@ -378,7 +378,7 @@ m_move_index macro
     loop @@loop_start
 
     @@si_in_right_place:
-endm
+endm m_move_index
 
 ; ============================================================
 ;  SETTINGS
@@ -825,7 +825,7 @@ proc p_print_next_byte
 
     pop dx ax
     ret
-endp
+endp p_print_next_byte
 
 ; Before call: SI must point to the first octal 
 ; digit of the byte to be printed
@@ -869,7 +869,7 @@ proc p_print_next_byte_sign_extended
 
     pop dx ax
     ret
-endp
+endp p_print_next_byte_sign_extended
 
 ; Before call: DI must point to the first octal 
 ; digit of the youngest byte
@@ -884,7 +884,7 @@ proc p_print_next_word
 
     pop dx ax
     ret
-endp
+endp p_print_next_word
 
 ; Decode 'reg' from 'mod reg r/m [offset]'
 ; Before call: DI must point to 'mod' byte
@@ -921,7 +921,7 @@ proc p_decode_reg
     dec di
     pop dx bx ax
     ret
-endp
+endp p_decode_reg
 
 ; Decode 'r/m' from 'mod reg r/m [offset]'
 ; Before call: DI must point to 'mod' byte
@@ -1090,7 +1090,7 @@ proc p_decode_rm
     endp_decode_rm:
         pop dx bx ax
     ret
-endp
+endp p_decode_rm
 
 ; Handles printing "r/m, immediate" for the 
 ; commands of the format:
@@ -1166,7 +1166,7 @@ proc p_op_0sw_rm_imm
     endp_op_0sw_rm_imm:
         pop dx bx ax
     ret
-endp
+endp p_op_0sw_rm_imm
 
 ; Handles printing "reg, r/m" or "r/m, reg" for the 
 ; commands of the format:
@@ -1239,7 +1239,7 @@ proc p_op_0dw_reg_rm
     si_in_right_place_L1:
     pop dx bx ax
     ret
-endp
+endp p_op_0dw_reg_rm
 
 convert_number proc
     ; Convert given bytes as a number in hex
@@ -1251,7 +1251,7 @@ convert_number proc
     mov     counter_convert, dx
     call    number_to_ascii
     ret
-convert_number endp
+endp convert_number
 
 clear_temp_bytes proc
     ; Clear the read bytes buffer
@@ -1280,7 +1280,7 @@ clear_temp_bytes proc
         pop     aX
 
         ret
-clear_temp_bytes endp
+endp clear_temp_bytes
 
 write_proc proc
     ; Writes analyzed command and resets all buffers for further work
@@ -1329,6 +1329,7 @@ write_proc proc
     pop     ax
 
     ret
+endp write_proc
 
 check_read proc
     ; Check if input needs to be replenished
@@ -1344,7 +1345,7 @@ check_read proc
         call    read_input
         pop     ax
         ret
-check_read endp
+endp check_read 
 
 read_input proc
     ; Updates bytes_read with new value. Does not change registers
@@ -1371,7 +1372,7 @@ read_input proc
     call    check_carry             ; Check if successful
 
     ret
-read_input endp
+endp read_input 
 
 store_next_byte proc
     ; Reads and stores next byte in DL
@@ -1450,7 +1451,7 @@ store_next_byte proc
     pop     ax
 
     ret
-store_next_byte endp
+endp store_next_byte
 
 number_to_ascii proc
     ; Convert read byte to ascii and store in temp_bytes
@@ -1506,7 +1507,7 @@ number_to_ascii proc
         pop     ax
 
         ret
-number_to_ascii endp
+endp number_to_ascii
 
 check_carry proc
     jc      stop_program            ; If carry flag is set, stop
@@ -1523,7 +1524,7 @@ check_carry proc
 
         mov     ax, 4C00H               ; Terminate
         int     21h
-check_carry endp
+endp check_carry
 
 disasm proc
 _xxx:
