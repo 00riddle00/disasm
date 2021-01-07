@@ -424,90 +424,41 @@ jumps
     ; Registers used as index in EA formation
     EAi dw 'SI', 'DI', 'SI', 'DI'
 
-arg_msg         DB "Intel 8088 Disasembler",13,10
-arg2_msg        DB "Written in TASM, intended for files assembled with TASM as well$"
-cant_open       DB 13,10,"Can't open",13,10,'$'     ; Message for file open error
-err_msg         DB 13,10,"Error",13,10,'$'      ; Message for file write error
-file_n          DB 40 DUP(0)                ; Input File name
-output_n        DB 40 DUP(0)                ; Output file name
-in_handle       DW 0                        ; File handles
-out_handle      DW 0
-temp_index      DW 0                        ; Temporary index for input file
-bytes_read      DW 0                        ; Bytes read on input
+    arg_msg         DB "Intel 8088 Disasembler",13,10
+    arg2_msg        DB "Written in TASM, intended for files assembled with TASM as well$"
+    cant_open       DB 13,10,"Can't open",13,10,'$'     ; Message for file open error
+    err_msg         DB 13,10,"Error",13,10,'$'      ; Message for file write error
+    file_n          DB 40 DUP(0)                ; Input File name
+    output_n        DB 40 DUP(0)                ; Output file name
+    in_handle       DW 0                        ; File handles
+    out_handle      DW 0
+    temp_index      DW 0                        ; Temporary index for input file
+    bytes_read      DW 0                        ; Bytes read on input
 
-;WRITING SYMBOLS
-new_line        DB 13,10
-doublepoint     DB ":"
-space           DB 9 DUP(" ")
+    ;WRITING SYMBOLS
+    new_line        DB 13,10
+    doublepoint     DB ":"
+    space           DB 9 DUP(" ")
 
-;Analyzed byte
-c_opName        DW 0    ; Operation code names adress
-c_abyte         DB 0    ; Is there an adress byte? (1 yes, 0 no)
-c_width         DB 0    ; Word or byte? (1 word, 0 byte)
-c_is_reg        DB 0    ; Is there a predefined register? (1 yes, 0 no)
-c_reg_val       DW 0    ; Predefined register value (Adress)
-c_arg_1         DB 0    ; First argument of analyzed byte
-c_arg_2         DB 0    ; Second argument of analyzed byte
-c_is_sr         DB 0    ; Is there a segment register in adress byte ()?
-c_sr            DB 0    ; Not used currently
-;Analyzed byte end
+    v_arg_1         DB 40 DUP("$")      ; First argument string
+    v_arg_2         DB 40 DUP("$")      ; Second argument string
 
-; Analyzed adress byte
-a_mod           DW 0                ; Adress byte mod
-a_reg           DW 0                ; Adress byte reg
-a_rm            DW 0                ; Adress byte register/memory
-;Analyzed adress byte end
+    v_arg_index     DW 0                ; Argument index (For both v_arg_1 and v_arg_2)
+    cur_arg_buff    DW 0                ; Adress of the current argument buffer = offset (v_arg_1 or v_arg_2)
 
-v_arg_1         DB 40 DUP("$")      ; First argument string
-v_arg_2         DB 40 DUP("$")      ; Second argument string
+    temp_bytes      DB 25 DUP(" "), '$' ; The read bytes for current command
+    temp_b_index    DW 0                ; The index of temp_bytes buffer
 
-v_arg_index     DW 0                ; Argument index (For both v_arg_1 and v_arg_2)
-cur_arg_buff    DW 0                ; Adress of the current argument buffer = offset (v_arg_1 or v_arg_2)
+    ip_index        DW 100h             ; The current IP value
+    ip_value        DB 4 DUP("$")       ; The current IP value in ASCII
+    ip_arr_index    DW 0                ; The index of ip_value buffer
+    temp_ip_add     DW 0                ; The number of bytes currently read (For IP adding)
 
-temp_bytes      DB 25 DUP(" "), '$' ; The read bytes for current command
-temp_b_index    DW 0                ; The index of temp_bytes buffer
+    needs_convert   DW 0
+    counter_convert DW 0
 
-ip_index        DW 100h             ; The current IP value
-ip_value        DB 4 DUP("$")       ; The current IP value in ASCII
-ip_arr_index    DW 0                ; The index of ip_value buffer
-temp_ip_add     DW 0                ; The number of bytes currently read (For IP adding)
-
-needs_convert   DW 0
-counter_convert DW 0
-
-; Analyze byte
-
-opcInfo struc                       ; Equivalent structure for analyzing bytes
-    s_opName    DW 0
-    s_abyte     DB 0
-    s_width     DB 0
-    s_is_reg    DB 0
-    s_reg_val   DW 0
-    s_arg_1     DB 0
-    s_arg_2     DB 0
-    s_is_sr     DB 0
-ends
-
-include opTable.inc
-
-hex             DB "0123456789ABCDEF"   ; Hex base
-temp_prefix     DW noReg                ; Adress to prefix (if found). Stored for 1 opc read
-
-; Extra identifying of operation code
-
-identifyx80     DW opcAdd, opcOr, opcAdc, opcSbb, opcAnd, opcSub, opcXor, opcCmp
-identifyxD0     DW opcRol, opcUnk, opcUnk, opcUnk, opcUnk, opcUnk, opcUnk, opcUnk
-identifyxF6     DW opcTest, opcUnk, opcNot, opcNeg, opcMul, opcIMul, opcDiv, opcIDiv
-identifyxFE     DW opcInc, opcDec, opcUnk, opcUnk, opcUnk, opcUnk, opcUnk, opcUnk
-identifyxFF     DW opcInc, opcDec, opcCall, opcCall, opcJmp, opcJmp, opcPush, opcUnk
-
-regRM_w0        DW regAL, regCL, regDL, regBL, regAH, regCH, regDH, regBH
-regRM_w1        DW regAX, regCX, regDX, regBX, regSP, regBP, regSI, regDI
-
-rm_00           DW rm_000_00, rm_001_00, rm_010_00, rm_011_00, rm_100_00, rm_101_00, rm_110_00, rm_111_00
-                ;  "BX+SI$"   "BX+DI$"   "BP+SI$"   "BP+DI$"   "SI$"      "DI$"      "$"        "BX$"
-rm_01           DW rm_000_01, rm_001_01, rm_010_01, rm_011_01, rm_100_01, rm_101_01, rm_110_01, rm_111_01
-                ;  "BX+SI+$"  "BX+DI+$"  "BP+SI+$"  "BP+DI+$"  "SI+$"     "DI+$"     "BP+$"     "BX+$"
+    ; Analyze byte
+    hex             DB "0123456789ABCDEF"   ; Hex base
 
 ; *************************************************************************************
 
