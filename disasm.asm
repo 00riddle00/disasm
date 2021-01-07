@@ -79,7 +79,7 @@ m_print_reg macro reg_group
    pop dx ax
  
    pop dx cx bx ax
-endm
+endm m_print
 
 ; print asm pointer directive
 ; ::param:: DL can be 0 (=byte), 1 (=word),
@@ -2101,3 +2101,1983 @@ _16x:
     cmp al, 3
     jb short __16_012
     je _163_jae_near
+    jmp short __16_456
+
+    __16_012:
+        cmp al, 1
+        jb short _160_jo_near
+        je _161_jno_near
+        jmp _162_jb_near
+
+    __16_456:
+        cmp al, 5
+        jb _164_je_near
+        je _165_jne_near
+        jmp _166_jbe_near
+
+; ------------------------------------------------------------
+_160_jo_near:
+    mov si, 3
+    m_putsf 'JO '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_161_jno_near:
+    mov si, 4
+    m_putsf 'JNO '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_162_jb_near:
+    mov si, 3
+    m_putsf 'JB '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_163_jae_near:
+    mov si, 4
+    m_putsf 'JAE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_164_je_near:
+    mov si, 3
+    m_putsf 'JE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_165_jne_near:
+    mov si, 4
+    m_putsf 'JNE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_166_jbe_near:
+    mov si, 4
+    m_putsf 'JBE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_167_ja_near:
+    mov si, 3
+    m_putsf 'JA '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _17X
+; ------------------------------------------------------------
+_17x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+
+    cmp al, 7
+    je _177_jg_near
+    ja undefined
+
+    cmp al, 3
+    jb short __17_012
+    je _173_jnp_near
+    jmp short __17_456
+
+    __17_012:
+        cmp al, 1
+        jb short _170_js_near
+        je _171_jns_near
+        jmp _172_jp_near
+
+    __17_456:
+        cmp al, 5
+        jb _174_jl_near
+        je _175_jge_near
+        jmp _176_jle_near
+
+; ------------------------------------------------------------
+_170_js_near:
+    mov si, 3
+    m_putsf 'JS '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_171_jns_near:
+    mov si, 4
+    m_putsf 'JNS '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_172_jp_near:
+    mov si, 3
+    m_putsf 'JP '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_173_jnp_near:
+    mov si, 4
+    m_putsf 'JNP '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_174_jl_near:
+    mov si, 3
+    m_putsf 'JL '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_175_jge_near:
+    mov si, 4
+    m_putsf 'JGE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_176_jle_near:
+    mov si, 4
+    m_putsf 'JLE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_177_jg_near:
+    mov si, 3
+    m_putsf 'JG '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ============================================================
+;  _2XX
+; ============================================================
+_2xx:
+    ; get 2nd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    je _27x_mov_reg_imm_word
+    ja undefined_2nd_octal
+
+    cmp al, 3
+    jb short __2_012_x
+    je _23x
+    jmp short __2_456_x
+
+    __2_012_x:
+        cmp al, 1
+        jb short _20x
+        je _21x
+        jmp _22x_xchg_reg_ax
+
+    __2_456_x:
+        cmp al, 5
+        jb _24x
+        je _25x
+        jmp _26x_mov_reg_imm_byte
+
+; ------------------------------------------------------------
+;  _20X
+; ------------------------------------------------------------
+_20x:
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 4
+    jb short __20_0123
+
+    cmp al, 6
+    jb _20_45_test_reg_rm
+    jmp _20_67_xchg_reg_rm
+
+    __20_0123:
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
+        ; find out which operation is used
+        cmp bl, 4
+        jb short __20_0123_mod_0123
+        je _20_0123_and_rm_imm
+
+        cmp bl, 6
+        jb _20_0123_sub_rm_imm
+        je _20_0123_xor_rm_imm
+        jmp _20_0123_cmp_rm_imm
+
+    __20_0123_mod_0123:
+        cmp bl, 2
+        jb short __20_0123_mod_01
+        je _20_0123_adc_rm_imm
+        jmp _20_0123_sbb_rm_imm
+
+    __20_0123_mod_01:
+        cmp bl, 1
+        jb _20_0123_add_rm_imm
+        jmp _20_0123_or_rm_imm
+
+; ------------------------------------------------------------
+_20_0123_add_rm_imm:
+    mov si, 4
+    m_putsf 'ADD '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_or_rm_imm:
+    mov si, 3
+    m_putsf 'OR '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_adc_rm_imm:
+    mov si, 4
+    m_putsf 'ADC '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_sbb_rm_imm:
+    mov si, 4
+    m_putsf 'SBB '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_and_rm_imm:
+    mov si, 4
+    m_putsf 'AND '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_sub_rm_imm:
+    mov si, 4
+    m_putsf 'SUB '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_xor_rm_imm:
+    mov si, 4
+    m_putsf 'XOR '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_0123_cmp_rm_imm:
+    mov si, 4
+    m_putsf 'CMP '
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_45_test_reg_rm:
+    mov si, 5
+    m_putsf 'TEST '
+    ; AL contains '10w'
+    mov dl, al
+    and dl, 001b ; will be used for decode procedures
+
+    inc di ; si points to 'mod' now
+
+    call p_decode_reg
+    mov si, 2
+    m_putsf ', '
+    call p_decode_rm
+
+    ; point SI to 'r/m'
+    inc di
+    inc di
+
+    cmp cl, 0
+    je si_in_right_place_L2 ; offset was not used
+
+    ; offset was used
+    ; point SI to the last byte read
+    ;
+    ; cl contains information about how many 
+    ; bytes were read as an offset or direct address
+    xor ch, ch
+    loop_L2:
+        inc di
+    loop loop_L2
+
+    si_in_right_place_L2:
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_20_67_xchg_reg_rm:
+    mov si, 5
+    m_putsf 'XCHG '
+    ; AL contains '11w'
+    mov dl, al
+    and dl, 001b ; will be used for decode procedures
+
+    inc di ; si points to 'mod' now
+
+    call p_decode_reg
+    mov si, 2
+    m_putsf ', '
+    call p_decode_rm
+
+    ; point SI to 'r/m'
+    inc di
+    inc di
+
+    cmp cl, 0
+    je si_in_right_place_L3 ; offset was not used
+
+    ; offset was used
+    ; point SI to the last byte read
+    ;
+    ; cl contains information about how many 
+    ; bytes were read as an offset or direct address
+    xor ch, ch
+    loop_L3:
+        inc di
+    loop loop_L3
+
+    si_in_right_place_L3:
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _21X
+; ------------------------------------------------------------
+_21x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    je short __217_mod_xxx
+    ja undefined
+
+    cmp al, 4
+    jb short __21_0123_mov_reg_rm
+
+    cmp al, 5
+    je _215_lea_reg_mem
+    jmp _21_46_mov_rm_segreg
+
+    __217_mod_xxx:
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
+        ; find out if it's a legit opcode
+        cmp bl, 6
+        je _217_pop_rm
+        jmp undefined_byte
+
+; ------------------------------------------------------------
+__21_0123_mov_reg_rm:
+    mov si, 4
+    m_putsf 'MOV '
+    call p_op_0dw_reg_rm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_21_46_mov_rm_segreg:
+    ; check if 'reg' is not '1xx'
+    call store_next_byte
+    inc di ; point to 'mod'
+    inc di ; point to 'reg'
+    mov bl, byte ptr [data_octal+di]
+    dec di 
+    dec di ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 4 ; reg cannot be '1xx'
+    jae undefined_byte
+
+    ; AL containts '1d0'
+    cmp al, 6
+    je _216_mov_segreg_rm
+
+    _214_mov_rm_segreg:
+        mov si, 4
+        m_putsf 'MOV '
+
+        mov al, 001
+        m_before_decode ; it will put '001' from AL to DL,
+                        ; which is what is needed.
+                        ; this will tell the decode procedure
+                        ; that the operand is a word
+        call p_decode_rm
+        m_move_index
+
+        mov si, 2
+        m_putsf ', '
+
+        ; BL still contains 'reg', which is '0sr'
+        shl bl, 1 ; times 2
+        m_print_reg SR16
+
+        ret ; jmp _xxx
+
+    _216_mov_segreg_rm:
+        ; BL still contains 'reg', which is '0sr'
+        ; if 'd'=1, which is the case here, 0sr cannot be
+        ; 001, since it cannot be written to 'CS'
+        cmp bl, 1 
+        je undefined_byte
+
+        mov si, 4
+        m_putsf 'MOV '
+
+        shl bl, 1 ; times 2
+        m_print_reg SR16
+
+        mov si, 2
+        m_putsf ', '
+
+        mov al, 001
+        m_before_decode ; it will put '001' from AL to DL,
+                        ; which is what is needed.
+                        ; this will tell the decode procedure
+                        ; that the operand is a word
+        call p_decode_rm
+        m_move_index
+
+        ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_215_lea_reg_mem:
+    ; check if mod is not '11'
+    inc di ; point to 'mod'
+    mov bl, byte ptr [data_octal+di]
+    dec di ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 3 ; mod cannot be '11'
+    je undefined_byte
+
+    mov si, 4
+    m_putsf 'LEA '
+
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+    call p_decode_reg
+    mov si, 3
+    m_putsf ', d' ; 'd' is for 'dword', since the next 
+                 ; operand  must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_217_pop_rm:
+    mov si, 4
+    m_putsf 'POP '
+    ; AL contains '111'
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is a word
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _22X
+; ------------------------------------------------------------
+_22x_xchg_reg_ax:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 0
+    je _22x_nop
+
+    mov si, 5
+    m_putsf 'XCHG '
+
+    mov bl, al
+    shl bl, 1; times 2. bl = 4
+    m_print_reg Rw
+
+    mov si, 4
+    m_putsf ', AX'
+    ret ; jmp _xxx
+
+    _22x_nop:
+        mov si, 3
+        m_putsf 'NOP'
+        ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _23X
+; ------------------------------------------------------------
+_23x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 4
+    jb short __23_0123
+    je _234_pushf
+
+    cmp al, 6
+    jb _235_popf
+    je _236_sahf
+    jmp _237_lahf
+
+    __23_0123:
+        cmp al, 2
+        jb short __23_01
+        je _232_call_far_absolute_direct
+        jmp _233_wait
+
+    __23_01:
+        cmp al, 1
+        jb short _230_cbw
+        jmp _231_cwd
+
+; -------------------------------------------------------------
+_230_cbw:
+    mov si, 3
+    m_putsf 'CBW'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_231_cwd:
+    mov si, 3
+    m_putsf 'CWD'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_232_call_far_absolute_direct:
+    mov si, 5
+    m_putsf 'CALL '
+    add di, 6 ; first print the second word
+    call p_print_next_word
+    m_putfchar '+'
+    sub di, 12 ; then print the first word
+    call p_print_next_word
+    add di, 6 ; move SI to the last byte read
+
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_233_wait:
+    mov si, 4
+    m_putsf 'WAIT'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_234_pushf:
+    mov si, 5
+    m_putsf 'PUSHF'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_235_popf:
+    mov si, 4
+    m_putsf 'POPF'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_236_sahf:
+    mov si, 4
+    m_putsf 'SAHF'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_237_lahf:
+    mov si, 4
+    m_putsf 'LAHF'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _24X
+; ------------------------------------------------------------
+_24x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 4
+    jb short __24_0123
+    je _244_movsb
+
+    cmp al, 6
+    jb _245_movsw
+    je _246_cmpsb
+    jmp _247_cmpsw
+
+    __24_0123:
+        cmp al, 2
+        jb short __24_01
+        je _242_mov_mem_acc_byte
+        jmp _243_mov_mem_acc_word
+
+    __24_01:
+        cmp al, 1
+        jb short _240_mov_acc_mem_byte
+        jmp _241_mov_acc_mem_word
+
+; -------------------------------------------------------------
+_240_mov_acc_mem_byte:
+    mov si, 17
+    m_putsf 'MOV AL, byte ptr '
+    m_print_sr_prefix_default
+    m_putfchar '['
+
+    call p_print_next_word
+    m_putfchar ']'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_241_mov_acc_mem_word:
+    mov si, 17
+    m_putsf 'MOV AX, word ptr '
+    m_print_sr_prefix_default
+    m_putfchar '['
+
+    call p_print_next_word
+    m_putfchar ']'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_242_mov_mem_acc_byte:
+    mov si, 13
+    m_putsf 'MOV byte ptr '
+    m_print_sr_prefix_default
+    m_putfchar '['
+
+    call p_print_next_word
+    mov si, 5
+    m_putsf '], AL'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_243_mov_mem_acc_word:
+    mov si, 13
+    m_putsf 'MOV word ptr '
+    m_print_sr_prefix_default
+    m_putfchar '['
+
+    call p_print_next_word
+    mov si, 5
+    m_putsf '], AX'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_244_movsb:
+    mov si, 5
+    m_putsf 'MOVSB'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_245_movsw:
+    mov si, 5
+    m_putsf 'MOVSW'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_246_cmpsb:
+    mov si, 5
+    m_putsf 'CMPSB'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_247_cmpsw:
+    mov si, 5
+    m_putsf 'CMPSW'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _25X
+; ------------------------------------------------------------
+_25x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 4
+    jb short __25_0123
+    je _254_lodsb
+
+    cmp al, 6
+    jb _255_lodsw
+    je _256_scasb
+    jmp _257_scasw
+
+    __25_0123:
+        cmp al, 2
+        jb short __25_01
+        je _252_stosb
+        jmp _253_stosw
+
+    __25_01:
+        cmp al, 1
+        jb _250_test_acc_imm_byte
+        jmp _251_test_acc_imm_word
+
+; -------------------------------------------------------------
+_250_test_acc_imm_byte:
+    mov si, 9
+    m_putsf 'TEST AL, '
+    call p_print_next_byte
+
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_251_test_acc_imm_word:
+    mov si, 9
+    m_putsf 'TEST AX, '
+    call p_print_next_word
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_252_stosb:
+    mov si, 5
+    m_putsf 'STOSB'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_253_stosw:
+    mov si, 5
+    m_putsf 'STOSW'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_254_lodsb:
+    mov si, 5
+    m_putsf 'LODSB'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_255_lodsw:
+    mov si, 5
+    m_putsf 'LODSW'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_256_scasb:
+    mov si, 5
+    m_putsf 'SCASB'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_257_scasw:
+    mov si, 5
+    m_putsf 'SCASW'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _26X
+; ------------------------------------------------------------
+_26x_mov_reg_imm_byte:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    mov si, 4
+    m_putsf 'MOV '
+
+    mov bl, al
+    shl bl, 1 ; times 2
+    m_print_reg Rb
+    mov si, 2
+    m_putsf ', '
+    call p_print_next_byte
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _27X
+; ------------------------------------------------------------
+_27x_mov_reg_imm_word:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    mov si, 4
+    m_putsf 'MOV '
+
+    mov bl, al
+    shl bl, 1; times 2. bl = 4
+    m_print_reg Rw
+    mov si, 2
+    m_putsf ', '
+    call p_print_next_word
+
+    ret ; jmp _xxx
+
+; ============================================================
+;  _3XX
+; ============================================================
+_3xx:
+    ; get 2nd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    je _37x
+    ja undefined_2nd_octal
+
+    cmp al, 3
+    jb short __3_012_x
+    je _33x
+    jmp short __3_456_x
+
+    __3_012_x:
+        cmp al, 1
+        jb short _30x
+        je _31x
+        jmp _32x
+
+    __3_456_x:
+        cmp al, 5
+        jb _34x
+        je _35x
+        jmp _36x
+
+; ------------------------------------------------------------
+;  _30X
+; ------------------------------------------------------------
+_30x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 6
+    jb short __30_2345
+    jmp _30_67_mov_rm_imm
+
+    __30_2345:
+        cmp al, 4
+        jb short __30_23
+
+    __30_45_xx:
+        inc di ; point to 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di ; return SI back
+        ; find out if it's a legit opcode
+        cmp bl, 3 ; mod cannot be '11'
+        jb short __30_45
+        jmp undefined_byte
+
+    __30_45:
+        cmp al, 5
+        jb _304_les_reg_mem
+        jmp _305_lds_reg_mem
+
+    __30_23:
+        cmp al, 3
+        jb short _302_ret_imm
+        jmp _303_ret
+
+; -------------------------------------------------------------
+_302_ret_imm:
+    mov si, 4
+    m_putsf 'RET '
+    call p_print_next_word
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_303_ret:
+    mov si, 3
+    m_putsf 'RET'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_304_les_reg_mem:
+    mov si, 4
+    m_putsf 'LES '
+    ; AL contains '100'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+    call p_decode_reg
+    mov si, 3
+    m_putsf ', d' ; 'd' is for 'dword', since the next 
+                 ; operand  must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_305_lds_reg_mem:
+    mov si, 4
+    m_putsf 'LDS '
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+    call p_decode_reg
+    mov si, 3
+    m_putsf ', d' ; 'd' is for 'dword', since the next 
+                 ; operand  must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_30_67_mov_rm_imm:
+    ; TODO check for other code than '000' between mod and r/m !
+    mov si, 4
+    m_putsf 'MOV '
+    ; AL so far contains 3 bits '11w' as an octal number.
+
+    ; keep only the last bit (ie. set 's' to 0)
+    and al, 001b
+
+    ; now the following procedure can be called. 
+    ; It will think that it is indeed the command
+    ; of format '0sw', which is exactly what is needed here.
+    ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _31X
+; ------------------------------------------------------------
+_31x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 5
+    jb short __31_234
+    je _315_int_number
+
+    cmp al, 6
+    je _316_into
+    jmp _317_iret
+
+    __31_234:
+        cmp al, 3
+        jb _312_retf_imm
+        je _313_retf
+        jmp _314_int3
+
+; -------------------------------------------------------------
+_312_retf_imm:
+    mov si, 5
+    m_putsf 'RETF '
+    call p_print_next_word
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_313_retf:
+    mov si, 4
+    m_putsf 'RETF'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_314_int3:
+    mov si, 5
+    m_putsf 'INT 3'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_315_int_number:
+    mov si, 4
+    m_putsf 'INT '
+    call p_print_next_byte
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_316_into:
+    mov si, 4
+    m_putsf 'INTO'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_317_iret:
+    mov si, 4
+    m_putsf 'IRET'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _32X
+; ------------------------------------------------------------
+_32x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 4
+    jb short __32_0123
+
+    cmp al, 6
+    jb __32_45
+    je undefined ; _326
+    jmp _327_xlat
+
+    __32_0123:
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
+
+        ; find out which operation is used
+        cmp bl, 2
+        jb short __32_0123_mod_01
+        je _32_0123_rcl_rm_times
+
+        cmp bl, 5
+        jb short __32_0123_mod_34
+        je _32_0123_shr_rm_times
+
+        cmp bl, 7
+        je _32_0123_sar_rm_times
+        jmp undefined_byte; _32X_0123_mod_6
+
+    __32_0123_mod_01:
+        cmp bl, 1
+        jb _32_0123_rol_times
+        jmp _32_0123_ror_times
+
+    __32_0123_mod_34:
+        cmp bl, 4
+        jb _32_0123_rcr_times
+        jmp _32_0123_shl_times
+
+    __32_45:
+        ; check if next byte is part of AAM/AAD opcode
+        cmp byte ptr [data_octal+di+1], 0
+        jne undefined
+
+        cmp byte ptr [data_octal+di+2], 1
+        jne undefined
+
+        cmp byte ptr [data_octal+di+3], 2
+        jne undefined
+
+        ; if AAM/AAD is recognized, move index to the 
+        ; end of next byte, which is part of the opcode
+        inc di
+        inc di
+        inc di
+
+        cmp al, 4
+        je _324_aam
+        jmp _325_aad
+
+; -------------------------------------------------------------
+_32_0123_rol_times:
+    mov si, 4
+    m_putsf 'ROL '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_ror_times:
+    mov si, 4
+    m_putsf 'ROR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_rcl_rm_times:
+    mov si, 4
+    m_putsf 'RCL '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_rcr_times:
+    mov si, 4
+    m_putsf 'RCR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_shl_times:
+    mov si, 4
+    m_putsf 'SHL '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_shr_rm_times:
+    mov si, 4
+    m_putsf 'SHR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_sar_rm_times:
+    mov si, 4
+    m_putsf 'SAR '
+    jmp _32_0123_fin
+
+; -------------------------------------------------------------
+_32_0123_fin:
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    mov si, 2
+    m_putsf ', '
+
+    ; AL still contains '0vw'
+    cmp al, 2
+    jb short times_is_1
+
+    times_is_cl:
+        mov si, 2
+        m_putsf 'CL'
+        ret ; jmp _xxx
+
+    times_is_1:
+        m_putfchar '1'
+        ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_324_aam:
+    mov si, 3
+    m_putsf 'AAM'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_325_aad:
+    mov si, 3
+    m_putsf 'AAD'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_327_xlat:
+    mov si, 4
+    m_putsf 'XLAT'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _33X
+; ------------------------------------------------------------
+_33x:
+    mov si, 13
+    m_putsf '; <ESC code> '
+
+    inc di ; 3rd octal digit of opcode ('xxx')
+    inc di ; points to 'mod'
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 3
+    je _33x_3
+
+    mov dl, 002 ; preparing for decode proc
+                ; si already points to 'mod'
+                ;
+                ; DL above 1 means no pointer
+                ; directive will be printed
+    call p_decode_rm
+    m_move_index
+
+    jmp short _33x_end
+
+    _33x_3:
+        inc di
+        inc di ; point to last byte read
+        jmp _33x_end
+
+    _33x_end:
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _34X
+; ------------------------------------------------------------
+_34x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 4
+    jb short __34_0123
+    je _344_in_acc_port_direct_byte
+
+    cmp al, 6
+    jb _345_in_acc_port_direct_word
+    je _346_out_acc_port_direct_byte
+    jmp _347_out_acc_port_direct_word
+
+    __34_0123:
+        cmp al, 2
+        jb short __34_01
+        je _342_loop_near
+        jmp _343_jcxz_near
+
+    __34_01:
+        cmp al, 1
+        jb short _340_loopne_near
+        jmp _341_loope_near
+
+; ------------------------------------------------------------
+_340_loopne_near:
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+    mov si, 7
+    m_putsf 'LOOPNE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_341_loope_near:
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+    mov si, 6
+    m_putsf 'LOOPE '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_342_loop_near:
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+    mov si, 5
+    m_putsf 'LOOP '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_343_jcxz_near:
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+    mov si, 5
+    m_putsf 'JCXZ '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_344_in_acc_port_direct_byte:
+    mov si, 7
+    m_putsf 'IN AL, '
+    call p_print_next_byte
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_345_in_acc_port_direct_word:
+    mov si, 7
+    m_putsf 'IN AX, '
+    call p_print_next_byte
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_346_out_acc_port_direct_byte:
+    mov si, 4
+    m_putsf 'OUT ' 
+    call p_print_next_byte
+    mov si, 4
+    m_putsf ', AL'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_347_out_acc_port_direct_word:
+    mov si, 4
+    m_putsf 'OUT ' 
+    call p_print_next_byte
+    mov si, 4
+    m_putsf ', AX'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _35X
+; ------------------------------------------------------------
+_35x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 4
+    jb short __35_0123
+    je _354_in_acc_port_indirect_byte
+
+    cmp al, 6
+    jb _355_in_acc_port_indirect_word
+    je _356_out_acc_port_indirect_byte
+    jmp _357_out_acc_port_indirect_word
+
+    __35_0123:
+        cmp al, 2
+        jb short __35_01
+        je _352_jmp_far_absolute_direct
+        jmp _353_jmp_short_relative
+
+    __35_01:
+        cmp al, 1
+        jb short _350_call_near_relative
+        jmp _351_jmp_near_relative
+
+; ------------------------------------------------------------
+_350_call_near_relative:
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+    mov si, 5
+    m_putsf 'CALL '
+    m_octal_word_to_number
+    m_print_near_offset_word
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_351_jmp_near_relative:
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+    mov si, 4
+    m_putsf 'JMP '
+    m_octal_word_to_number
+    m_print_near_offset_word
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_352_jmp_far_absolute_direct:
+    mov si, 4
+    m_putsf 'JMP '
+    add di, 6 ; first print the second word
+    call p_print_next_word
+    m_putfchar ':'
+    sub di, 12 ; then print the first word
+    call p_print_next_word
+    add di, 6 ; move SI to the last byte read
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+_353_jmp_short_relative:
+    inc di ; SI now points to the first 
+           ; octal digit of the offset
+    mov si, 10
+    m_putsf 'JMP short '
+    m_octal_byte_to_number
+    m_print_near_offset_byte
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_354_in_acc_port_indirect_byte:
+    mov si, 9
+    m_putsf 'IN AL, DX'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_355_in_acc_port_indirect_word:
+    mov si, 9
+    m_putsf 'IN AX, DX'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_356_out_acc_port_indirect_byte:
+    mov si, 10
+    m_putsf 'OUT DX, AL'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_357_out_acc_port_indirect_word:
+    mov si, 10
+    m_putsf 'OUT DX, AX'
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _36X
+; ------------------------------------------------------------
+_36x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 6
+    jb short __36_012345
+
+    __36_67:
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
+        ; find out which operation is used
+        cmp bl, 4
+        jb short __36_67_mod_0123
+        je _36_67_mul_rm
+
+        cmp bl, 6
+        jb _36_67_imul_rm
+        je _36_67_div_rm
+        jmp _36_67_idiv_rm
+
+    __36_67_mod_0123:
+        cmp bl, 2
+        jb short __36_67_mod_01
+        je _36_67_not_rm
+        jmp _36_67_neg_rm
+
+    __36_67_mod_01:
+        cmp bl, 1
+        jb _36_67_test_rm_imm
+        jmp undefined_byte; _36_67_mod_001_rm
+
+    __36_012345:
+        cmp al, 3
+        jb short __36_012
+        je _36_3_rep
+
+    cmp al, 5
+    jb _36_4_hlt
+    jmp _36_5_cmc
+
+    __36_012:
+        cmp al, 1
+        jb _360_lock
+        je undefined ; _361
+        jmp _362_repne
+
+; -------------------------------------------------------------
+_360_lock:
+    mov si, 4
+    m_putsf 'LOCK'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_362_repne:
+    mov si, 5
+    m_putsf 'REPNE'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_3_rep:
+    mov si, 3
+    m_putsf 'REP'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_4_hlt:
+    mov si, 3
+    m_putsf 'HLT'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_5_cmc:
+    mov si, 3
+    m_putsf 'CMC'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_test_rm_imm:
+    mov si, 5
+    m_putsf 'TEST '
+    ; AL so far contains 3 bits '11w' as an octal number.
+
+    ; keep only the last bit (ie. set 's' to 0)
+    and al, 001b
+
+    ; now the following procedure can be called. 
+    ; It will think that it is indeed the command
+    ; of format '0sw', which is exactly what is needed here.
+    ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
+    call p_op_0sw_rm_imm
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_not_rm:
+    mov si, 4
+    m_putsf 'NOT '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_neg_rm:
+    mov si, 4
+    m_putsf 'NEG '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_mul_rm:
+    mov si, 4
+    m_putsf 'MUL '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_imul_rm:
+    mov si, 5
+    m_putsf 'IMUL '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_div_rm:
+    mov si, 4
+    m_putsf 'DIV '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_36_67_idiv_rm:
+    mov si, 5
+    m_putsf 'IDIV '
+    ; AL contains '11w'
+    m_before_decode
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; ------------------------------------------------------------
+;  _37X
+; ------------------------------------------------------------
+_37x:
+    ; get 3rd octal digit
+    inc di
+    mov al, byte ptr [data_octal+di]
+
+    cmp al, 7
+    ja undefined
+
+    cmp al, 6
+    jb __37_012345
+
+    __37_67:
+        inc di ; point to 'mod'
+        inc di ; point SI to next octal digit after 'mod'
+        mov bl, byte ptr [data_octal+di]
+        dec di
+        dec di ; return SI back
+        ; find out which operation is used
+        cmp bl, 2
+        jb short __37_67_mod_01
+        je _377_call_near_absolute_indirect
+
+        cmp bl, 5
+        jb short __377_mod_34
+        je _377_jmp_far_absolute_indirect
+
+        cmp bl, 7
+        jb _377_push_rm
+        jmp undefined_byte; _377_mod_111_rm
+
+    __37_67_mod_01:
+        cmp bl, 1
+        jb _37_67_inc_rm
+        jmp _37_67_dec_rm
+
+    __377_mod_34:
+        cmp bl, 4
+        jb _377_call_far_absolute_indirect
+        jmp _377_jmp_near_absolute_indirect
+
+    __37_012345:
+        cmp al, 3
+        jb short __37_012
+        je _37_3_sti
+
+    cmp al, 5
+    jb _37_4_cld
+    jmp _37_5_std
+
+    __37_012:
+        cmp al, 1
+        jb _370_clc
+        je _371_stc
+        jmp _372_cli
+
+; -------------------------------------------------------------
+_370_clc:
+    mov si, 3
+    m_putsf 'CLC'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_371_stc:
+    mov si, 3
+    m_putsf 'STC'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_372_cli:
+    mov si, 3
+    m_putsf 'CLI'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_37_3_sti:
+    mov si, 3
+    m_putsf 'STI'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_37_4_cld:
+    mov si, 3
+    m_putsf 'CLD'
+    ret ; jmp _xxx
+
+; -------------------------------------------------------------
+_37_5_std:
+    mov si, 3
+    m_putsf 'STD'
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+_37_67_inc_rm:
+    mov si, 4
+    m_putsf 'INC '
+    ; AL contains '11w'
+    m_before_decode ; it will put '00w' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is byte/word
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+_37_67_dec_rm:
+    mov si, 4
+    m_putsf 'DEC '
+    ; AL contains '11w'
+    m_before_decode ; it will put '00w' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is byte/word
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+_377_call_near_absolute_indirect:
+    mov si, 5
+    m_putsf 'CALL '
+    inc di ; points to 'mod'
+
+    mov dl, 002 ; preparing for decode proc
+                ; si already points to 'mod'
+                ;
+                ; DL above 1 means no pointer
+                ; directive will be printed
+                ; (it will have a default meaning
+                ; that the operand is a word)
+ 
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+_377_call_far_absolute_indirect:
+    ; check if mod is not '11'
+    inc di ; point to 'mod'
+    mov bl, byte ptr [data_octal+di]
+    dec di ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 3 ; mod cannot be '11'
+    je undefined_byte
+
+    mov si, 5
+    m_putsf 'CALL '
+
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+
+    m_putfchar 'd' ; 'd' is for 'dword', since the next 
+                   ; operand must be memory ('word ptr ...')
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+_377_jmp_near_absolute_indirect:
+    mov si, 4
+    m_putsf 'JMP '
+    inc di ; points to 'mod'
+
+    mov dl, 002 ; preparing for decode proc
+                ; si already points to 'mod'
+                ;
+                ; DL above 1 means no pointer
+                ; directive will be printed
+                ; (it will have a default meaning
+                ; that the operand is a word)
+ 
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+_377_jmp_far_absolute_indirect:
+    ; check if mod is not '11'
+    inc di ; point to 'mod'
+    mov bl, byte ptr [data_octal+di]
+    dec di ; return SI back
+    ; find out if it's a legit opcode
+    cmp bl, 3 ; mod cannot be '11'
+    je undefined_byte
+
+    mov si, 4
+    m_putsf 'JMP '
+
+    ; AL contains '101'
+    MOV AL, 001 ; tell the decode procedures that
+                ; the operand will be a word
+
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+
+    m_putfchar 'd' ; 'd' is for 'dword', since the next 
+                   ; operand must be memory ('word ptr ...')
+
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+_377_push_rm:
+    mov si, 5
+    m_putsf 'PUSH '
+    ; AL contains '111'
+    m_before_decode ; it will put '001' in DL,
+                    ; which is what is needed.
+                    ; this will tell the decode procedure
+                    ; that the operand is a word
+    call p_decode_rm
+    m_move_index
+
+    ret ; jmp _xxx
+
+; -----------------------------------------------------------/
+endp disasm
+
+start:
+    mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
+    mov ds, ax                     ; move AX (@data) to DS (data segment)
+    MOV     DI, 0FFFFh
+    ; FIXME will it work?
+    ;mov es, ax                     ; move AX (@data) to ES (extended data segment) 
+
+    MOV     SI, 0081h               ; Set start of arguments ;siac
+    MOV     BX, 0                   ; Count index of argument file name
+    MOV     CX, -1                  ; Count amount of arguments
+
+ARG_PARSE:
+    MOV     AL, byte ptr ES:[SI]    ; Store next char of arguments ;siac
+
+    CMP     AL, 13                  ; End of arguments (newline)
+    JE      CHECK_ERRORS            ; Check if right amount of arguments
+
+    CMP     AL, ' '                 ; End of this argument, skip space
+    JE      SKIP_SPACE
+
+    CMP     AL, '/'                 ; Check if "/?" is trying to be written
+    JE      ERR_TEST
+
+    add si, 1 ;siac                 ; Store this character to appropriate array
+    JMP     WRITE
+
+ERR_TEST:
+    add si, 1 ;siac
+    MOV     AL, byte ptr ES:[SI]    ; Check if next byte is '?' ;siac
+    CMP     AL, '?'
+    JNE     WRITE_INIT              ; If no, continue with write
+ERROR:
+    MOV     DX, OFFSET err_msg      ; Error message
+    MOV     AH, 09
+    INT     21h
+
+    MOV     AX, 4C00H
+    INT     21h
+
+NO_OPEN:                            ; Cant open/write file
+    MOV     DX, offset cant_open
+    MOV     AH, 09
+    INT     21h
+JMP ERROR
+
+WRITE_INIT:                         ; Fix before write (After ERR_TEST)
+    sub si, 1 ;siac
+    MOV     AL, byte ptr ES:[SI] ;siac
+    add si, 1 ;siac
+JMP WRITE
+
+SKIP_SPACE:                         ; Skips the space, shifts to next array
+    add si, 1 ;siac
+    MOV     AL, byte ptr ES:[SI] ;siac
+    CMP     AL, ' '                 ; Skip all the spaces
+    JE      SKIP_SPACE
+    INC     CX                      ; Sets which array should be used
+    MOV     BX, 0                   ; Index of new array is 0
+JMP ARG_PARSE
+
+CHECK_ERRORS:                       ; Only continue if there are 3 arguments
+    CMP     CX, 1
+    JE      CONTINUE
+
+    CMP     CX, 2                   ; In case there is a space before newline
+    JE      CONTINUE
+JMP ERROR
+
+WRITE:                              ; Write to appropriate parameter
+    CMP     CX, 0
+    JE      FIRST_PARAM
+
+    CMP     CX, 1
+    JE      SECOND_PARAM
+JMP ERROR                           ; If there are more arguments, error
+
+FIRST_PARAM:
+    MOV     [file_n+BX], AL         ; First param
+    INC     BX
+JMP ARG_PARSE
+
+SECOND_PARAM:
+    MOV     [output_n+BX], AL           ; Second param
+    INC     BX
+JMP ARG_PARSE
+
+CONTINUE:
+    INT 3h                          ; Debug
+    CLC                             ; Clear carry
+
+    MOV     DX, OFFSET file_n       ; Atidaryti  input faila
+    MOV     AX, 3D00h
+    INT     21h
+
+    CALL    check_carry             ; Check if successful
+
+    MOV     in_handle, AX               ; Store handle
+
+    MOV     CX, 0
+    MOV     DX, OFFSET output_n     ; Open output file
+    MOV     AX, 3C00h
+    INT     21h
+
+    CALL    check_carry             ; check if success
+
+    MOV     out_handle, AX      ; save handle
+
+    MOV     AX, 0
+    MOV     BX, 0
+    MOV     CX, 0
+    MOV     DX, 0
+
+PARSE:                              ; The whole algorithm
+    ;xor di, di
+    CALL    check_read              ; Check if new input has to be read
+    MOV     CX, [bytes_read]
+    CMP     CX, 0                   ; Check if any bytes left in file
+    JLE     EXIT                    ; nothing left in file, quit
+
+    CALL    store_next_byte         ; Get the next byte for opc
+
+    mov si, 0
+    call disasm
+
+    mov si, 5
+    m_putsf '    ;'
+
+    call write_proc
+JMP PARSE
+
+exit:
+    mov     ax, 0
+terminate:
+    mov     ah, 4Ch
+    int     21h
+
+end start
