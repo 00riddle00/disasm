@@ -138,10 +138,6 @@ m_putspace macro
     m_putchar 20h
 endm
 
-m_putdollar macro
-    m_putchar 24h
-endm
-
 ; ---------------------
 ;  write to FILE
 ; ---------------------

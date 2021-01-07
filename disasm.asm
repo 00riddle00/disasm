@@ -205,7 +205,7 @@ local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
             jmp @@macro_end
 
         @@endm_m:
-            ret ; jmp _xxx
+            ret 
     @@macro_end:
 endm m_print_near_offset_byte
 
@@ -243,7 +243,7 @@ local @@save_number, @@label_00, @@label_01, @@label_end, @@macro_end, @@endm_m
             jmp @@macro_end
 
         @@endm_m:
-            ret ; jmp _xxx
+            ret 
     @@macro_end:
 endm m_print_near_offset_word
 
@@ -1288,7 +1288,7 @@ clear_temp_bytes proc
         mov     [bx], dX
         add     bx, 1
         cmp     cx, 24
-        je      exit_cleaR
+        je      exit_clear
         inc     cx
         jmp clear_loop
 
@@ -1752,21 +1752,21 @@ __00_0123_add_reg_rm:
     mov si, 4
     m_putsf 'ADD '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _004_add_acc_imm_byte:
     mov si, 8
     m_putsf 'ADD AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _005_add_acc_imm_word:
     mov si, 8
     m_putsf 'ADD AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _01X
@@ -1785,21 +1785,21 @@ __01_0123_or_reg_rm:
     mov si, 3
     m_putsf 'OR '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _014_or_acc_imm_byte:
     mov si, 7
     m_putsf 'OR AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _015_or_acc_imm_word:
     mov si, 7
     m_putsf 'OR AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _02X
@@ -1818,21 +1818,21 @@ __02_0123_adc_reg_rm:
     mov si, 4
     m_putsf 'ADC '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _024_adc_acc_imm_byte:
     mov si, 8
     m_putsf 'ADC AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _025_adc_acc_imm_word:
     mov si, 8
     m_putsf 'ADC AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _03X
@@ -1851,21 +1851,21 @@ __03_0123_sbb_reg_rm:
     mov si, 4
     m_putsf 'SBB '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _034_sbb_acc_imm_byte:
     mov si, 8
     m_putsf 'SBB AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _035_sbb_acc_imm_word:
     mov si, 8
     m_putsf 'SBB AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _04X
@@ -1884,21 +1884,21 @@ __04_0123_and_reg_rm:
     mov si, 4
     m_putsf 'AND '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _044_and_acc_imm_byte:
     mov si, 8
     m_putsf 'AND AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _045_and_acc_imm_word:
     mov si, 8
     m_putsf 'AND AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _05X
@@ -1917,21 +1917,21 @@ __05_0123_sub_reg_rm:
     mov si, 4
     m_putsf 'SUB '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _054_sub_acc_imm_byte:
     mov si, 8
     m_putsf 'SUB AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _055_sub_acc_imm_word:
     mov si, 8
     m_putsf 'SUB AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _06X
@@ -1950,21 +1950,21 @@ __06_0123_xor_reg_rm:
     mov si, 4
     m_putsf 'XOR '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _064_xor_acc_imm_byte:
     mov si, 8
     m_putsf 'XOR AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _065_xor_acc_imm_word:
     mov si, 8
     m_putsf 'XOR AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _07X
@@ -1983,21 +1983,21 @@ __07_0123_cmp_reg_rm:
     mov si, 4
     m_putsf 'CMP '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _074_cmp_acc_imm_byte:
     mov si, 8
     m_putsf 'CMP AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _075_cmp_acc_imm_word:
     mov si, 8
     m_putsf 'CMP AX, '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _0X6
@@ -2015,7 +2015,7 @@ _0x6_push_seg:
     shl bl, 1 ; times 2
     m_print_reg SR16
 
-    ret ; jmp _xxx
+    ret 
 
 ; TODO
 _0x6_seg_change_prefix:
@@ -2043,31 +2043,31 @@ _0x7_pop_seg:
     shl bl, 1 ; times 2
     m_print_reg SR16
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _047_add_sub_adjust:
     mov si, 3
     m_putsf 'DAA'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _057_add_sub_adjust:
     mov si, 3
     m_putsf 'DAS'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _067_add_sub_adjust:
     mov si, 3
     m_putsf 'AAA'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _077_add_sub_adjust:
     mov si, 3
     m_putsf 'AAS'
-    ret ; jmp _xxx
+    ret 
 
 ; ============================================================
 ;  _1XX
@@ -2115,7 +2115,7 @@ _10x_inc_reg_word:
     shl bl, 1 ; times 2
     m_print_reg Rw
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _11X
@@ -2135,7 +2135,7 @@ _11_dec_reg_word:
     shl bl, 1; times 2. bl = 4
     m_print_reg Rw
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _12X
@@ -2155,7 +2155,7 @@ _12_push_reg_word:
     shl bl, 1; times 2. bl = 4
     m_print_reg Rw
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _13X
@@ -2175,7 +2175,7 @@ _13_pop_reg_word:
     shl bl, 1; times 2. bl = 4
     m_print_reg Rw
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _16X
@@ -2215,7 +2215,7 @@ _160_jo_near:
     m_putsf 'JO '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _161_jno_near:
@@ -2223,7 +2223,7 @@ _161_jno_near:
     m_putsf 'JNO '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _162_jb_near:
@@ -2231,7 +2231,7 @@ _162_jb_near:
     m_putsf 'JB '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _163_jae_near:
@@ -2239,7 +2239,7 @@ _163_jae_near:
     m_putsf 'JAE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _164_je_near:
@@ -2247,7 +2247,7 @@ _164_je_near:
     m_putsf 'JE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _165_jne_near:
@@ -2255,7 +2255,7 @@ _165_jne_near:
     m_putsf 'JNE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _166_jbe_near:
@@ -2263,7 +2263,7 @@ _166_jbe_near:
     m_putsf 'JBE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _167_ja_near:
@@ -2271,7 +2271,7 @@ _167_ja_near:
     m_putsf 'JA '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _17X
@@ -2311,7 +2311,7 @@ _170_js_near:
     m_putsf 'JS '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _171_jns_near:
@@ -2319,7 +2319,7 @@ _171_jns_near:
     m_putsf 'JNS '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _172_jp_near:
@@ -2327,7 +2327,7 @@ _172_jp_near:
     m_putsf 'JP '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _173_jnp_near:
@@ -2335,7 +2335,7 @@ _173_jnp_near:
     m_putsf 'JNP '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _174_jl_near:
@@ -2343,7 +2343,7 @@ _174_jl_near:
     m_putsf 'JL '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _175_jge_near:
@@ -2351,7 +2351,7 @@ _175_jge_near:
     m_putsf 'JGE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _176_jle_near:
@@ -2359,7 +2359,7 @@ _176_jle_near:
     m_putsf 'JLE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _177_jg_near:
@@ -2367,7 +2367,7 @@ _177_jg_near:
     m_putsf 'JG '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ============================================================
 ;  _2XX
@@ -2447,56 +2447,56 @@ _20_0123_add_rm_imm:
     mov si, 4
     m_putsf 'ADD '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_0123_or_rm_imm:
     mov si, 3
     m_putsf 'OR '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_0123_adc_rm_imm:
     mov si, 4
     m_putsf 'ADC '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_0123_sbb_rm_imm:
     mov si, 4
     m_putsf 'SBB '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_0123_and_rm_imm:
     mov si, 4
     m_putsf 'AND '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_0123_sub_rm_imm:
     mov si, 4
     m_putsf 'SUB '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_0123_xor_rm_imm:
     mov si, 4
     m_putsf 'XOR '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_0123_cmp_rm_imm:
     mov si, 4
     m_putsf 'CMP '
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_45_test_reg_rm:
@@ -2531,7 +2531,7 @@ _20_45_test_reg_rm:
     loop loop_L2
 
     si_in_right_place_L2:
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _20_67_xchg_reg_rm:
@@ -2566,7 +2566,7 @@ _20_67_xchg_reg_rm:
     loop loop_L3
 
     si_in_right_place_L3:
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _21X
@@ -2603,7 +2603,7 @@ __21_0123_mov_reg_rm:
     mov si, 4
     m_putsf 'MOV '
     call p_op_0dw_reg_rm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _21_46_mov_rm_segreg:
@@ -2642,7 +2642,7 @@ _21_46_mov_rm_segreg:
         shl bl, 1 ; times 2
         m_print_reg SR16
 
-        ret ; jmp _xxx
+        ret 
 
     _216_mov_segreg_rm:
         ; BL still contains 'reg', which is '0sr'
@@ -2668,7 +2668,7 @@ _21_46_mov_rm_segreg:
         call p_decode_rm
         m_move_index
 
-        ret ; jmp _xxx
+        ret 
 
 ; ------------------------------------------------------------
 _215_lea_reg_mem:
@@ -2696,7 +2696,7 @@ _215_lea_reg_mem:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _217_pop_rm:
@@ -2710,7 +2710,7 @@ _217_pop_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _22X
@@ -2735,12 +2735,12 @@ _22x_xchg_reg_ax:
 
     mov si, 4
     m_putsf ', AX'
-    ret ; jmp _xxx
+    ret 
 
     _22x_nop:
         mov si, 3
         m_putsf 'NOP'
-        ret ; jmp _xxx
+        ret 
 
 ; ------------------------------------------------------------
 ;  _23X
@@ -2777,13 +2777,13 @@ _23x:
 _230_cbw:
     mov si, 3
     m_putsf 'CBW'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _231_cwd:
     mov si, 3
     m_putsf 'CWD'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _232_call_far_absolute_direct:
@@ -2796,37 +2796,37 @@ _232_call_far_absolute_direct:
     call p_print_next_word
     add di, 6 ; move SI to the last byte read
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _233_wait:
     mov si, 4
     m_putsf 'WAIT'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _234_pushf:
     mov si, 5
     m_putsf 'PUSHF'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _235_popf:
     mov si, 4
     m_putsf 'POPF'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _236_sahf:
     mov si, 4
     m_putsf 'SAHF'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _237_lahf:
     mov si, 4
     m_putsf 'LAHF'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _24X
@@ -2868,7 +2868,7 @@ _240_mov_acc_mem_byte:
 
     call p_print_next_word
     m_putfchar ']'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _241_mov_acc_mem_word:
@@ -2879,7 +2879,7 @@ _241_mov_acc_mem_word:
 
     call p_print_next_word
     m_putfchar ']'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _242_mov_mem_acc_byte:
@@ -2891,7 +2891,7 @@ _242_mov_mem_acc_byte:
     call p_print_next_word
     mov si, 5
     m_putsf '], AL'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _243_mov_mem_acc_word:
@@ -2903,31 +2903,31 @@ _243_mov_mem_acc_word:
     call p_print_next_word
     mov si, 5
     m_putsf '], AX'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _244_movsb:
     mov si, 5
     m_putsf 'MOVSB'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _245_movsw:
     mov si, 5
     m_putsf 'MOVSW'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _246_cmpsb:
     mov si, 5
     m_putsf 'CMPSB'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _247_cmpsw:
     mov si, 5
     m_putsf 'CMPSW'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _25X
@@ -2966,7 +2966,7 @@ _250_test_acc_imm_byte:
     m_putsf 'TEST AL, '
     call p_print_next_byte
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _251_test_acc_imm_word:
@@ -2974,43 +2974,43 @@ _251_test_acc_imm_word:
     m_putsf 'TEST AX, '
     call p_print_next_word
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _252_stosb:
     mov si, 5
     m_putsf 'STOSB'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _253_stosw:
     mov si, 5
     m_putsf 'STOSW'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _254_lodsb:
     mov si, 5
     m_putsf 'LODSB'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _255_lodsw:
     mov si, 5
     m_putsf 'LODSW'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _256_scasb:
     mov si, 5
     m_putsf 'SCASB'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _257_scasw:
     mov si, 5
     m_putsf 'SCASW'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _26X
@@ -3033,7 +3033,7 @@ _26x_mov_reg_imm_byte:
     m_putsf ', '
     call p_print_next_byte
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _27X
@@ -3056,7 +3056,7 @@ _27x_mov_reg_imm_word:
     m_putsf ', '
     call p_print_next_word
 
-    ret ; jmp _xxx
+    ret 
 
 ; ============================================================
 ;  _3XX
@@ -3130,13 +3130,13 @@ _302_ret_imm:
     mov si, 4
     m_putsf 'RET '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _303_ret:
     mov si, 3
     m_putsf 'RET'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _304_les_reg_mem:
@@ -3154,7 +3154,7 @@ _304_les_reg_mem:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _305_lds_reg_mem:
@@ -3172,7 +3172,7 @@ _305_lds_reg_mem:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _30_67_mov_rm_imm:
@@ -3189,7 +3189,7 @@ _30_67_mov_rm_imm:
     ; of format '0sw', which is exactly what is needed here.
     ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _31X
@@ -3221,38 +3221,38 @@ _312_retf_imm:
     mov si, 5
     m_putsf 'RETF '
     call p_print_next_word
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _313_retf:
     mov si, 4
     m_putsf 'RETF'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _314_int3:
     mov si, 5
     m_putsf 'INT 3'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _315_int_number:
     mov si, 4
     m_putsf 'INT '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _316_into:
     mov si, 4
     m_putsf 'INTO'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _317_iret:
     mov si, 4
     m_putsf 'IRET'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _32X
@@ -3382,29 +3382,29 @@ _32_0123_fin:
     times_is_cl:
         mov si, 2
         m_putsf 'CL'
-        ret ; jmp _xxx
+        ret 
 
     times_is_1:
         m_putfchar '1'
-        ret ; jmp _xxx
+        ret 
 
 ; -------------------------------------------------------------
 _324_aam:
     mov si, 3
     m_putsf 'AAM'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _325_aad:
     mov si, 3
     m_putsf 'AAD'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _327_xlat:
     mov si, 4
     m_putsf 'XLAT'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _33X
@@ -3436,7 +3436,7 @@ _33x:
         jmp _33x_end
 
     _33x_end:
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _34X
@@ -3477,7 +3477,7 @@ _340_loopne_near:
     m_putsf 'LOOPNE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _341_loope_near:
@@ -3487,7 +3487,7 @@ _341_loope_near:
     m_putsf 'LOOPE '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _342_loop_near:
@@ -3497,7 +3497,7 @@ _342_loop_near:
     m_putsf 'LOOP '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _343_jcxz_near:
@@ -3507,21 +3507,21 @@ _343_jcxz_near:
     m_putsf 'JCXZ '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _344_in_acc_port_direct_byte:
     mov si, 7
     m_putsf 'IN AL, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _345_in_acc_port_direct_word:
     mov si, 7
     m_putsf 'IN AX, '
     call p_print_next_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _346_out_acc_port_direct_byte:
@@ -3530,7 +3530,7 @@ _346_out_acc_port_direct_byte:
     call p_print_next_byte
     mov si, 4
     m_putsf ', AL'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _347_out_acc_port_direct_word:
@@ -3539,7 +3539,7 @@ _347_out_acc_port_direct_word:
     call p_print_next_byte
     mov si, 4
     m_putsf ', AX'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _35X
@@ -3583,7 +3583,7 @@ _350_call_near_relative:
     m_octal_word_to_number
     m_print_near_offset_word
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _351_jmp_near_relative:
@@ -3593,7 +3593,7 @@ _351_jmp_near_relative:
     m_putsf 'JMP '
     m_octal_word_to_number
     m_print_near_offset_word
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _352_jmp_far_absolute_direct:
@@ -3606,7 +3606,7 @@ _352_jmp_far_absolute_direct:
     call p_print_next_word
     add di, 6 ; move SI to the last byte read
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 _353_jmp_short_relative:
@@ -3616,31 +3616,31 @@ _353_jmp_short_relative:
     m_putsf 'JMP short '
     m_octal_byte_to_number
     m_print_near_offset_byte
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _354_in_acc_port_indirect_byte:
     mov si, 9
     m_putsf 'IN AL, DX'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _355_in_acc_port_indirect_word:
     mov si, 9
     m_putsf 'IN AX, DX'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _356_out_acc_port_indirect_byte:
     mov si, 10
     m_putsf 'OUT DX, AL'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _357_out_acc_port_indirect_word:
     mov si, 10
     m_putsf 'OUT DX, AX'
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _36X
@@ -3702,31 +3702,31 @@ _36x:
 _360_lock:
     mov si, 4
     m_putsf 'LOCK'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _362_repne:
     mov si, 5
     m_putsf 'REPNE'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_3_rep:
     mov si, 3
     m_putsf 'REP'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_4_hlt:
     mov si, 3
     m_putsf 'HLT'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_5_cmc:
     mov si, 3
     m_putsf 'CMC'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_67_test_rm_imm:
@@ -3742,7 +3742,7 @@ _36_67_test_rm_imm:
     ; of format '0sw', which is exactly what is needed here.
     ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
     call p_op_0sw_rm_imm
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_67_not_rm:
@@ -3753,7 +3753,7 @@ _36_67_not_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_67_neg_rm:
@@ -3764,7 +3764,7 @@ _36_67_neg_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_67_mul_rm:
@@ -3775,7 +3775,7 @@ _36_67_mul_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_67_imul_rm:
@@ -3786,7 +3786,7 @@ _36_67_imul_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_67_div_rm:
@@ -3797,7 +3797,7 @@ _36_67_div_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _36_67_idiv_rm:
@@ -3808,7 +3808,7 @@ _36_67_idiv_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; ------------------------------------------------------------
 ;  _37X
@@ -3872,37 +3872,37 @@ _37x:
 _370_clc:
     mov si, 3
     m_putsf 'CLC'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _371_stc:
     mov si, 3
     m_putsf 'STC'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _372_cli:
     mov si, 3
     m_putsf 'CLI'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _37_3_sti:
     mov si, 3
     m_putsf 'STI'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _37_4_cld:
     mov si, 3
     m_putsf 'CLD'
-    ret ; jmp _xxx
+    ret 
 
 ; -------------------------------------------------------------
 _37_5_std:
     mov si, 3
     m_putsf 'STD'
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 _37_67_inc_rm:
@@ -3916,7 +3916,7 @@ _37_67_inc_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 _37_67_dec_rm:
@@ -3930,7 +3930,7 @@ _37_67_dec_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 _377_call_near_absolute_indirect:
@@ -3949,7 +3949,7 @@ _377_call_near_absolute_indirect:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 _377_call_far_absolute_indirect:
@@ -3976,7 +3976,7 @@ _377_call_far_absolute_indirect:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 _377_jmp_near_absolute_indirect:
@@ -3995,7 +3995,7 @@ _377_jmp_near_absolute_indirect:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 _377_jmp_far_absolute_indirect:
@@ -4023,7 +4023,7 @@ _377_jmp_far_absolute_indirect:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 _377_push_rm:
@@ -4037,7 +4037,7 @@ _377_push_rm:
     call p_decode_rm
     m_move_index
 
-    ret ; jmp _xxx
+    ret 
 
 ; -----------------------------------------------------------/
 endp disasm
@@ -4045,130 +4045,128 @@ endp disasm
 start:
     mov ax, @data                  ; move @data to AX (@data - address where data segment starts)
     mov ds, ax                     ; move AX (@data) to DS (data segment)
-    ;MOV     DI, 0FFFFh
-    ; FIXME will it work?
-    ;mov es, ax                     ; move AX (@data) to ES (extended data segment) 
+    ;mov es, ax                    ; move AX (@data) to ES (extended data segment) 
 
-    MOV     SI, 0081h               ; Set start of arguments ;siac
-    MOV     BX, 0                   ; Count index of argument file name
-    MOV     CX, -1                  ; Count amount of arguments
+    mov     si, 0081h               ; Set start of arguments 
+    mov     bx, 0                   ; Count index of argument file name
+    mov     cx, -1                  ; Count amount of arguments
 
-ARG_PARSE:
-    MOV     AL, byte ptr ES:[SI]    ; Store next char of arguments ;siac
+arg_parse:
+    mov     al, byte ptr es:[si]    ; Store next char of arguments 
 
-    CMP     AL, 13                  ; End of arguments (newline)
-    JE      CHECK_ERRORS            ; Check if right amount of arguments
+    cmp     al, 13                  ; End of arguments (newline)
+    je      check_errors            ; Check if right amount of arguments
 
-    CMP     AL, ' '                 ; End of this argument, skip space
-    JE      SKIP_SPACE
+    cmp     al, ' '                 ; End of this argument, skip space
+    je      skip_space
 
-    CMP     AL, '/'                 ; Check if "/?" is trying to be written
-    JE      ERR_TEST
+    cmp     al, '/'                 ; Check if "/?" is trying to be written
+    je      err_test
 
-    add si, 1 ;siac                 ; Store this character to appropriate array
-    JMP     WRITE
+    add si, 1                  ; Store this character to appropriate array
+    jmp     write
 
-ERR_TEST:
-    add si, 1 ;siac
-    MOV     AL, byte ptr ES:[SI]    ; Check if next byte is '?' ;siac
-    CMP     AL, '?'
-    JNE     WRITE_INIT              ; If no, continue with write
-ERROR:
-    MOV     DX, OFFSET err_msg      ; Error message
-    MOV     AH, 09
-    INT     21h
+err_test:
+    add si, 1 
+    mov     al, byte ptr es:[si]    ; Check if next byte is '?' 
+    cmp     al, '?'
+    jne     write_init              ; If no, continue with write
+error:
+    mov     dx, offset err_msg      ; Error message
+    mov     ah, 09
+    int     21h
 
-    MOV     AX, 4C00H
-    INT     21h
+    mov     ax, 4C00H
+    int     21h
 
-NO_OPEN:                            ; Cant open/write file
-    MOV     DX, offset cant_open
-    MOV     AH, 09
-    INT     21h
-JMP ERROR
+no_open:                            ; Cant open/write file
+    mov     dx, offset cant_open
+    mov     ah, 09
+    int     21h
+jmp error
 
-WRITE_INIT:                         ; Fix before write (After ERR_TEST)
-    sub si, 1 ;siac
-    MOV     AL, byte ptr ES:[SI] ;siac
-    add si, 1 ;siac
-JMP WRITE
+write_init:                         ; Fix before write (After ERR_TEST)
+    sub si, 1 
+    mov     al, byte ptr es:[si] 
+    add si, 1 
+jmp write
 
-SKIP_SPACE:                         ; Skips the space, shifts to next array
-    add si, 1 ;siac
-    MOV     AL, byte ptr ES:[SI] ;siac
-    CMP     AL, ' '                 ; Skip all the spaces
-    JE      SKIP_SPACE
-    INC     CX                      ; Sets which array should be used
-    MOV     BX, 0                   ; Index of new array is 0
-JMP ARG_PARSE
+skip_space:                         ; Skips the space, shifts to next array
+    add si, 1 
+    mov     al, byte ptr es:[si] 
+    cmp     al, ' '                 ; Skip all the spaces
+    je      skip_space
+    inc     cx                      ; Sets which array should be used
+    mov     bx, 0                   ; Index of new array is 0
+jmp arg_parse
 
-CHECK_ERRORS:                       ; Only continue if there are 3 arguments
-    CMP     CX, 1
-    JE      CONTINUE
+check_errors:                       ; Only continue if there are 3 arguments
+    cmp     cx, 1
+    je      continue
 
-    CMP     CX, 2                   ; In case there is a space before newline
-    JE      CONTINUE
-JMP ERROR
+    cmp     cx, 2                   ; In case there is a space before newline
+    je      continue
+jmp error
 
-WRITE:                              ; Write to appropriate parameter
-    CMP     CX, 0
-    JE      FIRST_PARAM
+write:                              ; Write to appropriate parameter
+    cmp     cx, 0
+    je      first_param
 
-    CMP     CX, 1
-    JE      SECOND_PARAM
-JMP ERROR                           ; If there are more arguments, error
+    cmp     cx, 1
+    je      second_param
+jmp error                           ; If there are more arguments, error
 
-FIRST_PARAM:
-    MOV     [file_n+BX], AL         ; First param
-    INC     BX
-JMP ARG_PARSE
+first_param:
+    mov     [file_n+bx], al         ; First param
+    inc     bx
+jmp arg_parse
 
-SECOND_PARAM:
-    MOV     [output_n+BX], AL           ; Second param
-    INC     BX
-JMP ARG_PARSE
+second_param:
+    mov     [output_n+bx], al           ; Second param
+    inc     bx
+jmp arg_parse
 
-CONTINUE:
-    INT 3h                          ; Debug
-    CLC                             ; Clear carry
+continue:
+    int 3h                          ; Debug
+    clc                             ; Clear carry
 
-    MOV     DX, OFFSET file_n       ; Atidaryti  input faila
-    MOV     AX, 3D00h
-    INT     21h
+    mov     dx, offset file_n       ; Atidaryti  input faila
+    mov     ax, 3D00h
+    int     21h
 
-    CALL    check_carry             ; Check if successful
+    call    check_carry             ; Check if successful
 
-    MOV     in_handle, AX               ; Store handle
+    mov     in_handle, ax               ; Store handle
 
-    MOV     CX, 0
-    MOV     DX, OFFSET output_n     ; Open output file
-    MOV     AX, 3C00h
-    INT     21h
+    mov     cx, 0
+    mov     dx, offset output_n     ; Open output file
+    mov     ax, 3C00h
+    int     21h
 
-    CALL    check_carry             ; check if success
+    call    check_carry             ; check if success
 
-    MOV     out_handle, AX      ; save handle
+    mov     out_handle, ax      ; save handle
 
-    MOV     AX, 0
-    MOV     BX, 0
-    MOV     CX, 0
-    MOV     DX, 0
+    mov     ax, 0
+    mov     bx, 0
+    mov     cx, 0
+    mov     dx, 0
 
-PARSE:                              ; The whole algorithm
+parse:                              ; The whole algorithm
     xor di, di
     mov [chars_written], 0
-    CALL    check_read              ; Check if new input has to be read
-    MOV     CX, [bytes_read]
-    CMP     CX, 0                   ; Check if any bytes left in file
-    JLE     EXIT                    ; nothing left in file, quit
+    call    check_read              ; Check if new input has to be read
+    mov     cx, [bytes_read]
+    cmp     cx, 0                   ; Check if any bytes left in file
+    jle     exit                    ; nothing left in file, quit
 
-    CALL    store_next_byte         ; Get the next byte for opc
+    call    store_next_byte         ; Get the next byte for opc
 
     mov si, 0
     call disasm
 
     call write_proc
-JMP PARSE
+jmp parse
 
 exit:
     mov     ax, 0
