@@ -431,10 +431,6 @@ jumps
     bytes_read      DW 0                        ; Bytes read on input
 
     ;WRITING SYMBOLS
-    new_line        DB 13,10
-    doublepoint     DB ":"
-    space           DB 9 DUP(" ")
-
     v_arg_1         DB 40 DUP("$")      ; First argument string
     v_arg_2         DB 40 DUP("$")      ; Second argument string
 
@@ -1317,18 +1313,7 @@ write_proc proc
     mov si, 4
     m_printf ip_value                   ; Write 4 bytes (of IP) to file
 
-; -------------------------------------------------------
     m_putfchar ':'
-; -------------------------------------------------------
-    ;MOV     DX, offset doublepoint  ; Write ":"
-
-     ;;DX is buffer for symbol writing
-     ;;RESULT: updated output file
-    ;MOV     CX, 1                   ; Write result
-    ;MOV     BX, out_handle
-    ;MOV     AX, 4000h               ; Write
-    ;INT     21h
-; -------------------------------------------------------
 
     mov si, 4
     m_putsf '    '
@@ -1669,10 +1654,12 @@ PARSE:                              ; The whole algorithm
 
     CALL    store_next_byte         ; Get the next byte for opc
 
-    PUSH SI
+    mov si, 0
     call main
-    POP SI
-    ;m_putsf '     ;'
+
+    mov si, 5
+    m_putsf '    ;'
+
     call write_proc
 JMP PARSE
 
