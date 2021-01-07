@@ -109,8 +109,12 @@ local @@word_ptr, @@endm_print_ptr
 endm m_print_ptr
 
 m_octal_byte_to_number macro
-    ; SI already points to the first 
+    ; DI already points to the first 
     ; octal digit of the offset byte
+    call store_next_byte
+    ; DI still points to the same place,
+    ; only the byte was read there
+
     xor ax, ax
     mov bx, 8
 
