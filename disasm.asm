@@ -438,6 +438,7 @@ jumps
     chars_written   dw 0
     spaces          db 40 dup (" ")
     prefix          db 0
+    byte_stored     db 0
 
     arg_msg         db "Intel 8088 Disasembler",13,10
     arg2_msg        db "Written in TASM, intended for files assembled with TASM as well$"
@@ -922,6 +923,14 @@ endp p_print_next_word
 ; After call: DI is not changed.
 proc p_decode_reg
     push ax bx dx
+
+    cmp byte ptr [byte_stored], 1
+    je skip_store_byte
+
+        call store_next_byte
+        mov byte ptr [byte_stored], 1
+
+    skip_store_byte:
  
     ; get 'reg' value (3 bits, represented as an octal number)
     inc di
@@ -963,7 +972,14 @@ endp p_decode_reg
 ;                were used for offset (or direct address)
 proc p_decode_rm
     push ax bx dx
-    call store_next_byte
+
+    cmp byte ptr [byte_stored], 1
+    je skip_store_byte_01
+
+        call store_next_byte
+        mov byte ptr [byte_stored], 1
+
+    skip_store_byte_01:
 
     ; get 'mod' value (2 bits, represented as an octal number)
     mov al, byte ptr [data_octal+di]
@@ -979,7 +995,7 @@ proc p_decode_rm
         ; It will think that DI points to 'mod', and will treat
         ; 'r/m' as 'reg', which is what is needed here.
         ; TODO comment: it will use DL
-        call p_decode_reg 
+        call p_decode_reg  ; WITHOUT STORE
         ; point DI back to 'mod'
         dec di
 
@@ -1241,7 +1257,7 @@ proc p_op_0dw_reg_rm
         mov si, 2
         m_putsf ', '
         ; decode what should be used in place of 'r/m'
-        call p_decode_rm
+        call p_decode_rm ; WITHOUT STORE
         jmp move_index
 
     ; d = 0
@@ -1255,7 +1271,7 @@ proc p_op_0dw_reg_rm
         call p_decode_rm
         mov si, 2
         m_putsf ', '
-        call p_decode_reg
+        call p_decode_reg ; WITHOUT STORE
 
     ; move DI to the last byte read
     move_index:
@@ -2671,7 +2687,7 @@ _20_45_test_reg_rm:
     call p_decode_reg
     mov si, 2
     m_putsf ', '
-    call p_decode_rm
+    call p_decode_rm ; WITHOUT STORE
 
     ; point SI to 'r/m'
     inc di
@@ -2706,7 +2722,7 @@ _20_67_xchg_reg_rm:
     call p_decode_reg
     mov si, 2
     m_putsf ', '
-    call p_decode_rm
+    call p_decode_rm ; WITHOUT STORE
 
     ; point SI to 'r/m'
     inc di
@@ -2855,7 +2871,7 @@ _215_lea_reg_mem:
     mov si, 3
     m_putsf ', d' ; 'd' is for 'dword', since the next 
                  ; operand  must be memory ('word ptr ...')
-    call p_decode_rm
+    call p_decode_rm ; WITHOUT STORE
     m_move_index
 
     ret 
@@ -3334,7 +3350,7 @@ _304_les_reg_mem:
     mov si, 3
     m_putsf ', d' ; 'd' is for 'dword', since the next 
                  ; operand  must be memory ('word ptr ...')
-    call p_decode_rm
+    call p_decode_rm ; WITHOUT STORE
     m_move_index
 
     ret 
@@ -3352,7 +3368,7 @@ _305_lds_reg_mem:
     mov si, 3
     m_putsf ', d' ; 'd' is for 'dword', since the next 
                  ; operand  must be memory ('word ptr ...')
-    call p_decode_rm
+    call p_decode_rm ; WITHOUT STORE
     m_move_index
 
     ret 
@@ -4372,6 +4388,8 @@ print_com_file_info_start:
 parse:                              ; The whole algorithm
     xor di, di
     mov byte ptr [prefix], 0
+    mov byte ptr [byte_stored], 0
+
     mov [chars_written], 0
     call    check_read              ; Check if new input has to be read
     mov     cx, [bytes_read]
