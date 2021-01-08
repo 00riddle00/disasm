@@ -630,8 +630,8 @@ jumps
     ;db 0FFh
 ; --------------------------------------------------------------------------------------------
 
-    db 2, 1, 7,  0, 6, 0                                           ; 0???: ??      | POP word ptr [BX+SI]
-    db 2, 1, 7,  0, 7, 0                                           ; 0???: ??      | UNDEFINED
+    db 2, 1, 7,  0, 0, 0                                           ; 0???: ??      | POP word ptr [BX+SI]
+    db 2, 1, 7,  0, 6, 0                                           ; 0???: ??      | UNDEFINED
 
     db 3, 7, 6,  0, 0, 6,  1, 1, 1,  2, 2, 2                       ; 0???: ??      | INC byte ptr DS:[222111]
     db 3, 7, 7,  2, 0, 3,  1, 1, 1,  2, 2, 2                       ; 0???: ??      | INC word ptr [BP+DI+222111]
@@ -2743,7 +2743,7 @@ _21x:
         dec di
         dec di ; return SI back
         ; find out if it's a legit opcode
-        cmp bl, 6
+        cmp bl, 0
         je _217_pop_rm
         jmp undefined_byte
 
@@ -2852,7 +2852,8 @@ _215_lea_reg_mem:
 _217_pop_rm:
     mov si, 4
     m_putsf 'POP '
-    ; AL contains '111'
+    ; AL contains '000'
+    mov AL, 001
     m_before_decode ; it will put '001' in DL,
                     ; which is what is needed.
                     ; this will tell the decode procedure
