@@ -14,3 +14,9 @@ nurodančius komandos skaitliuko adresą ir atpažintos operacijos baitus Hex pa
   Patikrinimas: `meld INPUT.ASM OUTPUT.ASM`, arba kita programa, atliekanti diff funkciją.
 * Taip pat OUTPUT.ASM turi asembliuotis į OUTPUT.COM be klaidų
 
+## Kodas
+Nuoroda į kodo repozitoriją: https://github.com/00riddle00/BSc2-ComputerArchitecture
+Atsiskaitymui naudojamas kodas yra esantis šiame zip'e, jis yra naujesnis, kol kas GIT'e
+dar naujausių pakeitimų nėra įkelta.
+
+@ 2021-01-08
