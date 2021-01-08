@@ -1119,6 +1119,7 @@ proc p_decode_rm
 
             ; only direct address is used for EA
             _rm_is_mem_no_offset_direct_address:
+                inc di ; point DI to first octal of the byte to be read
                 m_print_ptr
                 m_print_sr_prefix_default
                 m_putfchar '['
