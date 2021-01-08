@@ -1193,7 +1193,7 @@ proc p_op_0sw_rm_imm
     ; w = 0, s = 0 or 1
     imm_1_byte: ; or in case of 'byte to word sign extended', print the required byte after sign padding byte.
         inc di
-        call store_next_byte
+        ;call store_next_byte
         call p_print_next_byte
         jmp endp_op_0sw_rm_imm
 
@@ -1900,6 +1900,7 @@ _005_add_acc_imm_word:
     mov si, 8
     m_putsf 'ADD AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -1935,6 +1936,7 @@ _015_or_acc_imm_word:
     mov si, 7
     m_putsf 'OR AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -1970,6 +1972,7 @@ _025_adc_acc_imm_word:
     mov si, 8
     m_putsf 'ADC AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -2005,6 +2008,7 @@ _035_sbb_acc_imm_word:
     mov si, 8
     m_putsf 'SBB AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -2040,6 +2044,7 @@ _045_and_acc_imm_word:
     mov si, 8
     m_putsf 'AND AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -2075,6 +2080,7 @@ _055_sub_acc_imm_word:
     mov si, 8
     m_putsf 'SUB AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -2110,6 +2116,7 @@ _065_xor_acc_imm_word:
     mov si, 8
     m_putsf 'XOR AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -2145,6 +2152,7 @@ _075_cmp_acc_imm_word:
     mov si, 8
     m_putsf 'CMP AX, '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -3025,6 +3033,7 @@ _240_mov_acc_mem_byte:
     m_putfchar '['
 
     inc di
+    call store_next_word
     call p_print_next_word
     m_putfchar ']'
     ret 
@@ -3037,6 +3046,7 @@ _241_mov_acc_mem_word:
     m_putfchar '['
 
     inc di
+    call store_next_word
     call p_print_next_word
     m_putfchar ']'
     ret 
@@ -3049,6 +3059,7 @@ _242_mov_mem_acc_byte:
     m_putfchar '['
 
     inc di
+    call store_next_word
     call p_print_next_word
     mov si, 5
     m_putsf '], AL'
@@ -3062,6 +3073,7 @@ _243_mov_mem_acc_word:
     m_putfchar '['
 
     inc di
+    call store_next_word
     call p_print_next_word
     mov si, 5
     m_putsf '], AX'
@@ -3136,6 +3148,7 @@ _251_test_acc_imm_word:
     mov si, 9
     m_putsf 'TEST AX, '
     inc di
+    call store_next_word
     call p_print_next_word
 
     ret 
@@ -3220,6 +3233,7 @@ _27x_mov_reg_imm_word:
     mov si, 2
     m_putsf ', '
     inc di
+    call store_next_word
     call p_print_next_word
 
     ret 
@@ -3297,6 +3311,7 @@ _302_ret_imm:
     mov si, 4
     m_putsf 'RET '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
@@ -3389,6 +3404,7 @@ _312_retf_imm:
     mov si, 5
     m_putsf 'RETF '
     inc di
+    call store_next_word
     call p_print_next_word
     ret 
 
