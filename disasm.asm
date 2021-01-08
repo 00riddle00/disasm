@@ -4355,6 +4355,20 @@ continue:
     mov     cx, 0
     mov     dx, 0
 
+print_com_file_info_start:
+    mov si, 5
+    m_putsfln '.8086'
+    mov si, 11
+    m_putsfln '.model tiny'
+    m_printf_nl
+    mov si, 5
+    m_putsfln '.code'
+    mov si, 8
+    m_putsfln 'org 100h'
+    m_printf_nl
+    mov si, 6
+    m_putsfln 'start:'
+
 parse:                              ; The whole algorithm
     xor di, di
     mov byte ptr [prefix], 0
@@ -4373,6 +4387,9 @@ parse:                              ; The whole algorithm
 jmp parse
 
 exit:
+    print_com_file_info_end:
+        mov si, 9
+        m_putsfln 'end start'
     mov     ax, 0
 terminate:
     mov     ah, 4Ch
