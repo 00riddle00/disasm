@@ -848,7 +848,7 @@ outpt_buff      db 257 dup(?)           ; output buffer
 proc p_print_next_byte
 
     push ax dx
-    inc di
+    ;inc di
     m_octal_byte_to_number
     m_number_to_octal_digit
 
@@ -1186,16 +1186,19 @@ proc p_op_0sw_rm_imm
     jb imm_2_bytes ; so s = 0
 
     ; w = 1, s = 1
+    inc di
     call p_print_next_byte_sign_extended
     jmp endp_op_0sw_rm_imm
 
     ; w = 0, s = 0 or 1
     imm_1_byte: ; or in case of 'byte to word sign extended', print the required byte after sign padding byte.
+        inc di
         call p_print_next_byte
         jmp endp_op_0sw_rm_imm
 
     ; w = 1, s = 0
     imm_2_bytes:
+        inc di
         call p_print_next_word
 
     endp_op_0sw_rm_imm:
@@ -1884,6 +1887,7 @@ __00_0123_add_reg_rm:
 _004_add_acc_imm_byte:
     mov si, 8
     m_putsf 'ADD AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -1917,6 +1921,7 @@ __01_0123_or_reg_rm:
 _014_or_acc_imm_byte:
     mov si, 7
     m_putsf 'OR AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -1950,6 +1955,7 @@ __02_0123_adc_reg_rm:
 _024_adc_acc_imm_byte:
     mov si, 8
     m_putsf 'ADC AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -1983,6 +1989,7 @@ __03_0123_sbb_reg_rm:
 _034_sbb_acc_imm_byte:
     mov si, 8
     m_putsf 'SBB AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -2016,6 +2023,7 @@ __04_0123_and_reg_rm:
 _044_and_acc_imm_byte:
     mov si, 8
     m_putsf 'AND AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -2049,6 +2057,7 @@ __05_0123_sub_reg_rm:
 _054_sub_acc_imm_byte:
     mov si, 8
     m_putsf 'SUB AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -2082,6 +2091,7 @@ __06_0123_xor_reg_rm:
 _064_xor_acc_imm_byte:
     mov si, 8
     m_putsf 'XOR AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -2115,6 +2125,7 @@ __07_0123_cmp_reg_rm:
 _074_cmp_acc_imm_byte:
     mov si, 8
     m_putsf 'CMP AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -3094,6 +3105,7 @@ _25x:
 _250_test_acc_imm_byte:
     mov si, 9
     m_putsf 'TEST AL, '
+    inc di
     call p_print_next_byte
 
     ret 
@@ -3161,6 +3173,7 @@ _26x_mov_reg_imm_byte:
     m_print_reg Rb
     mov si, 2
     m_putsf ', '
+    inc di
     call p_print_next_byte
 
     ret 
@@ -3369,6 +3382,7 @@ _314_int3:
 _315_int_number:
     mov si, 4
     m_putsf 'INT '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -3643,6 +3657,7 @@ _343_jcxz_near:
 _344_in_acc_port_direct_byte:
     mov si, 7
     m_putsf 'IN AL, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -3650,6 +3665,7 @@ _344_in_acc_port_direct_byte:
 _345_in_acc_port_direct_word:
     mov si, 7
     m_putsf 'IN AX, '
+    inc di
     call p_print_next_byte
     ret 
 
@@ -3657,6 +3673,7 @@ _345_in_acc_port_direct_word:
 _346_out_acc_port_direct_byte:
     mov si, 4
     m_putsf 'OUT ' 
+    inc di
     call p_print_next_byte
     mov si, 4
     m_putsf ', AL'
@@ -3666,6 +3683,7 @@ _346_out_acc_port_direct_byte:
 _347_out_acc_port_direct_word:
     mov si, 4
     m_putsf 'OUT ' 
+    inc di
     call p_print_next_byte
     mov si, 4
     m_putsf ', AX'
