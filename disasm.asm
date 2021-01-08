@@ -645,7 +645,7 @@ jumps
 
     db 3, 6, 6,  1, 0, 4,  2, 2, 2,  3, 3, 3                       ; 0???: ??      | TEST byte ptr [SI+377222], 333
     db 3, 6, 6,  0, 0, 1,  3, 3, 3                                 ; 0???: ??      | TEST byte ptr [BX+DI], 333
-    db 3, 0, 7,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4   ; 0???: ??      | MOV word ptr [SI+222111], 444333
+    db 3, 0, 7,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  3, 4, 4   ; 0???: ??      | MOV word ptr [SI+222111], 344333
     db 3, 0, 7,  3, 0, 4,  1, 1, 1,  2, 2, 2                       ; 0???: ??      | MOV SP, 222111
 
     ;db 0FFh
@@ -729,7 +729,7 @@ jumps
     db 2, 0, 0,  1, 1, 4,  2, 2, 2,  3, 3, 3                       ; 0???: ??      | OR byte ptr [SI+377222], 333
     db 2, 0, 3,  2, 2, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3             ; 0???: ??      | ADC word ptr [SI+222111], 377333
 
-    db 2, 0, 1,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  4, 4, 4   ; 0???: ??      | ADD word ptr [SI+222111], 444333
+    db 2, 0, 1,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3,  3, 4, 4   ; 0???: ??      | ADD word ptr [SI+222111], 344333
     db 2, 0, 2,  2, 0, 4,  1, 1, 1,  2, 2, 2,  3, 3, 3             ; 0???: ??      | ADD byte ptr [SI+222111], 333
     db 2, 0, 2,  0, 0, 6,  1, 1, 1,  2, 2, 2,  3, 3, 3             ; 0???: ??      | ADD byte ptr DS:[222111], 333
 
@@ -1193,12 +1193,14 @@ proc p_op_0sw_rm_imm
     ; w = 0, s = 0 or 1
     imm_1_byte: ; or in case of 'byte to word sign extended', print the required byte after sign padding byte.
         inc di
+        call store_next_byte
         call p_print_next_byte
         jmp endp_op_0sw_rm_imm
 
     ; w = 1, s = 0
     imm_2_bytes:
         inc di
+        call store_next_word
         call p_print_next_word
 
     endp_op_0sw_rm_imm:
@@ -1470,6 +1472,7 @@ show_next_byte proc
     push    ax
     push    bx
     push    cx
+    push    dx
 
     call    check_read_show         ; Check if input needs repleneshing has to be read
 
@@ -1516,6 +1519,7 @@ show_next_byte proc
     pop     bx
     pop     ax
 
+    pop     dx
     pop     cx
     pop     bx
     pop     ax
@@ -3340,7 +3344,7 @@ _305_lds_reg_mem:
 
 ; ------------------------------------------------------------
 _30_67_mov_rm_imm:
-    ; TODO check for other code than '000' between mod and r/m !
+    ; TODO check for other code then '000' between mod and r/m !
     mov si, 4
     m_putsf 'MOV '
     ; AL so far contains 3 bits '11w' as an octal number.
@@ -3351,7 +3355,7 @@ _30_67_mov_rm_imm:
     ; now the following procedure can be called. 
     ; It will think that it is indeed the command
     ; of format '0sw', which is exactly what is needed here.
-    ; 's' was set to 0, since there is no 's' bit in test_rm_imm.
+    ; 's' was set to 0, since there is no 's' bit in mov_rm_imm.
     call p_op_0sw_rm_imm
     ret 
 
