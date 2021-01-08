@@ -436,7 +436,7 @@ jumps
 
     char_to_write   db 0
     chars_written   dw 0
-    spaces          db 30 dup (" ")
+    spaces          db 40 dup (" ")
     prefix          db 0
 
     arg_msg         db "Intel 8088 Disasembler",13,10
@@ -772,7 +772,7 @@ jumps
     db 0, 7, 7                                 ; 0???: ??      | AAS
 
 ; ------------------------------------- GROUP 1 ----------------------------------------------
-    db 1, 0, 6                                 ; 0???: ??      | inc di
+    db 1, 0, 6                                 ; 0???: ??      | INC SI
     db 1, 1, 3                                 ; 0???: ??      | DEC BX
     db 1, 2, 0                                 ; 0???: ??      | PUSH AX
     db 1, 3, 1                                 ; 0???: ??      | POP CX
@@ -1328,7 +1328,7 @@ write_proc proc
     push    cx
     push    dx
 
-    mov si, 30
+    mov si, 40
     sub si, [chars_written]
     mov bx, si
     m_printf_only spaces
@@ -1895,6 +1895,7 @@ _004_add_acc_imm_byte:
 _005_add_acc_imm_word:
     mov si, 8
     m_putsf 'ADD AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -1929,6 +1930,7 @@ _014_or_acc_imm_byte:
 _015_or_acc_imm_word:
     mov si, 7
     m_putsf 'OR AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -1963,6 +1965,7 @@ _024_adc_acc_imm_byte:
 _025_adc_acc_imm_word:
     mov si, 8
     m_putsf 'ADC AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -1997,6 +2000,7 @@ _034_sbb_acc_imm_byte:
 _035_sbb_acc_imm_word:
     mov si, 8
     m_putsf 'SBB AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -2031,6 +2035,7 @@ _044_and_acc_imm_byte:
 _045_and_acc_imm_word:
     mov si, 8
     m_putsf 'AND AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -2065,6 +2070,7 @@ _054_sub_acc_imm_byte:
 _055_sub_acc_imm_word:
     mov si, 8
     m_putsf 'SUB AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -2099,6 +2105,7 @@ _064_xor_acc_imm_byte:
 _065_xor_acc_imm_word:
     mov si, 8
     m_putsf 'XOR AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -2133,6 +2140,7 @@ _074_cmp_acc_imm_byte:
 _075_cmp_acc_imm_word:
     mov si, 8
     m_putsf 'CMP AX, '
+    inc di
     call p_print_next_word
     ret 
 
@@ -2540,6 +2548,7 @@ _2xx:
 ;  _20X
 ; ------------------------------------------------------------
 _20x:
+    ; get 3rd octal digit
     inc di
     mov al, byte ptr [data_octal+di]
 
@@ -2555,6 +2564,7 @@ _20x:
 
     __20_0123:
         inc di ; point to 'mod'
+        call show_next_byte
         inc di ; point SI to next octal digit after 'mod'
         mov bl, byte ptr [data_octal+di]
         dec di
@@ -2727,6 +2737,7 @@ _21x:
 
     __217_mod_xxx:
         inc di ; point to 'mod'
+        call show_next_byte
         inc di ; point SI to next octal digit after 'mod'
         mov bl, byte ptr [data_octal+di]
         dec di
@@ -2747,7 +2758,7 @@ __21_0123_mov_reg_rm:
 _21_46_mov_rm_segreg:
     ; check if 'reg' is not '1xx'
     inc di ; must point to first octal of next byte
-    call store_next_byte
+    call show_next_byte
     inc di ; point to 'reg'
     mov bl, byte ptr [data_octal+di]
 
@@ -2812,6 +2823,7 @@ _21_46_mov_rm_segreg:
 _215_lea_reg_mem:
     ; check if mod is not '11'
     inc di ; point to 'mod'
+    call show_next_byte
     mov bl, byte ptr [data_octal+di]
     dec di ; return SI back
     ; find out if it's a legit opcode
@@ -3007,6 +3019,7 @@ _240_mov_acc_mem_byte:
     m_print_sr_prefix_default
     m_putfchar '['
 
+    inc di
     call p_print_next_word
     m_putfchar ']'
     ret 
@@ -3018,6 +3031,7 @@ _241_mov_acc_mem_word:
     m_print_sr_prefix_default
     m_putfchar '['
 
+    inc di
     call p_print_next_word
     m_putfchar ']'
     ret 
@@ -3029,6 +3043,7 @@ _242_mov_mem_acc_byte:
     m_print_sr_prefix_default
     m_putfchar '['
 
+    inc di
     call p_print_next_word
     mov si, 5
     m_putsf '], AL'
@@ -3041,6 +3056,7 @@ _243_mov_mem_acc_word:
     m_print_sr_prefix_default
     m_putfchar '['
 
+    inc di
     call p_print_next_word
     mov si, 5
     m_putsf '], AX'
@@ -3114,6 +3130,7 @@ _250_test_acc_imm_byte:
 _251_test_acc_imm_word:
     mov si, 9
     m_putsf 'TEST AX, '
+    inc di
     call p_print_next_word
 
     ret 
@@ -3197,6 +3214,7 @@ _27x_mov_reg_imm_word:
     m_print_reg Rw
     mov si, 2
     m_putsf ', '
+    inc di
     call p_print_next_word
 
     ret 
@@ -3251,6 +3269,7 @@ _30x:
 
     __30_45_xx:
         inc di ; point to 'mod'
+        call show_next_byte
         mov bl, byte ptr [data_octal+di]
         dec di ; return SI back
         ; find out if it's a legit opcode
@@ -3272,6 +3291,7 @@ _30x:
 _302_ret_imm:
     mov si, 4
     m_putsf 'RET '
+    inc di
     call p_print_next_word
     ret 
 
@@ -3363,6 +3383,7 @@ _31x:
 _312_retf_imm:
     mov si, 5
     m_putsf 'RETF '
+    inc di
     call p_print_next_word
     ret 
 
@@ -3419,6 +3440,7 @@ _32x:
 
     __32_0123:
         inc di ; point to 'mod'
+        call show_next_byte
         inc di ; point SI to next octal digit after 'mod'
         mov bl, byte ptr [data_octal+di]
         dec di
@@ -3448,19 +3470,22 @@ _32x:
         jmp _32_0123_shl_times
 
     __32_45:
+        inc di
+        call show_next_byte
         ; check if next byte is part of AAM/AAD opcode
-        cmp byte ptr [data_octal+di+1], 0
+        cmp byte ptr [data_octal+di], 0
         jne undefined
 
-        cmp byte ptr [data_octal+di+2], 1
+        cmp byte ptr [data_octal+di+1], 1
         jne undefined
 
-        cmp byte ptr [data_octal+di+3], 2
+        cmp byte ptr [data_octal+di+2], 2
         jne undefined
 
         ; if AAM/AAD is recognized, move index to the 
         ; end of next byte, which is part of the opcode
-        inc di
+        call store_next_byte
+
         inc di
         inc di
 
@@ -3559,6 +3584,7 @@ _33x:
 
     inc di ; 3rd octal digit of opcode ('xxx')
     inc di ; points to 'mod'
+    call show_next_byte
     mov al, byte ptr [data_octal+di]
 
     cmp al, 3
@@ -3810,6 +3836,7 @@ _36x:
 
     __36_67:
         inc di ; point to 'mod'
+        call show_next_byte
         inc di ; point SI to next octal digit after 'mod'
         mov bl, byte ptr [data_octal+di]
         dec di
