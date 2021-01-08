@@ -1204,6 +1204,7 @@ proc p_op_0sw_rm_imm
 
     ; w = 1, s = 1
     inc di
+    call store_next_byte
     call p_print_next_byte_sign_extended
     jmp endp_op_0sw_rm_imm
 
