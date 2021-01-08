@@ -131,7 +131,7 @@
 1000 10dw mod reg r/m [poslinkis]             | MOV registras <--> registras/atmintis
 1000 11d0 mod 0sr r/m [poslinkis]             | MOV segmento registras <--> registras/atmintis
 1000 1101 mod reg r/m [poslinkis]             | LEA registras <- atmintis
-1000 1111 mod 110 r/m [poslinkis]             | POP registras/atmintis 
+1000 1111 mod 000 r/m [poslinkis]             | POP registras/atmintis 
 -------------------------------------o220--------------------------------------------------------------------
 1001 0000                                     | NOP; XCHG ax, ax
 1001 0reg                                     | XCHG registras <--> akumuliatorius (ax)
