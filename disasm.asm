@@ -1525,6 +1525,7 @@ store_next_byte proc
     push    ax
     push    bx
     push    cx
+    push    dx
 
     call    check_read              ; Check if input needs repleneshing has to be read
 
@@ -1592,6 +1593,7 @@ store_next_byte proc
     pop     bx
     pop     ax
 
+    pop     dx
     pop     cx
     pop     bx
     pop     ax
@@ -4088,6 +4090,7 @@ _377_call_near_absolute_indirect:
 _377_call_far_absolute_indirect:
     ; check if mod is not '11'
     inc di ; point to 'mod'
+    call show_next_byte
     mov bl, byte ptr [data_octal+di]
     dec di ; return SI back
     ; find out if it's a legit opcode
@@ -4134,6 +4137,7 @@ _377_jmp_near_absolute_indirect:
 _377_jmp_far_absolute_indirect:
     ; check if mod is not '11'
     inc di ; point to 'mod'
+    call show_next_byte
     mov bl, byte ptr [data_octal+di]
     dec di ; return SI back
     ; find out if it's a legit opcode
